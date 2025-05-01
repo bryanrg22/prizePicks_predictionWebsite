@@ -1,53 +1,51 @@
-PrizePicks Prediction Website
+# PrizePicks Prediction Website
 
-An automated NBA player performance prediction model and interactive web app that identifies optimal betting opportunities on PrizePicks. Leveraging statistical analysis, probability modeling, and AI-driven explanations to help users make data-informed picks.
+Lead Developer | Feb 2025 – Present  
+Automated player performance prediction model to identify optimal betting opportunities on PrizePicks, analyzing player stats, team rankings, and matchup history.
 
-⸻
+## 🚀 Project Overview
 
-Tech Stack
+- **Objective:** Predict NBA player point performances (“Over/Under” picks) using statistical modeling and AI.
+- **Outcome:** Grew account balance from \$10 to over \$3,000 (29,900% ROI) with an 11/14 lineup win rate.
+- **Live Demo:** https://github.com/bryanrg22/prizePicks_predictionWebsite
 
-Frontend
-	•	React + Vite – Fast, modern UI framework
-	•	Tailwind CSS – Utility-first styling
-	•	Lucide React – Iconography
-	•	Recharts – Charts for visualizing performance
+## 🧰 Tech Stack
 
-Backend
-	•	Python – Core language for data processing
-	•	Flask – Lightweight web API
-	•	Firebase Admin SDK – Secure Firestore interactions
+### Frontend
+- **React + Vite** – Fast, modern SPA  
+- **Tailwind CSS** – Utility-first styling  
+- **Lucide React** – Iconography  
+- **Recharts** – Charts & data visualization  
 
-Database & Cloud
-	•	Firebase Firestore – NoSQL data storage (processedPlayers, users/...)
-	•	Firebase Authentication – User management
-	•	Cloud Functions – Automated data migrations and archival
+### Backend
+- **Python 3.9+** – Core language  
+- **Flask** – REST API  
+- **Firebase Admin SDK** – Firestore interaction  
 
-Data & AI Integration
-	•	Poisson Distribution – Probability of player point totals
-	•	Monte Carlo Simulations – Long‑run outcome estimates
-	•	ChatGPT – Natural‐language bet explanations
-	•	OCR (Tesseract) – Screenshot parsing for batch analyses
+### Database & Hosting
+- **Firebase Firestore** – NoSQL  
+- **Firebase Authentication** – User accounts  
+- **Firebase Storage** – Screenshots & assets  
 
-⸻
+### Data & AI
+- **Pandas, NumPy** – Data wrangling  
+- **Poisson & Monte Carlo** – Probability models  
+- **OCR** – Screenshot parsing  
+- **OpenAI ChatGPT** – Bet explanation generation  
 
-Features
-	•	Player Analysis – Season, last-5 games, matchup history
-	•	Probability Models – Poisson & Monte Carlo outputs
-	•	AI Recommendations – ChatGPT-powered Over/Under guidance
-	•	Screenshot Uploader – Bulk import of PrizePicks screenshots
-	•	Processed Players Dashboard – Active vs. concluded games
-	•	Bet Slip & History – Build, edit, lock in picks; view outcomes
-	•	Real-time Sync – Firebase for seamless data updates
+## 🔧 Installation
 
-⸻
+### Prerequisites
+- Node.js v16+ & npm/yarn  
+- Python 3.8+ & pip  
+- Firebase account & service-account JSON
 
-Installation
+---
 
-Prerequisites
-	•	Node.js (v16+)
-	•	npm or yarn
-	•	Python (v3.8+)
-	•	Firebase account & CLI
+### 1. Clone Repository
+```bash
+git clone https://github.com/bryanrg22/prizePicks_predictionWebsite.git
+cd prizePicks_predictionWebsite
 
 Frontend Setup
 	1.	Clone the repo and install:
