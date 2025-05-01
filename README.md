@@ -11,12 +11,22 @@ Automated player performance prediction model to identify optimal betting opport
 
 ## 1. Briefly describe what this code sample does:
 ```plaintext
-My backend includes a Flask module that defines REST endpoints under /api that drive the PrizePicks Prediction Website’s backend (in app.py). Each endpoint uses the Firebase Admin SDK to gather and manipulate data in the Firebase Database, fetching player metrics (e.g., seasonAvgPoints, last-5 games averages, gameStatus) from processedPlayers/active or concluded, reading and writing user bet documents (activeBets, betHistory), and ingesting OCR-parsed screenshot data. It then invokes our Poisson and Monte Carlo modules to compute probability forecasts on those player stats before securely updating Firestore. Cloud Functions run in the background to migrate and archive old threshold documents, ensuring the React+Vite frontend always displays up-to-date, real-time analytics.
+My backend includes a Flask module that defines REST endpoints under /api that drive the PrizePicks Prediction
+Website’s backend (in app.py). Each endpoint uses the Firebase Admin SDK to gather and manipulate data in the
+Firebase Database, fetching player metrics (e.g., seasonAvgPoints, last-5 games averages, gameStatus) from
+processedPlayers/active or concluded, reading and writing user bet documents (activeBets, betHistory), and
+ingesting OCR-parsed screenshot data. It then invokes our Poisson and Monte Carlo modules to compute probability
+forecasts on those player stats before securely updating Firestore. Cloud Functions run in the background to migrate
+and archive old threshold documents, ensuring the React+Vite frontend always displays up-to-date, real-time analytics.
 ```
 
 ## 2. Briefly describe what you learned when you created this code sample
 ```plaintext
-I learned how to better design a Firebase Database schema so that it would be able to support multi-user access and real-time sync, structuring collections like processedPlayers and per-user activeBets for efficient reads and writes. I gained experience wiring React+Vite to a Flask API via the Firebase Admin SDK, ensuring secure, monitored communication. I also mastered integrating third-party APIs for data retrieval, while also writing python scripts that would calculate data when APIs lacked needed fields, and even using web scraping to fill gaps in our dataset such as web scraping the NBA Injury Report.
+I learned how to better design a Firebase Database schema so that it would be able to support multi-user access and
+real-time sync, structuring collections like processedPlayers and per-user activeBets for efficient reads and writes.
+I gained experience wiring React+Vite to a Flask API via the Firebase Admin SDK, ensuring secure, monitored communication.
+I also mastered integrating third-party APIs for data retrieval, while also writing python scripts that would calculate data
+when APIs lacked needed fields, and even using web scraping to fill gaps in our dataset such as web scraping the NBA Injury Report.
 ```
 
 
