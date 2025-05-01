@@ -7,7 +7,6 @@ Automated player performance prediction model to identify optimal betting opport
 
 - **Objective:** Predict NBA player point performances (“Over/Under” picks) using statistical modeling and AI.
 - **Outcome:** Grew account balance from \$10 to over \$3,000 (29,900% ROI) with an 11/14 lineup win rate.
-- **Live Demo:** https://github.com/bryanrg22/prizePicks_predictionWebsite
 
 ## 1. Briefly describe what this code sample does:
 ```plaintext
