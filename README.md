@@ -30,12 +30,15 @@ when APIs lacked needed fields, and even using web scraping to fill gaps in our 
 
 ## 📸 Images of Web Program
 ### Home Page
+#### Each user will be greeted with this page with their own unique data upon entry (Data such as Earnings, Active Bets, Current Picks, etc)
 <img width="1512" alt="Image" src="https://github.com/user-attachments/assets/39f4e1e9-add3-415b-95ca-03cb9c5b3129" />
 
 ### Player Analysis on Home Page 
+#### This is the layout the web page displays when a user searches for a player and their point threshold.
 <img width="1512" alt="Image" src="https://github.com/user-attachments/assets/8d960312-30c7-47f6-9004-ed82facc348b" />
 
 ### Processed Players Page
+#### This is the Processed Player's page, which will display the same players across all users. All players serarched for by different users will appear on this page.
 <img width="1512" alt="Image" src="https://github.com/user-attachments/assets/3f9c727b-b315-4688-bd57-0a12a55820dc" />
 
 ### Player Analysis on Processed Players Page
