@@ -334,6 +334,7 @@ def analyze_player(first_name, last_name, threshold=None):
             search_date += datetime.timedelta(days=1)
             continue
         if not game_df.empty:
+            print("NOT EMPTY")
             if player_team_id in game_df['HOME_TEAM_ID'].values:
                 home_index = int(game_df.index[game_df['HOME_TEAM_ID'] == player_team_id][0])
                 opponent_team_id = game_df.at[home_index, 'VISITOR_TEAM_ID']

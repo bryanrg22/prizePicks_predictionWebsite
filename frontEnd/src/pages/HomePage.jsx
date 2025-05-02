@@ -364,8 +364,10 @@ export default function HomePage() {
       .toLowerCase()
       .replace(/\s+/g, "_")            // "LeBron James" → "lebron_james"
 
+    const docId = `${playerKey}_${pointsThreshold}`        // "stephen_curry_19.5"
+
     const newPick = {
-      id: playerKey,
+      id: docId,
       player: mockPlayerData.name,
       team: mockPlayerData.team,
       teamLogo: mockPlayerData.teamLogo,
@@ -373,7 +375,7 @@ export default function HomePage() {
       opponentLogo: mockPlayerData.opponentLogo,
       gameDate: mockPlayerData.gameDate,
       gameTime: mockPlayerData.gameTime,
-      threshold: pointsThreshold,
+      threshold: Number.parseFloat(pointsThreshold),
       recommendation: rec.recommendation,
       confidence: rec.confidence,
       photoUrl: mockPlayerData.photoUrl,

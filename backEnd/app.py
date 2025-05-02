@@ -27,12 +27,13 @@ def pkey(name: str) -> str:
 
 def thr_doc_ref(name: str, threshold: float):
     doc_id = f"{pkey(name)}_{threshold}"
+    # now under processedPlayers → players → active → {doc_id}
     return (
         db
         .collection("processedPlayers")
-        .doc("active")
-        .collection("thresholds")
-        .doc(doc_id)
+        .document("players")
+        .collection("active")
+        .document(doc_id)
     )
 
 @app.route("/api/player", methods=["POST"])
@@ -41,10 +42,10 @@ def analyze_player_endpoint():
     name      = body.get("playerName")
     threshold = float(body.get("threshold", 0))
     key       = name.lower().replace(" ", "_")
-    ref       = db.collection("processedPlayers") \
-                  .doc("active") \
-                  .collection("thresholds") \
-                  .document(f"{key}_{threshold}")
+    ref = db.collection("processedPlayers") \
+            .document("players") \
+            .collection("active") \
+            .document(f"{key}_{threshold}")
 
     snap = ref.get()
     if snap.exists:

@@ -128,24 +128,26 @@ export const addUserPick = async (username, pickData) => {
     const userSnap = await getDoc(userRef)
     if (!userSnap.exists()) return []
 
-    // Load only the one threshold we want:
-    const playerKey = pickData.id
-    const thrKey    = String(pickData.threshold)
-    const ppRef     = doc(db, "processedPlayers", playerKey, "thresholds", thrKey)
+    // new: pickData.id already === "<player>_<threshold>"
+    const docId = pickData.id;
+    const ppRef = doc(
+      db,
+      "processedPlayers", "players", "active",
+      docId
+    );
+
     const ppSnap    = await getDoc(ppRef)
     if (!ppSnap.exists()) {
-      throw new Error(`No processedPlayer at ${playerKey}/${thrKey}`)
+      throw new Error(`No processedPlayer at players/active/${docId}`);
     }
-    const processedData = {
-      thresholds: [
-        { threshold: thrKey, ...ppSnap.data() }
-      ]
-    }
+    // just grab the whole document
+    const processedData = ppSnap.data()
 
     // Upsert into users/{username}.picks[]
     const picks = userSnap.data().picks || []
-    const newPick = { id: playerKey, ...processedData }
-    const idx = picks.findIndex((p) => p.id === playerKey)
+    // use the same <player>_<threshold> as the ID
+    const newPick = { id: docId, ...processedData }
+    const idx = picks.findIndex((p) => p.id === docId)
     if (idx >= 0) picks[idx] = newPick
     else           picks.push(newPick)
 
@@ -504,17 +506,14 @@ export const getUserBetHistory = async (username) => {
 
 // Get all processed players from the top‐level processedPlayers collection
 export const getProcessedPlayers = async () => {
-  // grab *every* document in any “thresholds” subcollection
-  const snaps = await getDocs(collectionGroup(db, "thresholds"))
-  return snaps.docs.map(docSnap => {
-    const data      = docSnap.data()
-    const playerKey = docSnap.ref.parent.parent.id  // the playerKey
-    return {
-      id: playerKey,
-      ...data
-    }
-  })
-}
+    // now stored under processedPlayers → players → active
+    const activeRef = collection(db, "processedPlayers", "players", "active")
+    const snaps     = await getDocs(activeRef)
+    return snaps.docs.map(docSnap => ({
+      id:   docSnap.id,
+      ...docSnap.data(),
+    }))
+  }
 
 // ===== INITIALIZATION FUNCTIONS =====
 
