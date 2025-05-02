@@ -28,6 +28,18 @@ I also mastered integrating third-party APIs for data retrieval, while also writ
 when APIs lacked needed fields, and even using web scraping to fill gaps in our dataset such as web scraping the NBA Injury Report.
 ```
 
+## 📸 Images of Web Program
+### Home Page
+<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/39f4e1e9-add3-415b-95ca-03cb9c5b3129" />
+
+### Player Analysis on Home Page 
+<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/8d960312-30c7-47f6-9004-ed82facc348b" />
+
+### Processed Players Page
+<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/3f9c727b-b315-4688-bd57-0a12a55820dc" />
+
+### Player Analysis on Processed Players Page
+<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/80d5ca78-d3af-439e-a687-b8d90363da13" />
 
 ## 🧰 Tech Stack
 
