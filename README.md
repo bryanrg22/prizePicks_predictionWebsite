@@ -75,87 +75,6 @@ when APIs lacked needed fields, and even using web scraping to fill gaps in our 
 - Python 3.8+ & pip  
 - Firebase account & service-account JSON
 
----
-
-### 1. Clone Repository
-```sh
-git clone https://github.com/bryanrg22/prizePicks_predictionWebsite.git
-cd prizePicks_predictionWebsite
-```
-
-Frontend Setup
-	1.	Clone the repo and install:
-```sh
-git clone https://github.com/bryanrg22/prizePicks_predictionWebsite.git
-cd prizePicks_predictionWebsite/frontend
-npm install
-```
-
-	2.	Create .env.local in frontend/:
-```sh
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-```
-
-
-Backend Setup
-	1.	Navigate to backend and create a venv:
-```sh
-cd ../backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```sh
-
-
-	2.	Add your Firebase service account JSON as firebase-credentials.json in backend/.
-
-⸻
-
-## Running the Application
-
-### Frontend
-```sh
-cd frontend
-npm run dev
-
-Open http://localhost:3000
-```
-
-### Backend
-
-```sh
-cd backend
-python app.py
-
-API available at http://localhost:5000/api
-```
-
-⸻
-
-## Firebase Database Schema
-
-```plaintext
-firestore/
-├─ processedPlayers/
-│  ├─ active/thresholds/{player_threshold_doc}
-│  └─ concluded/thresholds/{player_threshold_doc}
-│     └─ { seasonAvgPoints, last5GamesAvg, gameStatus, gameId, … }
-
-users/{userId}/
-├─ activeBets/{betId}
-│     └─ { betAmount, potentialWinnings, picks: [ … ], status, … }
-├─ betHistory/{year}/{month}/{betId}
-│     └─ { ...betData, settledAt }
-└─ picks (legacy)           # array of { id, thresholds: [ … ] }
-```
-
-
-
 ⸻
 
 ## Project Structure
@@ -175,8 +94,25 @@ prizePicks_predictionWebsite/
     └── index.js            # data migration & archival
 ```
 
-
 ⸻
+
+
+## Firebase Database Schema
+
+```plaintext
+firestore/
+├─ processedPlayers/
+│  ├─ active/thresholds/{player_threshold_doc}
+│  └─ concluded/thresholds/{player_threshold_doc}
+│     └─ { seasonAvgPoints, last5GamesAvg, gameStatus, gameId, … }
+
+users/{userId}/
+├─ activeBets/{betId}
+│     └─ { betAmount, potentialWinnings, picks: [ … ], status, … }
+├─ betHistory/{year}/{month}/{betId}
+│     └─ { ...betData, settledAt }
+└─ picks (legacy)           # array of { id, thresholds: [ … ] }
+```
 
 License
 
