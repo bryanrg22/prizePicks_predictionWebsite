@@ -112,7 +112,8 @@ users/{userId}/
 │     └─ { betAmount, potentialWinnings, picks: [ … ], status, … }
 ├─ betHistory/{year}/{month}/{betId}
 │     └─ { ...betData, settledAt }
-└─ picks (legacy)           # array of { id, thresholds: [ … ] }
+├─ picks (legacy)           # array of { id, thresholds: [ … ] }
+└─ profileData
 ```
 
 License
