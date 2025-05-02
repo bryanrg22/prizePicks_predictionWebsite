@@ -63,10 +63,11 @@ when APIs lacked needed fields, and even using web scraping to fill gaps in our 
 - **Firebase Storage** – Screenshots & assets  
 
 ### Data & AI
-- **Pandas, NumPy** – Data wrangling  
+- **OpenAI ChatGPT's o4-mini API** – Bet explanation generation
 - **Poisson & Monte Carlo** – Probability models  
-- **OCR** – Screenshot parsing  
-- **OpenAI ChatGPT** – Bet explanation generation  
+- **Pandas, NumPy** – Data wrangling  
+- **OCR** – Screenshot parsing
+- **WORK IN PROGRESS** Machine Learning Model
 
 ## 🔧 Installation
 
