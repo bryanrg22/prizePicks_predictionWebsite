@@ -472,7 +472,7 @@ export default function HomePage() {
 
       // If we're not on the Dashboard tab, show a notification
       if (activeTab !== "Dashboard") {
-        alert(`Added ${pick.player} to your picks with a threshold of ${pick.threshold} points`)
+        console.log(`Added ${pick.player} to your picks with a threshold of ${pick.threshold} points`)
       }
     } catch (error) {
       console.error("Error adding pick to Firebase:", error)

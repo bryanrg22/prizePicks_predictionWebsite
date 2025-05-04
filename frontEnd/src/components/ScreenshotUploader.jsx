@@ -356,54 +356,6 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
         </div>
       </div>
 
-      {/* Processing overlay */}
-      <AnimatePresence>
-        {uploading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700 max-w-md w-full"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="relative w-24 h-24 mb-6">
-                  <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
-                  <div
-                    className="absolute inset-3 rounded-full border-4 border-t-transparent border-r-blue-400 border-b-transparent border-l-transparent animate-spin"
-                    style={{ animationDuration: "1.5s" }}
-                  ></div>
-                  <div
-                    className="absolute inset-6 rounded-full border-4 border-t-transparent border-r-transparent border-b-blue-300 border-l-transparent animate-spin"
-                    style={{ animationDuration: "2s" }}
-                  ></div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <FileText className="w-8 h-8 text-blue-400" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Analyzing Screenshots</h3>
-                <p className="text-gray-400 mb-4">
-                  Gathering player statistics, analyzing matchups, and calculating probabilities...
-                </p>
-                <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                  <motion.div
-                    className="h-full bg-blue-600 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${uploadProgress}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </div>
-                <p className="text-sm text-gray-500 mt-2">{Math.round(uploadProgress)}% complete</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Add CSS for the shimmer animation */}
       <style jsx>{`
