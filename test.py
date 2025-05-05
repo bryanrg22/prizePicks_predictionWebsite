@@ -8,6 +8,9 @@ pgl = PlayerGameLog(
 games_df = pgl.get_data_frames()[0]  # most recent game is first row
 num_playoff_games = len(games_df)
 
+for game in range(num_playoff_games):
+    curr = game_df.iloc[i]
+
 last_game = games_df.iloc[0]
 print(f"Stephen CUrry has played {num_playoff_games} playoff games in the 2024-25 season.")
 print(f"On {last_game['GAME_DATE']}, he scored {last_game['PTS']} points.")
