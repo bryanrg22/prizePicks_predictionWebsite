@@ -54,6 +54,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const teamLogo = playerData.teamLogo
   const opponentLogo = playerData.opponentLogo
   const gameDate = playerData.gameDate
+  const gameType = playerData.GameType
   const gameTime = playerData.gameTime
   const teamRank = playerData.teamPlayoffRank
   const opponentRank = playerData.opponentPlayoffRank
@@ -139,8 +140,10 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                       </span>
                       <span className="mx-2">•</span>
                       <span>
-                        {gameDate} {gameTime}
+                        {gameDate} at {gameTime}
                       </span>
+                      <span className="mx-2">•</span>
+                      <span>{gameType}</span>
                     </div>
                   </div>
                 </div>

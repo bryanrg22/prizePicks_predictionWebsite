@@ -7,7 +7,7 @@ from nba_api.stats.endpoints import leaguestandings
 from nba_api.stats.static import teams, players
 from nba_api.stats.endpoints import ScoreboardV2 as Scoreboard
 from nba_api.stats.endpoints import playercareerstats, playergamelog
-from prediction_analyzer import get_player_prediction
+
 
 ############################################################################
 ### HELPER FUNCTIONS (Moved to top so they are in scope)
@@ -21,6 +21,17 @@ def get_player_image_url(player_id):
 def get_team_logo_url(team_id):
     return f"https://cdn.nba.com/logos/nba/{team_id}/global/L/logo.svg"
 
+# Get Game Type from Game ID
+def deduce_game_type(game_id):
+    prefix = game_id[:3]
+    return {
+      '001': 'Preseason',
+      '002': 'Regular Season',
+      '003': 'All-Star',
+      '004': 'Playoffs',
+      '005': 'Play-In',
+      '006': 'NBA Cup'
+    }.get(prefix, 'Unknown')
 
 # Add this function to fetch more games for a player
 def fetch_more_games(player_id, season_str, max_games=30):
@@ -58,6 +69,9 @@ def fetch_more_games(player_id, season_str, max_games=30):
             opp_full = get_team_full_name_from_abbr(opponent_abbr_recent)
             opp_id = get_team_id_from_abbr(opponent_abbr_recent)
             opp_logo = get_team_logo_url(opp_id) if opp_id else "/placeholder.svg?height=20&width=20"
+
+            print("Game Type", end=" ")
+            print(deduce_game_type(g["GAME_ID"]))
             
             games_list.append({
                 "date": g["GAME_DATE"],
@@ -66,7 +80,8 @@ def fetch_more_games(player_id, season_str, max_games=30):
                 "opponentFullName": opp_full,
                 "opponentLogo": opp_logo,
                 "location": home_away,
-                "minutes": int(g["MIN"]) if "MIN" in g else None
+                "minutes": int(g["MIN"]) if "MIN" in g else None,
+                "gameType": deduce_game_type(g["GAME_ID"])
             })
             
         return games_list
@@ -341,6 +356,7 @@ def analyze_player(first_name, last_name, threshold=None):
                 game_date_est = game_df.at[home_index, 'GAME_STATUS_TEXT']
                 home = True
                 next_game_id = game_df.at[home_index, 'GAME_ID']
+                next_game_type = deduce_game_type(next_game_id) if next_game_id else None
                 break
             elif player_team_id in game_df['VISITOR_TEAM_ID'].values:
                 away_index = int(game_df.index[game_df['VISITOR_TEAM_ID'] == player_team_id][0])
@@ -348,6 +364,7 @@ def analyze_player(first_name, last_name, threshold=None):
                 game_date_est = game_df.at[away_index, 'GAME_STATUS_TEXT']
                 home = False
                 next_game_id = game_df.at[away_index, 'GAME_ID']
+                next_game_type = deduce_game_type(next_game_id) if next_game_id else None
                 break
         search_date += datetime.timedelta(days=1)
     all_teams = teams.get_teams()
@@ -386,18 +403,12 @@ def analyze_player(first_name, last_name, threshold=None):
         return f"{season_start}-{str(season_end)[-2:]}"
     current_season_str = get_current_season()
 
+
     # Career stats from playercareerstats
     try:
         career_df = playercareerstats.PlayerCareerStats(player_id=nba_player_id).get_data_frames()[0]
     except Exception:
         career_df = None
-    if career_df is not None and not career_df.empty:
-        career_df['TotalPoints'] = career_df['PTS'] * career_df['GP']
-        career_total_points = career_df['TotalPoints'].sum()
-        career_total_games = career_df['GP'].sum()
-        career_avg_points = career_total_points / career_total_games
-    else:
-        career_avg_points = None
 
     # Current season stats
     try:
@@ -466,6 +477,7 @@ def analyze_player(first_name, last_name, threshold=None):
             opp_full = get_team_full_name_from_abbr(opponent_abbr_recent)
             opp_id = get_team_id_from_abbr(opponent_abbr_recent)
             opp_logo = get_team_logo_url(opp_id) if opp_id else "/placeholder.svg?height=20&width=20"
+
             last_5_games.append({
                 "date": g["GAME_DATE"],
                 "points": int(g["PTS"]),
@@ -474,6 +486,7 @@ def analyze_player(first_name, last_name, threshold=None):
                 "opponentLogo": opp_logo,
                 "location": home_away,
                 "minutes": int(g["MIN"]) if "MIN" in g else None
+                #"gameType": next_game_type
             })
         last_5_games_avg = float(recent_games["PTS"].mean())
     else:
@@ -502,12 +515,9 @@ def analyze_player(first_name, last_name, threshold=None):
         "last5GamesAvg": last_5_games_avg,
         "homeAwgAvg": season_avg_points * 1.05 if home else season_avg_points * 0.95 if season_avg_points else None,
         "gameId": next_game_id,
+        "GameType": next_game_type,
         "gameStatus" : "Scheduled"
     }
-
-    if threshold is not None or season_avg_points is not None:
-        prediction = get_player_prediction(player_data, threshold)
-        player_data["prediction"] = prediction
 
     ############################################################################
     ### (4) CALL analyze_player_performance to attach advanced metrics
