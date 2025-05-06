@@ -59,7 +59,7 @@ def get_current_season():
     return f"{season_start}-{str(season_end)[-2:]}"
 
 # Add this function to fetch more games for a player
-def fetch_more_games(player_id, season_str):
+def fetch_more_games(player_id):
     """
     Fetch more games for a player, up to max_games
     """
@@ -67,7 +67,7 @@ def fetch_more_games(player_id, season_str):
     more_regular_games = []
     pgl = PlayerGameLog(
             player_id=player_id,                 
-            season=season_str,
+            season=get_current_season(),
             season_type_all_star='Regular Season'
         )
     games_df = pgl.get_data_frames()[0]
@@ -93,7 +93,6 @@ def fetch_more_games(player_id, season_str):
             minutes = int(raw_min.split(':')[0])
         else:
             minutes = int(raw_min) if raw_min else None
-        last_5_regular_games_avg += int(curr['PTS'])
         
         more_regular_games.append({
             "date":             curr['GAME_DATE'],
@@ -106,7 +105,7 @@ def fetch_more_games(player_id, season_str):
             "gameType":         "Regular Season"
         })
 
-        return more_regular_games
+    return more_regular_games
    
 
 ############################################################################
@@ -572,6 +571,8 @@ def analyze_player(first_name, last_name, threshold=None):
 
     # Build the original player data object with preserved keys
     player_data = {
+        "playerId": nba_player_id,
+        "threshold": threshold,
         "name": player_name,
         "position": player_position,
         "team": player_team,
