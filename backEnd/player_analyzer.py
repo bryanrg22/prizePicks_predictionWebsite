@@ -59,7 +59,7 @@ def get_current_season():
     return f"{season_start}-{str(season_end)[-2:]}"
 
 # Add this function to fetch more games for a player
-def fetch_more_games(player_id, season_str):
+def fetch_more_games(player_id):
     """
     Fetch more games for a player, up to max_games
     """
