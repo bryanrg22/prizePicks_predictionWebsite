@@ -54,7 +54,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const teamLogo = playerData.teamLogo
   const opponentLogo = playerData.opponentLogo
   const gameDate = playerData.gameDate
-  const gameType = playerData.GameType
+  const gameType = playerData.gameType
   const gameTime = playerData.gameTime
   const teamRank = playerData.teamPlayoffRank
   const opponentRank = playerData.opponentPlayoffRank

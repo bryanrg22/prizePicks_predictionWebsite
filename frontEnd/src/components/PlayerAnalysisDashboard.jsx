@@ -55,7 +55,7 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
   const opponentLogo = playerData.opponentLogo
   const gameDate = playerData.gameDate
   const gameTime = playerData.gameTime
-  const gametype = playerData.GameType
+  const gametype = playerData.gameType
   const teamRank = playerData.teamPlayoffRank
   const opponentRank = playerData.opponentPlayoffRank
   const seasonAvg = playerData.seasonAvgPoints
