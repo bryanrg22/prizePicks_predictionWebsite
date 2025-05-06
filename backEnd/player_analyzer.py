@@ -7,6 +7,7 @@ from nba_api.stats.endpoints import leaguestandings
 from nba_api.stats.static import teams, players
 from nba_api.stats.endpoints import ScoreboardV2 as Scoreboard
 from nba_api.stats.endpoints import playercareerstats, playergamelog
+from nba_api.stats.endpoints import PlayerGameLog
 
 
 ############################################################################
@@ -461,36 +462,148 @@ def analyze_player(first_name, last_name, threshold=None):
 
     # Last 5 games
     last_5_games = []
-    if not season_log.empty:
-        recent_games = season_log.head(5)
-        for idx, g in recent_games.iterrows():
-            matchup = g["MATCHUP"]
-            if "vs." in matchup:
-                home_away = "Home"
-                opponent_abbr_recent = matchup.split(" vs. ")[1].strip()
-            elif "@" in matchup:
-                home_away = "Away"
-                opponent_abbr_recent = matchup.split(" @ ")[1].strip()
-            else:
-                home_away = "Unknown"
-                opponent_abbr_recent = "Unknown"
-            opp_full = get_team_full_name_from_abbr(opponent_abbr_recent)
-            opp_id = get_team_id_from_abbr(opponent_abbr_recent)
-            opp_logo = get_team_logo_url(opp_id) if opp_id else "/placeholder.svg?height=20&width=20"
+    num_playoff_games = 0
+    last_5_games_avg = 0
 
+    # Check if Playoff Game First
+    if next_game_type == "Playoffs":
+        pgl = PlayerGameLog(
+            player_id=nba_player_id,                 
+            season='2024-25',
+            season_type_all_star='Playoffs'
+        )
+        games_df = pgl.get_data_frames()[0]  # most recent game is first row
+        num_playoff_games = len(games_df)
+        
+        if num_playoff_games > 5:
+            for i in range(5):
+                curr = games_df.iloc[i]
+
+                matchup = curr['MATCHUP']            
+                if ' vs. ' in matchup:
+                    location = 'Home'
+                    opp_abbr = matchup.split(' vs. ')[1]
+                elif ' @ ' in matchup:
+                    location = 'Away'
+                    opp_abbr = matchup.split(' @ ')[1]
+                else:
+                    location = 'Unknown'
+                    opp_abbr = None
+
+                # lookup full name & logo
+                opp_full = get_team_full_name_from_abbr(opp_abbr) if opp_abbr else None
+                opp_id   = get_team_id_from_abbr(opp_abbr)        if opp_abbr else None
+                opp_logo = get_team_logo_url(opp_id)              if opp_id   else None
+
+                # minutes (takes only the minute portion if it's "MM:SS")
+                raw_min = curr.get('MIN', '')
+                if isinstance(raw_min, str) and ':' in raw_min:
+                    minutes = int(raw_min.split(':')[0])
+                else:
+                    minutes = int(raw_min) if raw_min else None
+                
+                last_5_games_avg += int(curr['PTS'])
+                
+                last_5_games.append({
+                    "date":             curr['GAME_DATE'],
+                    "points":           int(curr['PTS']),
+                    "opponent":         opp_abbr,
+                    "opponentFullName": opp_full,
+                    "opponentLogo":     opp_logo,
+                    "location":         location,
+                    "minutes":          minutes,
+                    "gameType":         "Playoffs"
+                })
+        
+        else:
+            for i in range(num_playoff_games):
+                curr = games_df.iloc[i]
+
+                matchup = curr['MATCHUP']            
+                if ' vs. ' in matchup:
+                    location = 'Home'
+                    opp_abbr = matchup.split(' vs. ')[1]
+                elif ' @ ' in matchup:
+                    location = 'Away'
+                    opp_abbr = matchup.split(' @ ')[1]
+                else:
+                    location = 'Unknown'
+                    opp_abbr = None
+
+                # lookup full name & logo
+                opp_full = get_team_full_name_from_abbr(opp_abbr) if opp_abbr else None
+                opp_id   = get_team_id_from_abbr(opp_abbr)        if opp_abbr else None
+                opp_logo = get_team_logo_url(opp_id)              if opp_id   else None
+
+                # minutes (takes only the minute portion if it's "MM:SS")
+                raw_min = curr.get('MIN', '')
+                if isinstance(raw_min, str) and ':' in raw_min:
+                    minutes = int(raw_min.split(':')[0])
+                else:
+                    minutes = int(raw_min) if raw_min else None
+
+                last_5_games_avg += int(curr['PTS'])
+                
+                last_5_games.append({
+                    "date":             curr['GAME_DATE'],
+                    "points":           int(curr['PTS']),
+                    "opponent":         opp_abbr,
+                    "opponentFullName": opp_full,
+                    "opponentLogo":     opp_logo,
+                    "location":         location,
+                    "minutes":          minutes,
+                    "gameType":         "Playoffs"
+                })
+
+    # Check for (if remaining) Regular Season Game
+    if num_playoff_games == 0:
+        pgl = PlayerGameLog(
+                player_id=201939,                  # Stephen Curry NBA API player ID
+                season='2024-25',
+                season_type_all_star='Regular Season'
+            )
+        games_df = pgl.get_data_frames()[0]
+        for i in range(5 - num_playoff_games):
+            curr = games_df.iloc[i]
+
+            matchup = curr['MATCHUP']            
+            if ' vs. ' in matchup:
+                location = 'Home'
+                opp_abbr = matchup.split(' vs. ')[1]
+            elif ' @ ' in matchup:
+                location = 'Away'
+                opp_abbr = matchup.split(' @ ')[1]
+            else:
+                location = 'Unknown'
+                opp_abbr = None
+            # lookup full name & logo
+            opp_full = get_team_full_name_from_abbr(opp_abbr) if opp_abbr else None
+            opp_id   = get_team_id_from_abbr(opp_abbr)        if opp_abbr else None
+            opp_logo = get_team_logo_url(opp_id)              if opp_id   else None
+            # minutes (takes only the minute portion if it's "MM:SS")
+            raw_min = curr.get('MIN', '')
+            if isinstance(raw_min, str) and ':' in raw_min:
+                minutes = int(raw_min.split(':')[0])
+            else:
+                minutes = int(raw_min) if raw_min else None
+
+            last_5_games_avg += int(curr['PTS'])
+            
             last_5_games.append({
-                "date": g["GAME_DATE"],
-                "points": int(g["PTS"]),
-                "opponent": opp_full,
+                "date":             curr['GAME_DATE'],
+                "points":           int(curr['PTS']),
+                "opponent":         opp_abbr,
                 "opponentFullName": opp_full,
-                "opponentLogo": opp_logo,
-                "location": home_away,
-                "minutes": int(g["MIN"]) if "MIN" in g else None
-                #"gameType": next_game_type
+                "opponentLogo":     opp_logo,
+                "location":         location,
+                "minutes":          minutes,
+                "gameType":         "Regular Season"
             })
-        last_5_games_avg = float(recent_games["PTS"].mean())
-    else:
-        last_5_games_avg = None
+    
+    last_5_games_avg /= 5
+
+    for game in last_5_games:
+        print(game)
 
     # Build the original player data object with preserved keys
     player_data = {
@@ -515,7 +628,7 @@ def analyze_player(first_name, last_name, threshold=None):
         "last5GamesAvg": last_5_games_avg,
         "homeAwgAvg": season_avg_points * 1.05 if home else season_avg_points * 0.95 if season_avg_points else None,
         "gameId": next_game_id,
-        "GameType": next_game_type,
+        "gameType": next_game_type,
         "gameStatus" : "Scheduled"
     }
 
