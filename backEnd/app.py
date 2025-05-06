@@ -127,14 +127,10 @@ def more_games_endpoint(player_id):
     Returns the “extra” regular-season games beyond the first 5.
     Optional query-param: ?season=YYYY-YY; otherwise uses current season.
     """
-    # pick up season from ?season=; fallback to Python helper
-    season = request.args.get("season") or player_analyzer.get_current_season()
-    try:
-        games = player_analyzer.fetch_more_games(player_id, season)
-        return jsonify(games), 200
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+    
+    games = player_analyzer.fetch_more_games(player_id, season)
+    return jsonify(games), 200
+    
 
 
 # include game-results endpoints
