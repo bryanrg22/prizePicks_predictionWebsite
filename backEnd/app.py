@@ -130,7 +130,7 @@ def more_games_endpoint(player_id):
     # pick up season from ?season=; fallback to Python helper
     season = request.args.get("season") or player_analyzer.get_current_season()
     try:
-        games = player_analyzer.fetch_more_games(player_id)
+        games = player_analyzer.fetch_more_games(player_id, season)
         return jsonify(games), 200
     except Exception as e:
         traceback.print_exc()
