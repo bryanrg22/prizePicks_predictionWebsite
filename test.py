@@ -17,8 +17,17 @@ if gameType = "Playoff":
     if num_playoff_games > 5:
         for i in range(5):
             curr = game_df.iloc[i]
-            points = curr['PTS']
-            game_date = curr['GAME_DATE']
+            
+            last_5_games.append({
+                "date": curr['GAME_DATE'],
+                "points": int(curr['PTS']),
+                "opponent": ,
+                "opponentFullName": ,
+                "opponentLogo": ,
+                "location": ,
+                "minutes": int(g["MIN"]) if "MIN" in g else None
+                "gameType": "PlayOff"
+            })
     
     else:
         for i in range(num_playoff_games):
