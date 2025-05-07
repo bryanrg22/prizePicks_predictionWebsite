@@ -40,10 +40,12 @@ import ImageWithFallback from "./ImageWithFallback"
   const betExplanation = playerData.betExplanation || {}
   const poissonProbability = playerData.poissonProbability
   const monteCarloProbability = playerData.monteCarloProbability
+  const volatility_regular = playerData.volatilityForecast
 
   const num_playoff_games = playerData.num_playoff_games
   const playoffAvg = playerData.playoffAvg
   const playoff_games = playerData.playoff_games
+  const volatility_PlayOffs = playerData.volatilityPlayOffsForecast
 
   // Format numbers to 2 decimal places
   const formatNumber = (num) => {
@@ -224,13 +226,13 @@ import ImageWithFallback from "./ImageWithFallback"
           </p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Last 5 Games</p>
+          <p className="text-gray-400 text-sm">Average Last 5 Games</p>
           <p className={`text-2xl font-bold ${getComparisonColor(last5RegAvg, threshold)}`}>
             {formatNumber(last5RegAvg)} pts
           </p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Vs. {opponent}</p>
+          <p className="text-gray-400 text-sm">Average Vs. {opponent}</p>
           <p className={`text-2xl font-bold ${getComparisonColor(vsOpponentAvg, threshold)}`}>
             {formatNumber(vsOpponentAvg)} pts
           </p>
@@ -249,23 +251,46 @@ import ImageWithFallback from "./ImageWithFallback"
           </p>
         </div>
       </div>
-
-      {/* only render this block if there are playoffs games */}
-      {num_playoff_games !== 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <p className="text-gray-400 text-sm">Regular Season Volatility Forecast</p>
+          <p
+            className={`text-2xl font-bold ${
+              getComparisonColor(volatility_regular, threshold)
+            }`}
+          >
+            {formatNumber(volatility_regular)} pts
+          </p>
+        </div>
+        {/* only render this block if there are playoffs games */}
+        {volatility_PlayOffs != 0 && (
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-gray-400 text-sm">Playoffs Volatility Forecast</p>
+            <p
+              className={`text-2xl font-bold ${
+                getComparisonColor(volatility_PlayOffs, threshold)
+              }`}
+            >
+              {formatNumber(volatility_PlayOffs)} pts
+            </p>
+          </div>
+        )}
+        {/* only render this block if there are playoffs games */}
+        {num_playoff_games !== 0 && (
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-gray-400 text-sm">Playoffs Average</p>
             <p
-              className={`text-2xl font-bold ${getComparisonColor(
-                playoffAvg,
-                threshold
-              )}`}
+              className={`text-2xl font-bold ${
+                getComparisonColor(playoffAvg, threshold)
+              }`}
             >
               {formatNumber(playoffAvg)} pts
             </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+      
 
       {/* Playoffs Game Log */}
       {num_playoff_games !== 0 && (
@@ -345,8 +370,10 @@ import ImageWithFallback from "./ImageWithFallback"
             <ChevronDown className="w-5 h-5 text-gray-400" />
           )}
         </div>
+
         {expandedSection === "recentGames" && (
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-4 border-t border-gray-700 flex flex-col">
+            {/* first 5 games */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -360,14 +387,14 @@ import ImageWithFallback from "./ImageWithFallback"
                   </tr>
                 </thead>
                 <tbody>
-                  {last5RegularGames.map((game, index) => (
-                    <tr key={index} className="border-b border-gray-700">
+                  {last5RegularGames.map((game, idx) => (
+                    <tr key={idx} className="border-b border-gray-700">
                       <td className="py-3">{game.date}</td>
                       <td className="py-3">
                         <div className="flex items-center">
                           <ImageWithFallback
                             src={game.opponentLogo || "/placeholder.svg"}
-                            alt={game.opponent}
+                            alt={game.opponentFullName || game.opponent}
                             className="w-5 h-5 mr-2"
                             fallbackSrc="/placeholder.svg?height=20&width=20"
                           />
@@ -380,9 +407,13 @@ import ImageWithFallback from "./ImageWithFallback"
                       <td className="py-3 text-right">
                         {threshold && (
                           <span
-                            className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
+                            className={
+                              game.points > parseFloat(threshold)
+                                ? "text-green-500"
+                                : "text-red-500"
+                            }
                           >
-                            {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
+                            {game.points > parseFloat(threshold) ? "OVER" : "UNDER"}
                           </span>
                         )}
                       </td>
@@ -391,82 +422,86 @@ import ImageWithFallback from "./ImageWithFallback"
                 </tbody>
               </table>
             </div>
+
+            {/* extra games (conditionally) */}
+            {showMoreGames && moreGames.length > 0 && (
+              <div className="overflow-x-auto mt-6">
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-gray-400 border-b border-gray-700">
+                      <th className="pb-2">Date</th>
+                      <th className="pb-2">Opponent</th>
+                      <th className="pb-2">Location</th>
+                      <th className="pb-2">MIN</th>
+                      <th className="pb-2">PTS</th>
+                      <th className="pb-2 text-right">vs Threshold</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {moreGames.map((game, idx) => (
+                      <tr key={idx} className="border-b border-gray-700">
+                        <td className="py-3">{game.date}</td>
+                        <td className="py-3">
+                          <div className="flex items-center">
+                            <ImageWithFallback
+                              src={game.opponentLogo || "/placeholder.svg"}
+                              alt={game.opponentFullName || game.opponent}
+                              className="w-5 h-5 mr-2"
+                              fallbackSrc="/placeholder.svg?height=20&width=20"
+                            />
+                            <span>{game.opponentFullName || game.opponent}</span>
+                          </div>
+                        </td>
+                        <td className="py-3">{game.location}</td>
+                        <td className="py-3">{game.minutes ?? "N/A"}</td>
+                        <td className="py-3 font-bold">{game.points}</td>
+                        <td className="py-3 text-right">
+                          {threshold && (
+                            <span
+                              className={
+                                game.points > parseFloat(threshold)
+                                  ? "text-green-500"
+                                  : "text-red-500"
+                              }
+                            >
+                              {game.points > parseFloat(threshold)
+                                ? "OVER"
+                                : "UNDER"}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* error message */}
+            {moreGamesError && (
+              <p className="text-red-400 text-center mt-4">{moreGamesError}</p>
+            )}
+
+            {/* See More / See Less button always at bottom */}
+            <div className="mt-auto flex justify-center">
+              <button
+                onClick={handleToggleMoreGames}
+                disabled={loadingMoreGames}
+                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loadingMoreGames
+                  ? "Loading…"
+                  : showMoreGames
+                  ? "See Less Games"
+                  : "See More Games"}
+              </button>
+            </div>
           </div>
         )}
       </div>
 
-{/* See More / See Less button */}
-<div className="flex justify-center mt-4">
-        <button
-          onClick={handleToggleMoreGames}
-          disabled={loadingMoreGames}
-          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loadingMoreGames
-            ? "Loading…"
-            : showMoreGames
-            ? "See Less Games"
-            : "See More Games"}
-        </button>
-      </div>
 
-      {moreGamesError && (
-        <p className="text-red-400 text-center mt-2">{moreGamesError}</p>
-      )}
-
-      {showMoreGames && moreGames.length > 0 && (
-        <div className="overflow-x-auto mt-4">
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-gray-400 border-b border-gray-700">
-                <th className="pb-2">Date</th>
-                <th className="pb-2">Opponent</th>
-                <th className="pb-2">Location</th>
-                <th className="pb-2">MIN</th>
-                <th className="pb-2">PTS</th>
-                <th className="pb-2 text-right">vs Threshold</th>
-              </tr>
-            </thead>
-            <tbody>
-              {moreGames.map((game, i) => (
-                <tr key={i} className="border-b border-gray-700">
-                  <td className="py-3">{game.date}</td>
-                  <td className="py-3">
-                    <div className="flex items-center">
-                      <ImageWithFallback
-                        src={game.opponentLogo || "/placeholder.svg"}
-                        alt={game.opponentFullName || game.opponent}
-                        className="w-5 h-5 mr-2"
-                        fallbackSrc="/placeholder.svg?height=20&width=20"
-                      />
-                      <span>{game.opponentFullName || game.opponent}</span>
-                    </div>
-                  </td>
-                  <td className="py-3">{game.location}</td>
-                  <td className="py-3">{game.minutes ?? "N/A"}</td>
-                  <td className="py-3 font-bold">{game.points}</td>
-                  <td className="py-3 text-right">
-                    {threshold && (
-                      <span
-                        className={
-                          game.points > Number.parseFloat(threshold)
-                            ? "text-green-500"
-                            : "text-red-500"
-                        }
-                      >
-                        {game.points > Number.parseFloat(threshold)
-                          ? "OVER"
-                          : "UNDER"}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
+      
       {/* Injury Status Section */}
       <div className="bg-gray-800 rounded-lg overflow-hidden">
         <div
