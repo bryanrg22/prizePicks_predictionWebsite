@@ -662,6 +662,7 @@ def analyze_player(first_name, last_name, threshold=None):
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
         "playoffAvg":       playoff_avg,
+        "season_games_agst_opp" : fetcth_all_opponent_games(nba_player_id, opponent_abbr)
     }
 
     
