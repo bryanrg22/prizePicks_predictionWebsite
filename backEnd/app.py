@@ -9,6 +9,7 @@ import player_analyzer
 from prediction_analyzer import calculate_poisson_probability
 from monte_carlo import monte_carlo_for_player
 from chatgpt_bet_explainer import get_bet_explanation_from_chatgpt
+from volatility import fetch_point_series, forecast_volatility, forecast_playoff_volatility
 import injury_report, game_results
 
 from screenshot_parser import parse_image_data_url
@@ -54,7 +55,6 @@ def analyze_player_endpoint():
     # 1) run your pipeline
     first, last = name.split(maxsplit=1)
     pdata = player_analyzer.analyze_player(first, last, threshold)
-    pdata["threshold"]           = threshold
     # make sure both fields exist even if analyzer couldn’t find a game
     pdata.setdefault("gameId", None)
     pdata.setdefault("gameStatus", "Scheduled")
@@ -62,6 +62,15 @@ def analyze_player_endpoint():
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
     pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or 0.0  
     pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
+
+    # — GARCH vol forecast —
+    series = fetch_point_series(pdata, n_games=50)
+    vol   = forecast_volatility(series)
+    pdata["volatilityForecast"] = vol
+
+    if pdata["num_playoff_games"] >= 5:
+        pdata["volatilityPlayOffsForecast"] = forecast_playoff_volatility(pdata)
+
 
     # 2) persist it
     ref.set(pdata)
@@ -127,10 +136,8 @@ def more_games_endpoint(player_id):
     Returns the “extra” regular-season games beyond the first 5.
     Optional query-param: ?season=YYYY-YY; otherwise uses current season.
     """
-    # pick up season from ?season=; fallback to Python helper
-    season = request.args.get("season") or player_analyzer.get_current_season()
     try:
-        games = player_analyzer.fetch_more_games(player_id, season)
+        games = player_analyzer.fetch_more_games(player_id)
         return jsonify(games), 200
     except Exception as e:
         traceback.print_exc()

@@ -598,7 +598,7 @@ def analyze_player(first_name, last_name, threshold=None):
         "gameStatus" : "Scheduled",
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
-        "playoffAvg":       playoff_avg
+        "playoffAvg":       playoff_avg,
     }
 
     
