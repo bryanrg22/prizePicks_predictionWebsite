@@ -41,11 +41,7 @@ def forecast_volatility(point_series):
 
 def forecast_playoff_volatility(player_data):
     po = player_data.get("playoff_games", [])[:]
-    print(f"Length = {len(po)}") 
-
-    
     dates = [pd.to_datetime(g["date"]) for g in po]
     pts   = [g["points"] for g in po]
-    print(f"Points = {pts}")
     series = pd.Series(data=pts, index=dates).sort_index()
     return forecast_volatility(series)

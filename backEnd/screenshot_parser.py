@@ -37,7 +37,6 @@ def parse_image_data_url(data_url: str) -> dict:
     )
 
     raw_json  = resp.choices[0].message.content   # already a JSON-string
-    print("\n[◼︎ ChatGPT raw]:", raw_json)        # ← console feedback
 
     try:
         data = json.loads(raw_json)

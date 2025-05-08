@@ -5,9 +5,18 @@ import requests
 from firebase_admin import credentials, firestore, initialize_app
 from nba_api.stats.endpoints import ScoreboardV2, BoxScoreTraditionalV2
 
-# Initialize Firestore
+
+# pick up the GOOGLE_CLOUD_PROJECT env var that GCF sets
+project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
+# initialize the Admin SDK
 cred = credentials.ApplicationDefault()
-initialize_app(cred, {'projectId': os.environ['GCP_PROJECT']})
+if project_id:
+    initialize_app(cred, {"projectId": project_id})
+else:
+    initialize_app(cred)
+
+# now create your module‐level client
 db = firestore.client()
 
 
@@ -230,3 +239,4 @@ def check_games(request):
     check_active_processedPlayers()
     check_user_picks()
     check_user_active_bets()
+    return ("OK", 200)

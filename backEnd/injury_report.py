@@ -56,7 +56,6 @@ def get_player_injury_status(player_name):
         return {"error": "No player name provided"}
 
     pdf_url = get_injury_report_url()
-    print(f"Checking injury report at: {pdf_url}")
 
     try:
         resp = requests.get(pdf_url)

@@ -17,8 +17,6 @@ def calculate_poisson_probability(avg_points, threshold):
     assuming the player's scoring follows a Poisson distribution with mean 'avg_points'.
     """
     threshold_int = math.ceil(threshold)
-    print(f"threshold: {threshold}")
-    print(f"avg points: {avg_points}")
     
     cumulative = sum(
         (avg_points**i * math.exp(-avg_points)) / math.factorial(i)

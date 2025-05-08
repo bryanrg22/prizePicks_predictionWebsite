@@ -308,7 +308,6 @@ def analyze_player_performance(nba_player_id, season_str):
     home_games = []
     away_games = []
     for idx, g in enumerate(logs):
-        print(f"[Game #{idx}] => {g}")
         points = g.get("points", 0)
         fga = g.get("fga", 0)
         fgm = g.get("fgm", 0)
@@ -352,9 +351,7 @@ def analyze_player_performance(nba_player_id, season_str):
     avg_minutes = total_minutes / total_games if total_games else 0
     avg_points_home = sum(home_games) / len(home_games) if home_games else 0
     avg_points_away = sum(away_games) / len(away_games) if away_games else 0
-    print(f"[analyze_player_performance] FINAL => avg_points={avg_points}, efg={efg}, "
-          f"shot_dist_3pt={shot_dist_3pt}, ft_rate={ft_rate}, usage_rate={usage_rate}, "
-          f"avg_points_home={avg_points_home}, avg_points_away={avg_points_away}")
+
     return {
         "avg_points": avg_points,
         "avg_minutes": avg_minutes,
@@ -433,7 +430,6 @@ def analyze_player(first_name, last_name, threshold=None):
             search_date += datetime.timedelta(days=1)
             continue
         if not game_df.empty:
-            print("NOT EMPTY")
             if player_team_id in game_df['HOME_TEAM_ID'].values:
                 home_index = int(game_df.index[game_df['HOME_TEAM_ID'] == player_team_id][0])
                 opponent_team_id = game_df.at[home_index, 'VISITOR_TEAM_ID']

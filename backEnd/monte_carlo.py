@@ -88,13 +88,3 @@ def monte_carlo_for_player(player_name,
         distribution=distribution
     )
     return prob
-
-if __name__ == "__main__":
-    name      = input("Player name: ")
-    threshold = input("Point threshold: ")
-    dist      = input("Distribution [normal/poisson]: ") or "normal"
-    prob = monte_carlo_for_player(name, threshold, distribution=dist)
-    if prob is None:
-        print("Failed to compute probability.")
-    else:
-        print(f"P({name} > {threshold} pts) = {prob:.2%}")
