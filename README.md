@@ -168,7 +168,7 @@ firestore/
 ├─ users/{userId}/
 │   ├─ activeBets/{betId}
 │   │   └─ { betAmount, potentialWinnings, picks: [ {player_threshold_doc}/ (document), ... ], status, … }
-│   ├─ betHistory/{year}/{month}/{betId}
+│   ├─ betHistory/{betId}
 │   │   └─ { ...betData, settledAt, picks: [ {player_threshold_doc}/ (document), ... ] }
 │   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
 └─  └─ profileData
