@@ -1,4 +1,4 @@
-name: CI/CD: Frontend → Hosting • Backend → Cloud Run
+name: "CI/CD: Frontend → Hosting • Backend → Cloud Run"
 
 on:
   push:
