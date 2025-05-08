@@ -6,6 +6,8 @@ nba_api
 arch
 functions-framework
 firebase-admin
+openai
+gunicorn
 pandas>=1.5.0
 Werkzeug<2.1.0
 Flask<2.3.0

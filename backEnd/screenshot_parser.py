@@ -1,7 +1,7 @@
 import os, base64, json            # ← add json
 from openai import OpenAI
 
-key = os.getenv("OPENAI_API_KEY", "YOUR_API_KEY_HERE")
+key = os.environ["OPENAI_KEY"]
 llm  = OpenAI(api_key=key)
 
 def parse_image_data_url(data_url: str) -> dict:

@@ -17,7 +17,7 @@ import base64
 import requests
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}})
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173", "https://prizepicksproject-15337.web.app"]}})
 
 cred = credentials.Certificate("prizepicksproject-15337-firebase-adminsdk-fbsvc-c967e4c17d.json")
 firebase_admin.initialize_app(cred)

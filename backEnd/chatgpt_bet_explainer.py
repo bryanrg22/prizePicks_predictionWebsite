@@ -69,7 +69,7 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
     }}
     """)
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", "YOUR_API_KEY_HERE"))
+    client = OpenAI(api_key=os.environ["OPENAI_KEY"])
     resp = client.chat.completions.create(
         model="o4-mini",
         messages=[{"role": "user", "content": prompt}],
