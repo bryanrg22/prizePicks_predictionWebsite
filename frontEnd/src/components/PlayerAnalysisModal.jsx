@@ -45,8 +45,14 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
     return value > threshold ? "text-green-500" : "text-red-500"
   }
 
+  const [moreGames, setMoreGames] = useState([]);
+  const [showMoreGames, setShowMoreGames] = useState(false);
+  const [loadingMoreGames, setLoadingMoreGames] = useState(false);
+  const [moreGamesError, setMoreGamesError] = useState(null);
+
   // Extract data
   const name = playerData.name
+  const playerId = playerData.playerId
   const team = playerData.team
   const position = playerData.position
   const opponent = playerData.opponent
@@ -54,22 +60,30 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const teamLogo = playerData.teamLogo
   const opponentLogo = playerData.opponentLogo
   const gameDate = playerData.gameDate
-  const gameType = playerData.gameType
   const gameTime = playerData.gameTime
+  const gametype = playerData.gameType
   const teamRank = playerData.teamPlayoffRank
   const opponentRank = playerData.opponentPlayoffRank
   const seasonAvg = playerData.seasonAvgPoints
-  const last5Avg = playerData.last5GamesAvg
+  const last5RegAvg = playerData.last5RegularGamesAvg
   const vsOpponentAvg = playerData.seasonAvgVsOpponent
   const homeAwayAvg = playerData.homeAwgAvg
-  const last5Games = playerData.last5Games || []
+  const last5RegularGames = playerData.last5RegularGames || []
   const advancedMetrics = playerData.advancedPerformance || {}
   const careerStats = playerData.careerSeasonStats || []
   const injuryReport = playerData.injuryReport || {}
   const betExplanation = playerData.betExplanation || {}
   const poissonProbability = playerData.poissonProbability
   const monteCarloProbability = playerData.monteCarloProbability
-  const threshold = playerData.threshold || 0
+  const volatility_regular = playerData.volatilityForecast
+  const season_games_agst_opp = playerData.season_games_agst_opp
+  const threshold = playerData.threshold
+
+  // Playoff Data
+  const num_playoff_games = playerData.num_playoff_games
+  const playoffAvg = playerData.playoffAvg
+  const playoff_games = playerData.playoff_games
+  const volatility_PlayOffs = playerData.volatilityPlayOffsForecast
 
   // Format probabilities for display
   const poissonProbabilityFormatted = poissonProbability ? `${(poissonProbability * 100).toFixed(2)}%` : "N/A"
@@ -83,6 +97,30 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? "main" : section)
   }
+
+  // Toggle between fetching & hiding
+  const handleToggleMoreGames = async () => {
+    if (showMoreGames) {
+      // simply hide if already showing
+      return setShowMoreGames(false);
+    }
+    setLoadingMoreGames(true);
+    setMoreGamesError(null);
+    try {
+      const res = await fetch(
+        `/api/player/${playerData.playerId}/more_games`
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setMoreGames(data);
+      setShowMoreGames(true);
+    } catch (err) {
+      console.error(err);
+      setMoreGamesError("Failed to load more games.");
+    } finally {
+      setLoadingMoreGames(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -143,7 +181,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                         {gameDate} at {gameTime}
                       </span>
                       <span className="mx-2">•</span>
-                      <span>{gameType}</span>
+                      <span>{gametype}</span>
                     </div>
                   </div>
                 </div>
@@ -192,7 +230,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
           </div>
 
           {/* Key Stats Section */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
             <div className="bg-gray-800 p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Season Average</p>
               <p className={`text-2xl font-bold ${getComparisonColor(seasonAvg, threshold)}`}>
@@ -200,39 +238,85 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
               </p>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Last 5 Games</p>
-              <p className={`text-2xl font-bold ${getComparisonColor(last5Avg, threshold)}`}>
-                {formatNumber(last5Avg)} pts
+              <p className="text-gray-400 text-sm">Average Last 5 Games</p>
+              <p className={`text-2xl font-bold ${getComparisonColor(last5RegAvg, threshold)}`}>
+                {formatNumber(last5RegAvg)} pts
               </p>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Vs. {opponent}</p>
+              <p className="text-gray-400 text-sm">Average Vs. {opponent}</p>
               <p className={`text-2xl font-bold ${getComparisonColor(vsOpponentAvg, threshold)}`}>
                 {formatNumber(vsOpponentAvg)} pts
               </p>
             </div>
+
             <div className="bg-gray-800 p-4 rounded-lg">
-              <p className="text-gray-400 text-sm">Home/Away</p>
-              <p className={`text-2xl font-bold ${getComparisonColor(homeAwayAvg, threshold)}`}>
-                {formatNumber(homeAwayAvg)} pts
+              <p className="text-gray-400 text-sm">Season Average @ Home</p>
+              <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics['avg_points_home'], threshold)}`}>
+                {formatNumber(advancedMetrics['avg_points_home'])} pts
+              </p>
+            </div>
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <p className="text-gray-400 text-sm">Season Average @ Away</p>
+              <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics['avg_points_away'], threshold)}`}>
+                {formatNumber(advancedMetrics['avg_points_away'])} pts
               </p>
             </div>
           </div>
 
-          {/* Recent Games Section */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <p className="text-gray-400 text-sm">Regular Season Volatility Forecast</p>
+              <p
+                className={`text-2xl font-bold ${
+                  getComparisonColor(volatility_regular, threshold)
+                }`}
+              >
+                {formatNumber(volatility_regular)} pts
+              </p>
+            </div>
+            {/* only render this block if there are playoffs games */}
+            {volatility_PlayOffs != 0 && (
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <p className="text-gray-400 text-sm">Playoffs Volatility Forecast</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    getComparisonColor(volatility_PlayOffs, threshold)
+                  }`}
+                >
+                  {formatNumber(volatility_PlayOffs)} pts
+                </p>
+              </div>
+            )}
+            {/* only render this block if there are playoffs games */}
+            {num_playoff_games !== 0 && (
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <p className="text-gray-400 text-sm">Playoffs Average</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    getComparisonColor(playoffAvg, threshold)
+                  }`}
+                >
+                  {formatNumber(playoffAvg)} pts
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {/* Recent Encounters Section */}
           <div className="bg-gray-800 rounded-lg overflow-hidden">
             <div
               className="flex justify-between items-center p-4 cursor-pointer"
-              onClick={() => toggleSection("recentGames")}
+              onClick={() => toggleSection("recentEncounters")}
             >
-              <h2 className="text-xl font-semibold">Recent Games</h2>
-              {expandedSection === "recentGames" ? (
+              <h2 className="text-xl font-semibold">All Season Encounters</h2>
+              {expandedSection === "recentEncounters" ? (
                 <ChevronUp className="w-5 h-5 text-gray-400" />
               ) : (
                 <ChevronDown className="w-5 h-5 text-gray-400" />
               )}
             </div>
-            {expandedSection === "recentGames" && (
+            {expandedSection === "recentEncounters" && (
               <div className="p-4 border-t border-gray-700">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -247,7 +331,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {last5Games.map((game, index) => (
+                      {season_games_agst_opp.map((game, index) => (
                         <tr key={index} className="border-b border-gray-700">
                           <td className="py-3">{game.date}</td>
                           <td className="py-3">
@@ -267,9 +351,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                           <td className="py-3 text-right">
                             {threshold && (
                               <span
-                                className={
-                                  game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"
-                                }
+                                className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
                               >
                                 {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                               </span>
@@ -279,6 +361,214 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Playoffs Game Log */}
+          {num_playoff_games !== 0 && (
+            <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <div
+                className="flex justify-between items-center p-4 cursor-pointer"
+                onClick={() => toggleSection("playoffsLog")}
+              >
+                <h2 className="text-xl font-semibold">Playoffs Game Log</h2>
+                {expandedSection === "playoffsLog" ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+              {expandedSection === "playoffsLog" && (
+                <div className="p-4 border-t border-gray-700">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left text-gray-400 border-b border-gray-700">
+                          <th className="pb-2">Date</th>
+                          <th className="pb-2">Opponent</th>
+                          <th className="pb-2">Location</th>
+                          <th className="pb-2">MIN</th>
+                          <th className="pb-2">PTS</th>
+                          <th className="pb-2 text-right">vs Threshold</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {playoff_games.map((game, index) => (
+                          <tr key={index} className="border-b border-gray-700">
+                            <td className="py-3">{game.date}</td>
+                            <td className="py-3">
+                              <div className="flex items-center">
+                                <ImageWithFallback
+                                  src={game.opponentLogo || "/placeholder.svg"}
+                                  alt={game.opponent}
+                                  className="w-5 h-5 mr-2"
+                                  fallbackSrc="/placeholder.svg?height=20&width=20"
+                                />
+                                <span>{game.opponentFullName || game.opponent}</span>
+                              </div>
+                            </td>
+                            <td className="py-3">{game.location}</td>
+                            <td className="py-3">{game.minutes || "N/A"}</td>
+                            <td className="py-3 font-bold">{game.points}</td>
+                            <td className="py-3 text-right">
+                              {threshold && (
+                                <span
+                                  className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
+                                >
+                                  {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Recent Games Section */}
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
+            <div
+              className="flex justify-between items-center p-4 cursor-pointer"
+              onClick={() => toggleSection("recentGames")}
+            >
+              <h2 className="text-xl font-semibold">Recent Regular Season Games</h2>
+              {expandedSection === "recentGames" ? (
+                <ChevronUp className="w-5 h-5 text-gray-400" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-400" />
+              )}
+            </div>
+
+            {expandedSection === "recentGames" && (
+              <div className="p-4 border-t border-gray-700 flex flex-col">
+                {/* first 5 games */}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left text-gray-400 border-b border-gray-700">
+                        <th className="pb-2">Date</th>
+                        <th className="pb-2">Opponent</th>
+                        <th className="pb-2">Location</th>
+                        <th className="pb-2">MIN</th>
+                        <th className="pb-2">PTS</th>
+                        <th className="pb-2 text-right">vs Threshold</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {last5RegularGames.map((game, idx) => (
+                        <tr key={idx} className="border-b border-gray-700">
+                          <td className="py-3">{game.date}</td>
+                          <td className="py-3">
+                            <div className="flex items-center">
+                              <ImageWithFallback
+                                src={game.opponentLogo || "/placeholder.svg"}
+                                alt={game.opponentFullName || game.opponent}
+                                className="w-5 h-5 mr-2"
+                                fallbackSrc="/placeholder.svg?height=20&width=20"
+                              />
+                              <span>{game.opponentFullName || game.opponent}</span>
+                            </div>
+                          </td>
+                          <td className="py-3">{game.location}</td>
+                          <td className="py-3">{game.minutes || "N/A"}</td>
+                          <td className="py-3 font-bold">{game.points}</td>
+                          <td className="py-3 text-right">
+                            {threshold && (
+                              <span
+                                className={
+                                  game.points > parseFloat(threshold)
+                                    ? "text-green-500"
+                                    : "text-red-500"
+                                }
+                              >
+                                {game.points > parseFloat(threshold) ? "OVER" : "UNDER"}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* extra games (conditionally) */}
+                {showMoreGames && moreGames.length > 0 && (
+                  <div className="overflow-x-auto mt-6">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="text-left text-gray-400 border-b border-gray-700">
+                          <th className="pb-2">Date</th>
+                          <th className="pb-2">Opponent</th>
+                          <th className="pb-2">Location</th>
+                          <th className="pb-2">MIN</th>
+                          <th className="pb-2">PTS</th>
+                          <th className="pb-2 text-right">vs Threshold</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {moreGames.map((game, idx) => (
+                          <tr key={idx} className="border-b border-gray-700">
+                            <td className="py-3">{game.date}</td>
+                            <td className="py-3">
+                              <div className="flex items-center">
+                                <ImageWithFallback
+                                  src={game.opponentLogo || "/placeholder.svg"}
+                                  alt={game.opponentFullName || game.opponent}
+                                  className="w-5 h-5 mr-2"
+                                  fallbackSrc="/placeholder.svg?height=20&width=20"
+                                />
+                                <span>{game.opponentFullName || game.opponent}</span>
+                              </div>
+                            </td>
+                            <td className="py-3">{game.location}</td>
+                            <td className="py-3">{game.minutes ?? "N/A"}</td>
+                            <td className="py-3 font-bold">{game.points}</td>
+                            <td className="py-3 text-right">
+                              {threshold && (
+                                <span
+                                  className={
+                                    game.points > parseFloat(threshold)
+                                      ? "text-green-500"
+                                      : "text-red-500"
+                                  }
+                                >
+                                  {game.points > parseFloat(threshold)
+                                    ? "OVER"
+                                    : "UNDER"}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* error message */}
+                {moreGamesError && (
+                  <p className="text-red-400 text-center mt-4">{moreGamesError}</p>
+                )}
+
+                {/* See More / See Less button always at bottom */}
+                <div className="mt-auto flex justify-center">
+                  <button
+                    onClick={handleToggleMoreGames}
+                    disabled={loadingMoreGames}
+                    className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {loadingMoreGames
+                      ? "Loading…"
+                      : showMoreGames
+                      ? "See Less Games"
+                      : "See More Games"}
+                  </button>
                 </div>
               </div>
             )}

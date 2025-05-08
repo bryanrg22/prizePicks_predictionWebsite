@@ -14,9 +14,10 @@ exports.onPlayerStatusChange = functions.firestore
       const docId = context.params.docId;
 
       if (before.gameStatus !== "Concluded" &&
-        after.gameStatus === "Concluded") {
+      after.gameStatus === "Concluded") {
         const conclRef = db
-            .collection("processedPlayers").doc("players")
+            .collection("processedPlayers")
+            .doc("players")
             .collection("concluded")
             .doc(docId);
 
@@ -30,32 +31,53 @@ exports.onPlayerStatusChange = functions.firestore
 // 2) Archive active bets → betHistory (no change here)
 exports.onActiveBetWrite = functions.firestore
     .document("users/{userId}/activeBets/{betId}")
-    .onWrite(async (change, context) => {
+    .onWrite(async (change, ctx) => {
       const before = change.before.exists ? change.before.data() : null;
       const after = change.after.exists ? change.after.data() : null;
-      const {userId, betId} = context.params;
+      const {userId, betId} = ctx.params;
 
       const wasDeleted = !change.after.exists;
-      const statusChanged = before && after &&
+      const statusChanged =
+      before &&
+      after &&
       before.status !== after.status &&
       ["Concluded", "Completed", "Won", "Lost"].includes(after.status);
 
       if (wasDeleted || statusChanged) {
-        const betData = wasDeleted ? before : after;
+      // 1) copy into history
         const now = new Date();
         const year = now.getFullYear().toString();
-        const month = String(now.getMonth()+1).padStart(2, "0");
+        const mon = String(now.getMonth() + 1).padStart(2, "0");
+        const hist = db
+            .collection("users")
+            .doc(userId)
+            .collection("betHistory")
+            .doc(year)
+            .collection(mon)
+            .doc(betId);
 
-        const histRef = db
-            .collection("users").doc(userId)
-            .collection("betHistory").doc(year)
-            .collection(month).doc(betId);
-
-        await histRef.set({
-          ...betData,
+        await hist.set({
+          ...(wasDeleted ? before : after),
           settledAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        console.log(`Archived bet ${betId} for ${userId}
-          under ${year}/${month}`);
+
+        // 2) remove it from activeBets
+        if (change.after.exists) {
+          await change.after.ref.delete();
+        }
+      }
+    });
+
+exports.onUserPicksUpdate = functions.firestore
+    .document("users/{userId}")
+    .onUpdate(async (change, ctx) => {
+      const before = change.before.data().picks || [];
+      const after = change.after.data().picks || [];
+      // only run when picks actually change
+      if (JSON.stringify(before) === JSON.stringify(after)) return;
+
+      const kept = after.filter((p) => p.gameStatus !== "Concluded");
+      if (kept.length !== after.length) {
+        await change.after.ref.update({picks: kept});
       }
     });

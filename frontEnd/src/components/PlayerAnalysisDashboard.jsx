@@ -41,7 +41,9 @@ import ImageWithFallback from "./ImageWithFallback"
   const poissonProbability = playerData.poissonProbability
   const monteCarloProbability = playerData.monteCarloProbability
   const volatility_regular = playerData.volatilityForecast
+  const season_games_agst_opp = playerData.season_games_agst_opp
 
+  // Playoff Data
   const num_playoff_games = playerData.num_playoff_games
   const playoffAvg = playerData.playoffAvg
   const playoff_games = playerData.playoff_games
@@ -291,6 +293,68 @@ import ImageWithFallback from "./ImageWithFallback"
         )}
       </div>
       
+      {/* Recent Encounters Section */}
+      <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div
+          className="flex justify-between items-center p-4 cursor-pointer"
+          onClick={() => toggleSection("recentEncounters")}
+        >
+          <h2 className="text-xl font-semibold">All Season Encounters</h2>
+          {expandedSection === "recentEncounters" ? (
+            <ChevronUp className="w-5 h-5 text-gray-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          )}
+        </div>
+        {expandedSection === "recentEncounters" && (
+          <div className="p-4 border-t border-gray-700">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-gray-400 border-b border-gray-700">
+                    <th className="pb-2">Date</th>
+                    <th className="pb-2">Opponent</th>
+                    <th className="pb-2">Location</th>
+                    <th className="pb-2">MIN</th>
+                    <th className="pb-2">PTS</th>
+                    <th className="pb-2 text-right">vs Threshold</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {season_games_agst_opp.map((game, index) => (
+                    <tr key={index} className="border-b border-gray-700">
+                      <td className="py-3">{game.date}</td>
+                      <td className="py-3">
+                        <div className="flex items-center">
+                          <ImageWithFallback
+                            src={game.opponentLogo || "/placeholder.svg"}
+                            alt={game.opponent}
+                            className="w-5 h-5 mr-2"
+                            fallbackSrc="/placeholder.svg?height=20&width=20"
+                          />
+                          <span>{game.opponentFullName || game.opponent}</span>
+                        </div>
+                      </td>
+                      <td className="py-3">{game.location}</td>
+                      <td className="py-3">{game.minutes || "N/A"}</td>
+                      <td className="py-3 font-bold">{game.points}</td>
+                      <td className="py-3 text-right">
+                        {threshold && (
+                          <span
+                            className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
+                          >
+                            {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Playoffs Game Log */}
       {num_playoff_games !== 0 && (

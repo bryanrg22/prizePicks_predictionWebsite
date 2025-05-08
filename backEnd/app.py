@@ -72,7 +72,7 @@ def analyze_player_endpoint():
         pdata["volatilityPlayOffsForecast"] = forecast_playoff_volatility(pdata)
 
 
-    # 2) persist it
+    # 2) persist it (writes to processedPlayers/players/active/{player_threshold})
     ref.set(pdata)
 
     # 3) return it

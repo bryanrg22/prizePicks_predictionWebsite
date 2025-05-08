@@ -34,6 +34,7 @@ def deduce_game_type(game_id):
       '006': 'NBA Cup'
     }.get(prefix, 'Unknown')
 
+
 def get_team_full_name_from_abbr(abbr):
         all_teams = teams.get_teams()
         for t in all_teams:
@@ -41,12 +42,14 @@ def get_team_full_name_from_abbr(abbr):
                 return t["full_name"]
         return abbr
 
+
 def get_team_id_from_abbr(abbr):
     all_teams = teams.get_teams()
     for t in all_teams:
         if t["abbreviation"] == abbr:
             return t["id"]
     return None
+
 
 def get_current_season():
     now = datetime.datetime.now()
@@ -58,7 +61,7 @@ def get_current_season():
         season_end = now.year
     return f"{season_start}-{str(season_end)[-2:]}"
 
-# Add this function to fetch more games for a player
+
 def fetch_more_games(player_id):
     """
     Fetch more games for a player, up to max_games
@@ -173,9 +176,6 @@ def fetch_all_opponent_games(player_id, opponent_abbr):
     return games
    
 
-############################################################################
-### ADDED: fetch_career_summaries
-############################################################################
 def fetch_career_summaries(player_id, last_n=3):
     """
     Fetches career season-by-season data for a player using nba_api's playercareerstats.
@@ -639,8 +639,8 @@ def analyze_player(first_name, last_name, threshold=None):
     # Build the original player data object with preserved keys
     player_data = {
         "playerId": nba_player_id,
-        "points": null,
-        "minutes": null,
+        "points": None,
+        "minutes": None,
         "threshold": threshold,
         "name": player_name,
         "position": player_position,
@@ -680,31 +680,3 @@ def analyze_player(first_name, last_name, threshold=None):
     
 
     return player_data
-
-############################################################################
-### ADDED: Minimal fetch_player_game_logs fallback (if needed)
-############################################################################
-def fetch_player_game_logs_fallback(player_id, season_str="2024-25"):
-    try:
-        gamelog_df = playergamelog.PlayerGameLog(player_id=player_id, season=season_str).get_data_frames()[0]
-    except Exception as e:
-        print(f"[fetch_player_game_logs] Error fetching logs for player {player_id}: {e}")
-        return []
-    logs = []
-    for _, row in gamelog_df.iterrows():
-        pts = row.get("PTS", 0)
-        logs.append({"points": pts})
-    return logs
-
-############################################################################
-### ADDED: Helper function to get current season string
-############################################################################
-def get_current_season():
-    now = datetime.datetime.now()
-    if now.month >= 10:
-        season_start = now.year
-        season_end = now.year + 1
-    else:
-        season_start = now.year - 1
-        season_end = now.year
-    return f"{season_start}-{str(season_end)[-2:]}"
