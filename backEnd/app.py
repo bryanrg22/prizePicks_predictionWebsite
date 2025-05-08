@@ -93,7 +93,7 @@ def parse_screenshot_endpoint():
         return jsonify({"error": "No images uploaded"}), 400
 
     parsed = []
-    base = request.url_root.rstrip("/")  # e.g. http://127.0.0.1:5000
+    base = request.url_root.rstrip("/") 
 
     for img in files:
         raw = img.read()
