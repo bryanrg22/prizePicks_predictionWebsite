@@ -68,7 +68,8 @@ Aggregated player cards across all users.
 - **Flask** – REST API  
 - **gunicorn** – WSGI server (Cloud Run)  
 - **firebase-admin** – Firestore & Auth  
-- **openai** – ChatGPT o4-mini integration  
+- **openai** – ChatGPT o4-mini integration
+- **!!Coming Soon!!** - OCaml written to speed up Poisson, Monte Carlo, and GARCH Model
 
 ### Data & Analytics  
 - **Poisson & Monte Carlo** – Probability pipelines  
@@ -77,6 +78,7 @@ Aggregated player cards across all users.
 - **NBA API** – Stats & box scores  
 - **OCR (screenshot_parser.py)** – Image data extraction  
 - **Requests** – Web scraping (NBA Injury Report)  
+- **!!Coming Soon!!** - ML Algorithm trained off of data stored in Firestore
 
 ### Infrastructure & Deployment  
 - **Firebase Hosting** – Front-end CDN & SSL  
