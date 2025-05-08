@@ -139,6 +139,101 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
           </div>
         </div>
 
+        {/* Filter options */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-400 mb-1">Filter by Team</label>
+              <select
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  const teamFilter = e.target.value
+                  if (teamFilter === "all") {
+                    // Reset to current search results
+                    const searchFiltered =
+                      searchTerm.trim() === ""
+                        ? players
+                        : players.filter(
+                            (player) =>
+                              player.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              player.team?.toLowerCase().includes(searchTerm.toLowerCase()),
+                          )
+                    setFilteredPlayers(searchFiltered)
+                  } else {
+                    // Filter by team and maintain search filter
+                    const teamFiltered = (searchTerm.trim() === "" ? players : filteredPlayers).filter(
+                      (player) => player.team === teamFilter,
+                    )
+
+                    // Sort alphabetically by name within team
+                    teamFiltered.sort((a, b) => a.name.localeCompare(b.name))
+
+                    setFilteredPlayers(teamFiltered)
+                  }
+                }}
+              >
+                <option value="all">All Teams</option>
+                {Array.from(new Set(players.map((player) => player.team)))
+                  .filter(Boolean)
+                  .sort()
+                  .map((team) => (
+                    <option key={team} value={team}>
+                      {team}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-400 mb-1">Filter by AI Recommendation</label>
+              <select
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  const recFilter = e.target.value
+                  if (recFilter === "all") {
+                    // Reset to current search results
+                    const searchFiltered =
+                      searchTerm.trim() === ""
+                        ? players
+                        : players.filter(
+                            (player) =>
+                              player.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              player.team?.toLowerCase().includes(searchTerm.toLowerCase()),
+                          )
+                    setFilteredPlayers(searchFiltered)
+                  } else {
+                    // Filter by recommendation
+                    const recFiltered = (searchTerm.trim() === "" ? players : filteredPlayers).filter((player) => {
+                      const rec = player.betExplanation?.recommendation || ""
+
+                      if (recFilter === "100_yes" && rec.includes("100% YES")) {
+                        return true
+                      } else if (recFilter === "90_100_yes" && rec.includes("90–100% YES")) {
+                        return true
+                      } else if (recFilter === "80_90_possible" && rec.includes("80–90% possible")) {
+                        return true
+                      }
+                      return false
+                    })
+
+                    setFilteredPlayers(recFiltered)
+                  }
+                }}
+              >
+                <option value="all">All Recommendations</option>
+                <option value="100_yes">100% YES</option>
+                <option value="90_100_yes">90–100% YES</option>
+                <option value="80_90_possible">80–90% possible</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Filter stats */}
+          <div className="text-sm text-gray-400">
+            Showing {filteredPlayers.length} of {players.length} players
+          </div>
+        </div>
+
         {/* Loading state */}
         {loading && (
           <div className="flex justify-center items-center py-12">
