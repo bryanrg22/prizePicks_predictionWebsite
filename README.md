@@ -1,123 +1,171 @@
 # PrizePicks Prediction Website
 
-Lead Developer | Feb 2025 – Present  
-Automated player performance prediction model to identify optimal betting opportunities on PrizePicks, analyzing player stats, team rankings, and matchup history.
+**Lead Developer | Feb 2025 – Present**  
+A full-stack, AI-powered platform that automatically analyzes NBA “Over/Under” picks on PrizePicks. From OCR’ing screenshots to running Poisson, Monte Carlo & GARCH volatility forecasts (including playoff games), and generating natural-language bet explanations via ChatGPT, this site manages the entire pipeline end-to-end—hosted on Firebase Hosting + Cloud Run with CI/CD.
+
+---
 
 ## 🚀 Project Overview
 
-- **Objective:** Predict NBA player point performances (“Over/Under” picks) using statistical modeling and AI.
-- **Outcome:** Grew account balance from \$10 to over \$3,000 (29,900% ROI) with an 11/14 lineup win rate.
+- **Objective:** Predict NBA player point performances (“Over/Under” picks) using statistical models (Poisson, Monte Carlo, GARCH volatility) and AI-driven explanations.  
+- **Live Outcome:** Turned \$10 into \$3,279+ on PrizePicks (29,900% ROI) with an 11/14 lineup win rate.  
+- **Core Features:**  
+  - **Screenshot Parsing (OCR):** Upload PrizePicks cards, extract player & threshold pairs.  
+  - **Player Pipeline:**  
+    - Season & last-5 game averages  
+    - Poisson probability  
+    - Monte Carlo simulation  
+    - GARCH volatility forecast (regular season & playoffs)  
+    - Injury report scraping  
+    - ChatGPT-powered bet explanation  
+  - **Playoff Support:** Automatically switches to playoff stats after ≥ 5 postseason games.  
+  - **Real-Time Updates:** Background Cloud Functions mark “Concluded” games and settle bets.  
+  - **CI/CD & Hosting:** React + Vite on Firebase Hosting, Flask + Docker on Cloud Run, GitHub Actions auto-deploy.
 
-## 1. Briefly describe what this code sample does:
-```plaintext
-My backend includes a Flask module that defines REST endpoints under /api that drive the PrizePicks Prediction
-Website’s backend (in app.py). Each endpoint uses the Firebase Admin SDK to gather and manipulate data in the
-Firebase Database, fetching player metrics (e.g., seasonAvgPoints, last-5 games averages, gameStatus) from
-processedPlayers/active or concluded, reading and writing user bet documents (activeBets, betHistory), and
-ingesting OCR-parsed screenshot data. It then invokes our Poisson and Monte Carlo modules to compute probability
-forecasts on those player stats before securely updating Firestore. Cloud Functions run in the background to migrate
-and archive old threshold documents, ensuring the React+Vite frontend always displays up-to-date, real-time analytics.
-```
+---
 
-## 2. Briefly describe what you learned when you created this code sample
-```plaintext
-I learned how to better design a Firebase Database schema so that it would be able to support multi-user access and
-real-time sync, structuring collections like processedPlayers and per-user activeBets for efficient reads and writes.
-I gained experience wiring React+Vite to a Flask API via the Firebase Admin SDK, ensuring secure, monitored communication.
-I also mastered integrating third-party APIs for data retrieval, while also writing python scripts that would calculate data
-when APIs lacked needed fields, and even using web scraping to fill gaps in our dataset such as web scraping the NBA Injury Report.
-```
+## 📸 Pre Flight Website Access
 
-## 📸 Video
-https://github.com/user-attachments/assets/ec796b28-824e-4374-8d9a-beedc7a0ed4e
+[Website Link](https://prizepicksproject-15337.web.app/)
 
-### Home Page
-#### Each user will be greeted with this page with their own unique data upon entry (Data such as Earnings, Active Bets, Current Picks, etc)
-<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/39f4e1e9-add3-415b-95ca-03cb9c5b3129" />
+**Currently, the project is still in development as more features will be integreated along with bug fixes** 
+**If you would like access to the website despite it's early development phase, please feel free to reach out to bryanram2024@gmail.com** 
 
-### Player Analysis on Home Page 
-#### This is the layout the web page displays when a user searches for a player and their point threshold.
-<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/8d960312-30c7-47f6-9004-ed82facc348b" />
+---
 
-### Processed Players Page
-#### This is the Processed Player's page, which will display the same players across all users. All players serarched for by different users will appear on this page.
-<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/3f9c727b-b315-4688-bd57-0a12a55820dc" />
+## 📸 Demo Video
 
-### Player Analysis on Processed Players Page
-<img width="1512" alt="Image" src="https://github.com/user-attachments/assets/80d5ca78-d3af-439e-a687-b8d90363da13" />
+[Watch on GitHub](https://github.com/user-attachments/assets/ec796b28-824e-4374-8d9a-beedc7a0ed4e)
+
+---
+
+## 🖼️ Screenshots
+
+### Home Page  
+![](https://github.com/user-attachments/assets/39f4e1e9-add3-415b-95ca-03cb9c5b3129)  
+Greeted by Earnings, Active Bets & Live Picks.
+
+### Player Analysis Panel  
+![](https://github.com/user-attachments/assets/8d960312-30c7-47f6-9004-ed82facc348b)  
+Input a player + threshold → see probability forecasts & AI explanation.
+
+### Processed Players Dashboard  
+![](https://github.com/user-attachments/assets/3f9c727b-b315-4688-bd57-0a12a55820dc)  
+Aggregated player cards across all users.
+
+---
 
 ## 🧰 Tech Stack
 
-### Frontend
-- **React + Vite** – Fast, modern SPA  
+### Front-End  
+- **React + Vite** – SPA framework  
 - **Tailwind CSS** – Utility-first styling  
-- **Lucide React** – Iconography  
-- **Recharts** – Charts & data visualization  
+- **Lucide React** – Icon library  
+- **Recharts** – Charts & graphs  
 
-### Backend
-- **Python 3.9+** – Core language  
+### Back-End  
+- **Python 3.9+**  
 - **Flask** – REST API  
-- **Firebase Admin SDK** – Firestore interaction  
+- **gunicorn** – WSGI server (Cloud Run)  
+- **firebase-admin** – Firestore & Auth  
+- **openai** – ChatGPT o4-mini integration  
 
-### Database & Hosting
-- **Firebase Firestore** – NoSQL  
-- **Firebase Authentication** – User accounts  
-- **Firebase Storage** – Screenshots & assets  
+### Data & Analytics  
+- **Poisson & Monte Carlo** – Probability pipelines  
+- **GARCH (arch-model)** – Volatility forecasting  
+- **pandas, NumPy** – Data wrangling  
+- **NBA API** – Stats & box scores  
+- **OCR (screenshot_parser.py)** – Image data extraction  
+- **Requests** – Web scraping (NBA Injury Report)  
 
-### Data & AI
-- **OpenAI ChatGPT's o4-mini API** – Bet explanation generation
-- **Poisson & Monte Carlo** – Probability models  
-- **Pandas, NumPy** – Data wrangling  
-- **OCR** – Screenshot parsing
-- **WORK IN PROGRESS** Machine Learning Model
+### Infrastructure & Deployment  
+- **Firebase Hosting** – Front-end CDN & SSL  
+- **Cloud Run** – Containerized Flask API  
+- **Firebase Cloud Functions** – Background jobs & data migration  
+- **GitHub Actions** – CI/CD (build → deploy Hosting & Cloud Run)  
+- **Docker** – Back-end container  
 
-## 🔧 Installation
+---
 
-### Prerequisites
-- Node.js v16+ & npm/yarn  
-- Python 3.8+ & pip  
-- Firebase account & service-account JSON
-
-⸻
-
-## Project Structure
-
-```plaintext
-prizePicks_predictionWebsite/
-├── frontend/               # React + Vite app
-│   ├── src/
-│   ├── public/
-│   └── vite.config.js
-├── backend/                # Flask API + data pipelines
+### Project Scheme
+'''plaintext
+PRIZEPICKS_PREDICTIONWEBSITE/
+├── backEnd/
 │   ├── app.py
-│   ├── player_analyzer.py
+│   ├── backtester.py
+│   ├── chatgpt_bet_explainer.py
+│   ├── injury_report.py
+│   ├── main.py
 │   ├── monte_carlo.py
-│   └── ...
-└── functions/              # Firebase Cloud Functions
-    └── index.js            # data migration & archival
-```
+│   ├── player_analyzer.py
+│   ├── prediction_analyzer.py
+│   ├── requirements.txt
+│   ├── screenshot_parser.py
+│   └── volatility.py
+├── frontEnd/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── scripts/
+│   │   ├── services/
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── firebase.js
+│   │   ├── index.css
+│   │   └── main.jsx
+├── functions/
+│   ├── index.js
+├── .firebaserc
+├── firebase.json
+└── README.md
+'''
 
-⸻
-
-
-## Firebase Database Schema
-
-```plaintext
+### Firestore Database Scheme
 firestore/
-├─ processedPlayers/
-│  ├─ active/thresholds/{player_threshold_doc}
-│  └─ concluded/thresholds/{player_threshold_doc}
-│     └─ { seasonAvgPoints, last5GamesAvg, gameStatus, gameId, … }
-
-users/{userId}/
-├─ activeBets/{betId}
-│     └─ { betAmount, potentialWinnings, picks: [ … ], status, … }
-├─ betHistory/{year}/{month}/{betId}
-│     └─ { ...betData, settledAt }
-├─ picks (legacy)           # array of { id, thresholds: [ … ] }
-└─ profileData
-```
-
-License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
+├─ processedPlayers/ (collection)
+│   ├── active/ (document)
+│   │   └── thresholds/ (subcollection)
+│   │       └── {player_threshold_doc}/ (document)
+│   │           ├─ name: string
+│   │           ├─ playerId: string
+│   │           ├─ team: string
+│   │           ├─ position: string
+│   │           ├─ opponent: string
+│   │           ├─ photoUrl: string
+│   │           ├─ teamLogo: string
+│   │           ├─ opponentLogo: string
+│   │           ├─ gameDate: Timestamp
+│   │           ├─ gameTime: string
+│   │           ├─ gameType: string
+│   │           ├─ teamPlayoffRank: number
+│   │           ├─ opponentPlayoffRank: number
+│   │           ├─ seasonAvgPoints: number
+│   │           ├─ last5RegularGamesAvg: number
+│   │           ├─ seasonAvgVsOpponent: number
+│   │           ├─ homeAwayAvg: number
+│   │           ├─ last5RegularGames: array<map>  
+│   │           │    └─ [{ date, points, opponent, opponentFullName, … }, …]
+│   │           ├─ advancedPerformance: map
+│   │           ├─ careerSeasonStats: array<map>
+│   │           ├─ injuryReport: map
+│   │           ├─ betExplanation: map
+│   │           ├─ poissonProbability: number
+│   │           ├─ monteCarloProbability: number
+│   │           ├─ volatilityForecast: number
+│   │           ├─ season_games_agst_opp: array<map>
+│   │           ├─ num_playoff_games: number
+│   │           ├─ playoffAvg: number
+│   │           ├─ playoff_games: array<map>  
+│   │           │    └─ [{ date, points, opponent, …, gameType: "Playoffs" }, …]
+│   │           └─ volatilityPlayOffsForecast: number
+│   └── concluded/ (document)
+│       └── thresholds/ (subcollection)
+│           └── {player_threshold_doc}/  
+│               └─ (same fields as above) 
+├─ users/{userId}/
+│   ├─ activeBets/{betId}
+│   │   └─ { betAmount, potentialWinnings, picks: [ {player_threshold_doc}/ (document), ... ], status, … }
+│   ├─ betHistory/{year}/{month}/{betId}
+│   │   └─ { ...betData, settledAt, picks: [ {player_threshold_doc}/ (document), ... ] }
+│   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
+└─  └─ profileData
