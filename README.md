@@ -88,7 +88,7 @@ Aggregated player cards across all users.
 ---
 
 ### Project Scheme
-'''plaintext
+```plaintext
 PRIZEPICKS_PREDICTIONWEBSITE/
 ├── backEnd/
 │   ├── app.py
@@ -118,9 +118,10 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 ├── .firebaserc
 ├── firebase.json
 └── README.md
-'''
+```
 
 ### Firestore Database Scheme
+```plaintext
 firestore/
 ├─ processedPlayers/ (collection)
 │   ├── active/ (document)
@@ -169,3 +170,4 @@ firestore/
 │   │   └─ { ...betData, settledAt, picks: [ {player_threshold_doc}/ (document), ... ] }
 │   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
 └─  └─ profileData
+```
