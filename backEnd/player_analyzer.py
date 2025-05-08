@@ -157,7 +157,9 @@ def fetch_all_opponent_games(player_id, opponent_abbr):
         opp_id   = get_team_id_from_abbr(opp)        if opp else None
         opp_logo = get_team_logo_url(opp_id)         if opp_id else None
 
+
         games.append({
+            "gameId":           row['Game_ID'],
             "date":             row['GAME_DATE'],
             "points":           int(row['PTS']),
             "opponent":         opp,
@@ -570,8 +572,8 @@ def analyze_player(first_name, last_name, threshold=None):
             else:
                 minutes = int(raw_min) if raw_min else None
 
-            
             playoff_games.append({
+                "gameId":           curr['Game_ID'],
                 "date":             curr['GAME_DATE'],
                 "points":           int(curr['PTS']),
                 "opponent":         opp_abbr,
@@ -595,6 +597,7 @@ def analyze_player(first_name, last_name, threshold=None):
             season_type_all_star='Regular Season'
         )
     games_df = pgl.get_data_frames()[0]
+    
     for i in range(5):
         curr = games_df.iloc[i]
         matchup = curr['MATCHUP']            
@@ -620,6 +623,7 @@ def analyze_player(first_name, last_name, threshold=None):
         last_5_regular_games_avg += int(curr['PTS'])
         
         last_5_regular_games.append({
+            "gameId":           curr['Game_ID'],
             "date":             curr['GAME_DATE'],
             "points":           int(curr['PTS']),
             "opponent":         opp_abbr,
@@ -662,7 +666,7 @@ def analyze_player(first_name, last_name, threshold=None):
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
         "playoffAvg":       playoff_avg,
-        "season_games_agst_opp" : fetcth_all_opponent_games(nba_player_id, opponent_abbr)
+        "season_games_agst_opp" : fetch_all_opponent_games(nba_player_id, opponent_abbr)
     }
 
     

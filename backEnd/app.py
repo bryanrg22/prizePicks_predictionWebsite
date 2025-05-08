@@ -10,7 +10,7 @@ from prediction_analyzer import calculate_poisson_probability
 from monte_carlo import monte_carlo_for_player
 from chatgpt_bet_explainer import get_bet_explanation_from_chatgpt
 from volatility import fetch_point_series, forecast_volatility, forecast_playoff_volatility
-import injury_report, game_results
+import injury_report
 
 from screenshot_parser import parse_image_data_url
 import base64
@@ -142,10 +142,6 @@ def more_games_endpoint(player_id):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
-
-# include game-results endpoints
-game_results.add_game_results_endpoints(app, db)
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
