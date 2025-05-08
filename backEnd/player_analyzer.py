@@ -639,6 +639,8 @@ def analyze_player(first_name, last_name, threshold=None):
     # Build the original player data object with preserved keys
     player_data = {
         "playerId": nba_player_id,
+        "points": null,
+        "minutes": null,
         "threshold": threshold,
         "name": player_name,
         "position": player_position,
