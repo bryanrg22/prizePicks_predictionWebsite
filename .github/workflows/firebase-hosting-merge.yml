@@ -1,0 +1,52 @@
+name: CI/CD: Frontend → Hosting • Backend → Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  FIREBASE_PROJECT_ID: prizepicksproject-15337
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Install & build your React app
+      - name: Build React app
+        working-directory: frontEnd
+        run: |
+          npm ci
+          npm run build
+
+      # Deploy only the Hosting portion
+      - name: Deploy to Firebase Hosting
+        uses: w9jds/firebase-action@v2
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      # Set up GCP for Cloud Run
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      # Build & push your Flask Docker image
+      - name: Build & Push Docker image
+        run: |
+          docker build -t gcr.io/${{ env.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA backEnd
+          docker push     gcr.io/${{ env.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA
+
+      # Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy prizepicks-backend \
+            --image gcr.io/${{ env.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA \
+            --region us-west2 \
+            --platform managed \
+            --quiet
