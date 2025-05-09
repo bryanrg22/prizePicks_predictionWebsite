@@ -128,7 +128,7 @@ firestore/
 ├─ processedPlayers/ (collection)
 │   ├── active/ (document)
 │   │   └── thresholds/ (subcollection)
-│   │       └── {player_threshold_doc}/ (document)
+│   │       └── {firstName_lastName_threshold}/ (document)
 │   │           ├─ name: string
 │   │           ├─ playerId: string
 │   │           ├─ team: string
