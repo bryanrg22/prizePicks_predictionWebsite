@@ -72,6 +72,7 @@ def analyze_player_endpoint():
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
     pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or 0.0  
     pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
+    pdata["pick_id"]      = f"{pkey(name)}_{threshold}"
 
     # — GARCH vol forecast —
     series = fetch_point_series(pdata, n_games=50)
