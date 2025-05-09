@@ -28,7 +28,7 @@ A full-stack, AI-powered platform that automatically analyzes NBA â€œOver/Underâ
 
 [Website Link](https://prizepicksproject-15337.web.app/)
 
-- **Currently, the project is still in development as more features will be integreated along with bug fixes** 
+- **Currently, the project is still in development as more features will be integrated along with bug fixes** 
   - If you would like access to the website despite it's early development phase, please feel free to reach out to bryanram2024@gmail.com
 
 ---
