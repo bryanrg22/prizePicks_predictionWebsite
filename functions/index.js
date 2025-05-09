@@ -45,9 +45,6 @@ exports.onActiveBetWrite = functions.firestore
 
       if (wasDeleted || statusChanged) {
       // 1) copy into history
-        const now = new Date();
-        const year = now.getFullYear().toString();
-        const mon = String(now.getMonth() + 1).padStart(2, "0");
         const hist = db
             .collection("users")
             .doc(userId)
