@@ -341,81 +341,36 @@ export default function HomePage() {
   }
 
   // Inside the HomePage component, add this function to handle adding a player from ProcessedPlayers
-  const handleAddToPicks = async () => {
-    if (!mockPlayerData) {
-      alert("No player data available")
+  const handleAddToPicks = async (pick) => {
+    // de-dupe & enforce max
+    if (picks.find(p => p.id === pick.id)) {
+      alert(`${pick.player || pick.name} is already in your picks`)
       return
     }
-
     if (picks.length >= 6) {
       alert("You can only add up to 6 picks")
       return
     }
-
-    if (!pointsThreshold || pointsThreshold <= 0) {
-      alert("Please enter a valid points threshold")
-      return
-    }
-
-    const rec = getRecommendation(mockPlayerData, pointsThreshold)
-
-    // build the same slug your Firestore uses:
-    const playerKey = mockPlayerData.name
-      .toLowerCase()
-      .replace(/\s+/g, "_")            // "LeBron James" → "lebron_james"
-
-    const docId = `${playerKey}_${pointsThreshold}`        // "stephen_curry_19.5"
-
-    const newPick = {
-      id: docId,
-      player: mockPlayerData.name,
-      team: mockPlayerData.team,
-      teamLogo: mockPlayerData.teamLogo,
-      opponent: mockPlayerData.opponent,
-      opponentLogo: mockPlayerData.opponentLogo,
-      gameDate: mockPlayerData.gameDate,
-      gameTime: mockPlayerData.gameTime,
-      threshold: Number.parseFloat(pointsThreshold),
-      recommendation: rec.recommendation,
-      confidence: rec.confidence,
-      photoUrl: mockPlayerData.photoUrl,
-      gameId: mockPlayerData.gameId,
-    }
-
-    // Add to local state
-    setPicks([...picks, newPick])
-
-    // Add to Firebase - try both new and old structure
+  
+    // local state
+    setPicks([...picks, pick])
+  
+    // persist
     try {
-      // Format the data for new structure
-      const pickData = {
-        playerId: newPick.id,
-        playerName: mockPlayerData.name,
-        playerTeam: mockPlayerData.team,
-        playerTeamLogo: mockPlayerData.teamLogo,
-        opponent: mockPlayerData.opponent,
-        opponentLogo: mockPlayerData.opponentLogo,
-        gameDate: mockPlayerData.gameDate,
-        gameTime: mockPlayerData.gameTime,
-        threshold: Number.parseFloat(pointsThreshold),
-        recommendation: rec.recommendation,
-        confidence: rec.confidence,
-        photoUrl: mockPlayerData.photoUrl,
-      }
-
-      // Also add to old structure for backward compatibility
-      await addUserPick(currentUser, newPick)
-    } catch (error) {
-      console.error("Error adding pick to Firebase:", error)
-      alert("Failed to save pick. Please try again.")
-      // Remove from local state if Firebase save fails
-      setPicks(picks.filter((pick) => pick.id !== newPick.id))
+      await addUserPick(currentUser, pick)
+    } catch (err) {
+      console.error("Error adding pick:", err)
+      alert("Failed to save pick. Rolling back.")
+      setPicks(picks.filter(p => p.id !== pick.id))
       return
     }
-
-    setSearchPerformed(false)
-    setPlayerName("")
-    setPointsThreshold("")
+  
+    // if you came from the search dashboard, reset those inputs
+    if (searchPerformed) {
+      setSearchPerformed(false)
+      setPlayerName("")
+      setPointsThreshold("")
+    }
   }
 
   const handleRemovePick = async (id) => {
@@ -433,9 +388,6 @@ export default function HomePage() {
 
   // Add this function after the handleRemovePick function
   const handleAddProcessedPlayer = async (pick) => {
-    // Check if we already have 6 picks
-    
-    
     // Check if player is already in picks
     const existingPickIndex = picks.findIndex((p) => p.id === pick.id)
     if (existingPickIndex >= 0) {
@@ -448,22 +400,7 @@ export default function HomePage() {
 
     // Add to Firebase - try both new and old structure
     try {
-      // Format the data for new structure
-      const pickData = {
-        playerId: pick.id,
-        playerName: pick.player,
-        playerTeam: pick.team,
-        playerTeamLogo: pick.teamLogo,
-        opponent: pick.opponent,
-        opponentLogo: pick.opponentLogo,
-        gameDate: pick.gameDate,
-        gameTime: pick.gameTime,
-        threshold: pick.threshold,
-        recommendation: pick.recommendation,
-        confidence: pick.confidence,
-        photoUrl: pick.photoUrl,
-      }
-
+      
       // Also add to old structure for backward compatibility
       await addUserPick(currentUser, pick)
 

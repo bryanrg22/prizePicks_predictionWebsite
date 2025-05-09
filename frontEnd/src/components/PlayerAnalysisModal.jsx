@@ -768,7 +768,8 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onAddToPicks()
+              // pass the entire playerData object to HomePage
+              onAddToPicks(playerData)
               onClose()
             }}
             className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors"
