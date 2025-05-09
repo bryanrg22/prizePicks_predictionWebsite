@@ -33,19 +33,19 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
     vol_playoffs  = player_data.get("volatilityPlayOffsForecast", 0)
     pp = safe_fmt(player_data.get("poissonProbability")) or 0.0
     mc = safe_fmt(player_data.get("monteCarloProbability")) or 0.0
+    injury        = player_data.get("injuryReport", {})
+    playoff_games = player_data.get("playoff_games", 0)
 
-    # hard-code the two series from your screenshots
-    series_data = (
-        "Warriors vs Timberwolves (Game 1: GSW 99–88 MIN, series GSW leads 1–0)\n"
-        "Nuggets @ Thunder (Game 2 at 6:30 PM, series DEN leads 1–0)"
-    )
+    season_avg = float(player_data.get("seasonAvgPoints", 0))
+    threshold  = float(player_data.get("threshold", 0))
+
 
     # build and dedent the prompt
     prompt = textwrap.dedent(f"""
     PLAYOFF BETTING ANALYSIS for {name} in {team} vs {opponent}
 
     Series & last game:
-    {series_data}
+    {playoff_games}
 
     Player playoff metrics:
       • Season avg points         : {season_avg:.1f}
@@ -64,8 +64,9 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
       • “100% YES”
       • “90–100% YES”
       • “80–90% possible”
+      • “0% possible”
 
-    Also consider series momentum and the low chance of a blowout in Round 2.
+    Also consider series momentum and the chance of a blowout
 
     Return strict JSON:
     {{

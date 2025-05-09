@@ -184,23 +184,19 @@ export const createBet = async (userId, betData) => {
   return docRef.id
 }
 
-// ————— Active Bets —————
 /**
- * Fetches all active bets for a user.
- * First tries the new sub-collection, then falls back to legacy `bets[]`.
+ * Active Bets helper — make sure this is exported
  */
 export const getActiveBets = async (userId) => {
-  // 1) new sub-collection
+  // first try the new sub-collection…
   const snap = await getDocs(collection(db, "users", userId, "activeBets"))
   if (!snap.empty) {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }))
   }
-
-  // 2) legacy array on the user doc
+  // …fallback to the old array
   const userSnap = await getDoc(doc(db, "users", userId))
   if (!userSnap.exists()) return []
-  const legacy = userSnap.data().bets || []
-  return legacy.filter(b => b.status === "Active")
+  return (userSnap.data().bets || []).filter(b => b.status === "Active")
 }
 
 /**
@@ -436,7 +432,8 @@ export const getProcessedPlayer = async (playerName, threshold) => {
 
 // Clear out the old picks[] array on the user doc
 export const clearUserPicks = async (userId) => {
-  const userRef = doc(db, "users", userId);
-  // reset picks array to empty
-  await updateDoc(userRef, { picks: [] });
-};
+  const userRef = doc(db, "users", userId)
+  // remove any legacy picks[]
+  await updateDoc(userRef, { picks: [] })
+  return true
+}
