@@ -2,6 +2,7 @@ import os
 import json
 import textwrap
 from openai import OpenAI
+from openai import OpenAIError
 
 def safe_fmt(x, fmt="{:.2f}"):
     return fmt.format(x) if x is not None else "N/A"
@@ -9,17 +10,19 @@ def safe_fmt(x, fmt="{:.2f}"):
 
 def get_bet_explanation_from_chatgpt(player_data: dict):
     """
-    player_data contains:
+    player_data contains keys like:
       name, threshold, team, opponent,
       seasonAvgPoints, playoffAvg, seasonAvgVsOpponent,
       homeAwayAvg, poissonProbability, monteCarloProbability,
       advancedPerformance, injuryReport, volatilityPlayOffsForecast,
       playoff_games, etc.
     """
-    name          = player_data["name"]
-    threshold     = float(player_data.get("threshold", 0))
+
+    # 1) Pull out and coerce our inputs
+    name          = player_data.get("name", "")
     team          = player_data.get("team", "")
     opponent      = player_data.get("opponent", "")
+    threshold     = float(player_data.get("threshold", 0))
     season_avg    = float(player_data.get("seasonAvgPoints", 0))
     playoff_avg   = float(player_data.get("playoffAvg", 0))
     vs_opp_avg    = float(player_data.get("seasonAvgVsOpponent", 0))
@@ -29,17 +32,17 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
     adv_stats     = player_data.get("advancedPerformance", {})
     injury        = player_data.get("injuryReport", {})
     vol_playoffs  = float(player_data.get("volatilityPlayOffsForecast", 0))
-    playoff_games = player_data.get("playoff_games", "")
+    playoff_games = player_data.get("playoff_games", "N/A")
 
-    # Prepare the optional forecast line
+    # 2) Optional forecast line
     forecast_line = (
         f"  • Forecasted playoff vol    : {vol_playoffs:.2f}"
         if vol_playoffs > 0
         else ""
     )
 
-    # Format the prompt template, escaping JSON braces by doubling {{ }}
-    prompt_template = textwrap.dedent("""
+    # 3) Build prompt via .format(), doubling {{ }} around the JSON example
+    prompt = textwrap.dedent("""
     PLAYOFF BETTING ANALYSIS for {name} in {team} vs {opponent}
 
     Series & last game:
@@ -68,9 +71,7 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
 
     Return strict JSON:
     {{  "recommendation":"...",  "confidenceRange":"...",  "explanation":"..."  }}
-    """)
-
-    prompt = prompt_template.format(
+    """).format(
         name=name,
         team=team,
         opponent=opponent,
@@ -84,22 +85,32 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
         adv_stats=json.dumps(adv_stats),
         injury=json.dumps(injury),
         forecast_line=forecast_line,
-        threshold=threshold
+        threshold=threshold,
     )
 
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", "YOUR_API_KEY_HERE"))
-    resp = client.chat.completions.create(
-        model="o4-mini",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"}
-    )
+    # 4) Load API key from env, error if missing
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "OpenAI API key not set. Please set the OPENAI_API_KEY environment variable."
+        )
 
-    raw = resp.choices[0].message.content
+    client = OpenAI(api_key=api_key)
+
     try:
+        resp = client.chat.completions.create(
+            model="o4-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={"type": "json_object"},
+        )
+        raw = resp.choices[0].message.content
         return json.loads(raw)
+    except OpenAIError as e:
+        # If it's an auth error or any API error, raise a clear message
+        raise RuntimeError(f"OpenAI API error: {e}") from e
     except json.JSONDecodeError:
-        # fallback: return the full text for debugging
+        # Malformed JSON from the model; return raw for debugging
         return {
             "recommendation": "Error",
-            "explanation": raw.strip()
+            "explanation": resp.choices[0].message.content.strip(),
         }
