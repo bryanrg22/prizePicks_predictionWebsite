@@ -1,8 +1,5 @@
 // API service for interacting with the Python backend
 
-
-const API_BASE_URL = "http://127.0.0.1:5000/api"
-
 // Analyze player
 export const analyzePlayer = async (playerName, threshold) => {
   try {
@@ -11,7 +8,7 @@ export const analyzePlayer = async (playerName, threshold) => {
 
     console.log("Sending to API:", { playerName, threshold: numericThreshold })
 
-    const response = await fetch(`api/player`, {
+    const response = await fetch(`/api/player`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
