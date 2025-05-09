@@ -121,35 +121,29 @@ export const updateUserStats = async (userId, stats) => {
 
 // add or update a pick in users/{username}.picks[]
 export const addUserPick = async (username, pickData) => {
-  // 1) fetch user doc
+  if (typeof pickData?.id !== "string") {
+    throw new Error("Invalid pickData.id — must be a string")
+  }
+
   const userRef  = doc(db, "users", username)
   const userSnap = await getDoc(userRef)
   if (!userSnap.exists()) return []
 
-  const docId = pickData.id  // already "first_last_threshold"
+  // sanitize — drop anything that isn't JSON‐serializable
+  const sanitizedPick = JSON.parse(JSON.stringify(pickData))
 
-  // 2) fetch that processedPlayer
-  const ppRef  = doc(
-    db,
-    "processedPlayers", "players", "active",
-    docId
-  )
-  const ppSnap = await getDoc(ppRef)
-  if (!ppSnap.exists()) {
-    throw new Error(`No processedPlayer at players/active/${docId}`)
-  }
-  const processedData = ppSnap.data()
+  // pull the existing array (or start fresh)
+  const existingPicks = Array.isArray(userSnap.data().picks)
+    ? userSnap.data().picks
+    : []
 
-  // 3) upsert into user.picks[]
-  const picks = userSnap.data().picks || []
-  const idx   = picks.findIndex(p => p.id === docId)
-  const newPick = { id: docId, ...processedData }
+  // upsert
+  const idx = existingPicks.findIndex(p => p.id === sanitizedPick.id)
+  if (idx >= 0) existingPicks[idx] = sanitizedPick
+  else            existingPicks.push(sanitizedPick)
 
-  if (idx >= 0) picks[idx] = newPick
-            else picks.push(newPick)
-
-  await updateDoc(userRef, { picks })
-  return picks
+  await updateDoc(userRef, { picks: existingPicks })
+  return existingPicks
 }
 
 // remove a pick
