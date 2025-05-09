@@ -434,11 +434,8 @@ export default function HomePage() {
   // Add this function after the handleRemovePick function
   const handleAddProcessedPlayer = async (pick) => {
     // Check if we already have 6 picks
-    if (picks.length >= 6) {
-      alert("You can only add up to 6 picks")
-      return
-    }
-
+    
+    
     // Check if player is already in picks
     const existingPickIndex = picks.findIndex((p) => p.id === pick.id)
     if (existingPickIndex >= 0) {

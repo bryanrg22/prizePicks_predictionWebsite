@@ -130,11 +130,8 @@ export const addUserPick = async (username, pickData) => {
 
     // new: pickData.id already === "<player>_<threshold>"
     const docId = pickData.id;
-    const ppRef = doc(
-      db,
-      "processedPlayers", "players", "active",
-      docId
-    );
+    
+    const ppRef = doc(db, "processedPlayers", "active", "thresholds", docId)
 
     const ppSnap    = await getDoc(ppRef)
     if (!ppSnap.exists()) {
@@ -507,7 +504,7 @@ export const getUserBetHistory = async (username) => {
 // Get all processed players from the top‐level processedPlayers collection
 export const getProcessedPlayers = async () => {
     // now stored under processedPlayers → players → active
-    const activeRef = collection(db, "processedPlayers", "players", "active")
+    const activeRef = collection(db, "processedPlayers", "active", "thresholds")
     const snaps     = await getDocs(activeRef)
     return snaps.docs.map(docSnap => ({
       id:   docSnap.id,
@@ -883,13 +880,8 @@ export async function getProcessedPlayer(playerName, threshold) {
     const playerKey = playerName
       .toLowerCase()
       .replace(/\s+/g, "_");
-    const ref = doc(
-      db,
-      "processedPlayers",
-      playerKey,
-      "thresholds",
-      String(threshold)
-    );
+
+    const ref = doc(db, "processedPlayers", "active", "thresholds", `${playerKey}_${threshold}`)
     const snap = await getDoc(ref);
     return snap.exists() ? snap.data() : null;
   } catch (err) {
