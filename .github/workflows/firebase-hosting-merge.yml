@@ -64,4 +64,5 @@ jobs:
             --image gcr.io/${{ secrets.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA \
             --region us-west2 \
             --platform managed \
+            --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" \
             --quiet
