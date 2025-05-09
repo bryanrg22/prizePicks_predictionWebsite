@@ -169,7 +169,7 @@ firestore/
 │   ├─ activeBets/{betId}
 │   │   └─ { betAmount, potentialWinnings, picks: [ {firstName_lastName_threshold}/ (document), ... ], status, … }
 │   ├─ betHistory/{betId}
-│   │   └─ { ...betData, settledAt, picks: [ {firstName_lastName_threshold}/ (document), ... ] }
+│   │   └─ { betData, settledAt, picks: [ {firstName_lastName_threshold}/ (document), ... ] }
 │   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
 └─  └─ profileData
 ```
