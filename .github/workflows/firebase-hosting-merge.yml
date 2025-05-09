@@ -29,19 +29,11 @@ jobs:
           firebaseServiceAccount: "${{ secrets.GCP_SA_KEY }}"
           channelId: live
 
-      # Set up GCP for Cloud Run
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      # 3) Authenticate to GCP _and_ configure gcloud + Docker
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
         with:
-          project_id:       ${{ secrets.FIREBASE_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Configure Docker for GCP registries
-        run: |
-          # for legacy Container Registry (gcr.io)
-          gcloud auth configure-docker --quiet
-          # if you’re using Artifact Registry on us-west2:
-          # gcloud auth configure-docker us-west2-docker.pkg.dev --quiet
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       # Build & push your Flask Docker image
       - name: Build & Push Docker image
