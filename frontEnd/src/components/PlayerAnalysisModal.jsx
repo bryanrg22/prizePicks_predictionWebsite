@@ -769,12 +769,11 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             onClick={e => {
               e.stopPropagation()
               const [first, last] = name.split(" ")
-              const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
+              const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
               onAddToPicks({
-                ...playerData,
-                id: pick_id,
-                pick_id,
-                threshold,
+                  ...playerData,
+                  id: pickId,       // ← must be a string
+                  threshold,        // …and nothing else that might shadow it
               })
               onClose()
             }}

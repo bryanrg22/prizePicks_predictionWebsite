@@ -393,27 +393,29 @@ export default function HomePage() {
   }
 
   // Add this function after the handleRemovePick function
-  const handleAddProcessedPlayer = async (pick) => {
-    // Check dupes
-    if (picks.some(p => p.id === pick.pick_id)) {
-      alert(`${pick.player} is already in your picks`)
-      return
-    }
+const handleAddProcessedPlayer = async (pick) => {
+  let id = typeof pick.id === "string"
+    ? pick.id
+    : `${pick.playerId}_${pick.threshold}`
 
-    // Locally add
-    setPicks([...picks, pick])
+  const sanitized = { ...pick, id }
 
-    try {
-      // Persist with correct string id
-      await addUserPick(currentUser, { ...pick, id: pick.pick_id })
-      console.log(`Added ${pick.player} to your picks with a threshold of ${pick.threshold} points`)
-
-    } catch (error) {
-      console.error("Error adding pick to Firebase:", error)
-      alert("Failed to save pick. Please try again.")
-      setPicks(picks.filter(p => p.id !== pick.pick_id))
-    }
+  // de-dupe & enforce max
+  if (picks.find(p => p.id === id)) {
+    alert(`${pick.player} is already in your picks`)
+    return
   }
+
+  setPicks([...picks, sanitized])
+
+  try {
+    await addUserPick(currentUser, sanitized)
+  } catch (err) {
+    console.error("Error adding pick:", err)
+    alert("Failed to save pick. Rolling back.")
+    setPicks(picks.filter(p => p.id !== id))
+  }
+}
 
   const handleLockIn = () => {
     if (picks.length < 2) {
@@ -708,7 +710,7 @@ export default function HomePage() {
       {selectedPlayer && (
         <PlayerAnalysisModal
           playerData={selectedPlayer}
-          onClose={() => setSelectedPlayer(null)}
+          onClose={() => setShowModal(false)}
           onAddToPicks={handleAddProcessedPlayer}
         />
       )}
