@@ -23,7 +23,8 @@ CORS(app, resources={r"/api/*": {
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://prizepicksproject-15337.web.app"
-        "https://prizepicksproject-15337.web.app"
+        "https://prizepicksproject-15337.firebaseapp.com"
+        "https://prizepicks-backend-***.us-west2.run.app"
     ]
 }})
 
