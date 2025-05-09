@@ -33,20 +33,27 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          project_id:       ${{ env.FIREBASE_PROJECT_ID }}
+          project_id:       ${{ secrets.FIREBASE_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for GCP registries
+        run: |
+          # for legacy Container Registry (gcr.io)
+          gcloud auth configure-docker --quiet
+          # if you’re using Artifact Registry on us-west2:
+          # gcloud auth configure-docker us-west2-docker.pkg.dev --quiet
 
       # Build & push your Flask Docker image
       - name: Build & Push Docker image
         run: |
-          docker build -t gcr.io/${{ env.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA backEnd
-          docker push     gcr.io/${{ env.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA
+          docker build -t gcr.io/${{ secrets.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA backEnd
+          docker push     gcr.io/${{ secrets.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA
 
       # Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy prizepicks-backend \
-            --image gcr.io/${{ env.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA \
+            --image gcr.io/${{ secrets.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA \
             --region us-west2 \
             --platform managed \
             --quiet
