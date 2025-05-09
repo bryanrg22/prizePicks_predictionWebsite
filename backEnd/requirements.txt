@@ -12,3 +12,4 @@ pdfplumber
 pandas>=1.5.0
 Werkzeug<2.1.0
 Flask<2.3.0
+google-cloud-firestore
