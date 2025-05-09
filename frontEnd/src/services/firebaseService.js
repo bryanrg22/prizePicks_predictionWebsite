@@ -124,7 +124,7 @@ export const updateUserStats = async (userId, stats) => {
 // Add a pick to user's picks (legacy)
 export const addUserPick = async (username, pickData) => {
   try {
-    const userRef  = doc(db, "users", username)
+    const userRef  = doc(db, "processedPlayers", "players", "active", docId)
     const userSnap = await getDoc(userRef)
     if (!userSnap.exists()) return []
 
@@ -503,8 +503,8 @@ export const getUserBetHistory = async (username) => {
 
 // Get all processed players from the top‐level processedPlayers collection
 export const getProcessedPlayers = async () => {
-    // now stored under processedPlayers → players → active
-    const activeRef = collection(db, "processedPlayers", "active", "thresholds")
+    // pulls all docs at processedPlayers/players/active/{player_threshold}
+    const activeRef = collection(db, "processedPlayers", "players", "active")
     const snaps     = await getDocs(activeRef)
     return snaps.docs.map(docSnap => ({
       id:   docSnap.id,

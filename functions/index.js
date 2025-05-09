@@ -52,8 +52,6 @@ exports.onActiveBetWrite = functions.firestore
             .collection("users")
             .doc(userId)
             .collection("betHistory")
-            .doc(year)
-            .collection(mon)
             .doc(betId);
 
         await hist.set({
@@ -65,6 +63,9 @@ exports.onActiveBetWrite = functions.firestore
         if (change.after.exists) {
           await change.after.ref.delete();
         }
+
+        console.log(`Moved users/${userId}/active/${betId}
+          → users/${userId}/betHistory/${betId}`);
       }
     });
 
