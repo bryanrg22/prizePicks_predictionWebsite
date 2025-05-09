@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from "react"
 import { Upload, X, Check, AlertCircle, Loader2, Camera, FileText, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
-const API_BASE_URL = "http://127.0.0.1:5000/api"
 
 const ScreenshotUploader = ({ onUploadComplete }) => {
   const [files, setFiles] = useState([])
@@ -139,10 +138,10 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
         formData.append("images", file)
       })
 
-      const response = await fetch(`${API_BASE_URL}/parse_screenshot`, {
+      const response = await fetch("/api/parse_screenshot", {
         method: "POST",
         body: formData,
-      })
+    })
 
       if (!response.ok) {
         const errorData = await response.json()

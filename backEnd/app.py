@@ -18,7 +18,13 @@ import base64
 import requests
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173", "https://prizepicksproject-15337.web.app"]}})
+CORS(app, resources={r"/api/*": {
+    "origins": [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://prizepicksproject-15337.web.app"
+    ]
+}})
 
 # On Cloud Run the default service account is already bound to your project,
 # so this will pick it up automatically.
