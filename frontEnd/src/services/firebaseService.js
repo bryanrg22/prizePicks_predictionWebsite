@@ -184,6 +184,34 @@ export const createBet = async (userId, betData) => {
   return docRef.id
 }
 
+// ————— Active Bets —————
+/**
+ * Fetches all active bets for a user.
+ * First tries the new sub-collection, then falls back to legacy `bets[]`.
+ */
+export const getActiveBets = async (userId) => {
+  // 1) new sub-collection
+  const snap = await getDocs(collection(db, "users", userId, "activeBets"))
+  if (!snap.empty) {
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  }
+
+  // 2) legacy array on the user doc
+  const userSnap = await getDoc(doc(db, "users", userId))
+  if (!userSnap.exists()) return []
+  const legacy = userSnap.data().bets || []
+  return legacy.filter(b => b.status === "Active")
+}
+
+/**
+ * Stub for moving completed bets client-side.
+ * Your Cloud Function does the real archiving,
+ * so here we just return zero moved.
+ */
+export const moveCompletedBets = async (userId) => {
+  return { moved: 0 }
+}
+
 // Get user's active bets (legacy)
 export const getUserActiveBets = async (username) => {
   return await getActiveBets(username)
