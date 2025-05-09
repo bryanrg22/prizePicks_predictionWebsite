@@ -35,6 +35,14 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      # 4) Hook Docker into those creds
+      - name: Configure Docker for GCR & Artifact Registry
+        run: |
+          # legacy Container Registry
+          gcloud auth configure-docker gcr.io --quiet
+          # (if you ever use Artifact Registry repos, include them too)
+          # gcloud auth configure-docker us-west2-docker.pkg.dev --quie
+
       # Build & push your Flask Docker image
       - name: Build & Push Docker image
         run: |
