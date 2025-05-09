@@ -433,3 +433,10 @@ export const getProcessedPlayer = async (playerName, threshold) => {
   const snap = await getDoc(ref)
   return snap.exists() ? snap.data() : null
 }
+
+// Clear out the old picks[] array on the user doc
+export const clearUserPicks = async (userId) => {
+  const userRef = doc(db, "users", userId);
+  // reset picks array to empty
+  await updateDoc(userRef, { picks: [] });
+};
