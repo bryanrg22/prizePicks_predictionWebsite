@@ -71,7 +71,7 @@ Aggregated player cards across all users.
 - **openai** – ChatGPT o4-mini integration
 - **!!Coming Soon!!** - OCaml written to speed up Poisson, Monte Carlo, and GARCH Model
 
-### Data & Analytics  
+### 📈 Data & Analytics  
 - **Poisson & Monte Carlo** – Probability pipelines  
 - **GARCH (arch-model)** – Volatility forecasting  
 - **pandas, NumPy** – Data wrangling  
