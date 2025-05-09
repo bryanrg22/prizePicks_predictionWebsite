@@ -766,14 +766,19 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
 
           {/* Add to Picks Button */}
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
-              // just hand back the literal Firestore doc (with its real `id`)
-              onAddToPicks(playerData)
+              const [first, last] = name.split(" ")
+              const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
+              onAddToPicks({
+                ...playerData,
+                id: pick_id,
+                pick_id,
+                threshold,
+              })
               onClose()
             }}
-            className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors"
-          >
+            className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors">
             <Plus className="w-5 h-5 mr-2" />
             <span>Add to Picks</span>
           </button>

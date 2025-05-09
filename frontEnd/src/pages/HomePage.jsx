@@ -394,32 +394,24 @@ export default function HomePage() {
 
   // Add this function after the handleRemovePick function
   const handleAddProcessedPlayer = async (pick) => {
-    // Check if player is already in picks
-    const existingPickIndex = picks.findIndex((p) => p.id === pick.id)
-    if (existingPickIndex >= 0) {
+    // Check dupes
+    if (picks.some(p => p.id === pick.pick_id)) {
       alert(`${pick.player} is already in your picks`)
       return
     }
 
-    // Add to local state
+    // Locally add
     setPicks([...picks, pick])
 
-    // Add to Firebase - try both new and old structure
     try {
-      
-      // Also add to old structure for backward compatibility
-      await addUserPick(currentUser, pick)
+      // Persist with correct string id
+      await addUserPick(currentUser, { ...pick, id: pick.pick_id })
+      console.log(`Added ${pick.player} to your picks with a threshold of ${pick.threshold} points`)
 
-      // If we're not on the Dashboard tab, show a notification
-      if (activeTab !== "Dashboard") {
-        console.log(`Added ${pick.player} to your picks with a threshold of ${pick.threshold} points`)
-      }
     } catch (error) {
       console.error("Error adding pick to Firebase:", error)
       alert("Failed to save pick. Please try again.")
-      // Remove from local state if Firebase save fails
-      setPicks(picks.filter((p) => p.id !== pick.id))
-      return
+      setPicks(picks.filter(p => p.id !== pick.pick_id))
     }
   }
 
@@ -712,8 +704,14 @@ export default function HomePage() {
         />
       )}
 
-      {/* Player Stats Modal */}
-      {selectedPlayer && <PlayerStatsModal player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />}
+      {/* Player Analysis Modal for processed‐players */}
+      {selectedPlayer && (
+        <PlayerAnalysisModal
+          playerData={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          onAddToPicks={handleAddProcessedPlayer}
+        />
+      )}
 
       {/* Edit Bet Modal */}
       {editingBet && <EditBetModal bet={editingBet} onSave={handleSaveBet} onClose={() => setEditingBet(null)} />}

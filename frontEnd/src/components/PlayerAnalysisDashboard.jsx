@@ -758,9 +758,15 @@ import ImageWithFallback from "./ImageWithFallback"
       <button
         onClick={e => {
           e.stopPropagation()
-          // just hand back the literal Firestore doc (with its real `id`)
-          onAddToPicks(playerData)
-          onClose()
+          // build the proper pick_id string
+          const [first, last] = name.split(" ")
+          const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
+          onAddToPicks({
+            ...playerData,
+            id: pick_id,        // must be a string
+            pick_id,            // also store under pick_id
+            threshold,
+          })
         }}
         className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors">
         <Plus className="w-5 h-5 mr-2" />
