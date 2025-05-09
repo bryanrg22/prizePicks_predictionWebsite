@@ -23,11 +23,11 @@ jobs:
 
       # Deploy only the Hosting portion
       - name: Deploy to Firebase Hosting
-        uses: w9jds/firebase-action@v2
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          args: deploy --only hosting
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_TOKEN }}"
+          channelId: live
 
       # Set up GCP for Cloud Run
       - name: Set up Google Cloud SDK

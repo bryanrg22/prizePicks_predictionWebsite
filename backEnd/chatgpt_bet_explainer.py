@@ -3,6 +3,10 @@ import json
 import textwrap
 from openai import OpenAI
 
+def safe_fmt(x, fmt="{:.2f}"):
+    return fmt.format(x) if x is not None else "N/A"
+
+
 def get_bet_explanation_from_chatgpt(player_data: dict):
     """
     player_data contains:
@@ -27,6 +31,8 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
     adv_stats     = player_data.get("advancedPerformance", {})
     injury        = player_data.get("injuryReport", {})
     vol_playoffs  = player_data.get("volatilityPlayOffsForecast", 0)
+    pp = safe_fmt(player_data.get("poissonProbability")) or 0.0
+    mc = safe_fmt(player_data.get("monteCarloProbability")) or 0.0
 
     # hard-code the two series from your screenshots
     series_data = (
@@ -46,8 +52,8 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
       • Last 5 playoff games avg   : {playoff_avg:.1f}
       • Season avg vs {opponent}  : {vs_opp_avg:.1f}
       • Home/Away avg              : {home_away_avg:.1f}
-      • Poisson probability        : {poisson_p:.2%}
-      • Monte Carlo probability    : {mc_p:.2%}
+      • Poisson probability        : {pp:.2f}
+      • Monte Carlo probability    : {mc:.2f}
       • Advanced stats             : {adv_stats}
       • Injury report              : {injury}
     {f"  • Forecasted playoff vol    : {vol_playoffs:.2f}" if vol_playoffs > 0 else ""}
