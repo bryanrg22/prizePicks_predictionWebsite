@@ -342,9 +342,16 @@ export default function HomePage() {
 
   // Inside the HomePage component, add this function to handle adding a player from ProcessedPlayers
   const handleAddToPicks = async (pick) => {
+    // ensure we have a string id (fallback to playerId if needed)
+    const idStr = typeof pick.id === "string"
+      ? pick.id
+      : `${pick.playerId}_${pick.threshold}`
+  
+    const sanitized = { ...pick, id: idStr }
+  
     // de-dupe & enforce max
-    if (picks.find(p => p.id === pick.id)) {
-      alert(`${pick.player || pick.name} is already in your picks`)
+    if (picks.find(p => p.id === sanitized.id)) {
+      alert(`${sanitized.player || sanitized.name} is already in your picks`)
       return
     }
     if (picks.length >= 6) {
@@ -353,19 +360,18 @@ export default function HomePage() {
     }
   
     // local state
-    setPicks([...picks, pick])
+    setPicks([...picks, sanitized])
   
     // persist
     try {
-      await addUserPick(currentUser, pick)
+      await addUserPick(currentUser, sanitized)
     } catch (err) {
       console.error("Error adding pick:", err)
       alert("Failed to save pick. Rolling back.")
-      setPicks(picks.filter(p => p.id !== pick.id))
-      return
+      setPicks(picks.filter(p => p.id !== sanitized.id))
     }
   
-    // if you came from the search dashboard, reset those inputs
+    // if you came from search, reset inputs
     if (searchPerformed) {
       setSearchPerformed(false)
       setPlayerName("")

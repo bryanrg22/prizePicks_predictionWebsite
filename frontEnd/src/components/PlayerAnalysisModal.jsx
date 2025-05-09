@@ -767,10 +767,14 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
           {/* Add to Picks Button */}
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              // pass the entire playerData object to HomePage
-              onAddToPicks(playerData)
-              onClose()
+               e.stopPropagation()
+               // build a string-id from the API playerId & threshold
+               onAddToPicks({
+                 ...playerData,
+                 id: `${playerData.playerId}_${threshold}`,  // now always a string
+                 threshold,                                   // include threshold too
+               })
+               onClose()
             }}
             className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors"
           >
