@@ -1,41 +1,62 @@
-# main.py
-import os
-import datetime
-import pytz
 from firebase_admin import credentials, firestore, initialize_app
 from nba_api.stats.endpoints import ScoreboardV2, BoxScoreTraditionalV2
+import os, datetime, pytz, requests
 
 # Initialize Firebase Admin SDK
+db = None
 cred = credentials.ApplicationDefault()
 initialize_app(cred, {"projectId": os.getenv("GOOGLE_CLOUD_PROJECT")})
 db = firestore.client()
 
+# Increase default timeout for NBA API requests
+def nba_request(func, *args, **kwargs):
+    try:
+        # pass a higher timeout to avoid read timeouts
+        return func(*args, timeout=60, **kwargs)
+    except requests.exceptions.ReadTimeout:
+        print(f"⚠️ NBA API request timed out for {func.__name__}({args}, {kwargs})")
+        return None
+
+
 def has_tipoff_passed(date_str, time_str):
     eastern = pytz.timezone("US/Eastern")
     dt = datetime.datetime.strptime(
-        f"{date_str} {time_str.replace('ET', '').strip()}",
+        f"{date_str} {time_str.replace('ET','').strip()}",
         "%m/%d/%Y %I:%M %p",
     )
     tipoff_utc = eastern.localize(dt).astimezone(pytz.utc)
     return datetime.datetime.utcnow().replace(tzinfo=pytz.utc) >= tipoff_utc
 
+
 def fetch_game_status(game_date, game_id):
-    sb = ScoreboardV2(game_date=game_date, league_id="00").game_header.get_data_frame()
-    if sb.empty: return None
-    mask = sb["GAME_ID"] == int(game_id)
-    if not mask.any(): return None
-    return sb.loc[mask, "GAME_STATUS_TEXT"].iloc[0]
+    sb = nba_request(ScoreboardV2, game_date=game_date, league_id="00")
+    if not sb:
+        return None
+    df = sb.game_header.get_data_frame()
+    if df.empty:
+        return None
+    mask = df["GAME_ID"] == int(game_id)
+    if not mask.any():
+        return None
+    return df.loc[mask, "GAME_STATUS_TEXT"].iloc[0]
+
 
 def fetch_player_stats(game_id, player_id):
-    bb = BoxScoreTraditionalV2(game_id=game_id).player_stats.get_data_frame()
-    if bb.empty: return None, None
-    mask = bb["PLAYER_ID"] == player_id
-    if not mask.any(): return None, None
-    row = bb.loc[mask].iloc[0]
+    bb = nba_request(BoxScoreTraditionalV2, game_id=game_id)
+    if not bb:
+        return None, None
+    df = bb.player_stats.get_data_frame()
+    if df.empty:
+        return None, None
+    mask = df["PLAYER_ID"] == player_id
+    if not mask.any():
+        return None, None
+    row = df.loc[mask].iloc[0]
     pts = int(row["PTS"])
-    raw_min = row["MIN"] or "0"
+    raw_min = row.get("MIN") or "0"
     mins = int(raw_min.split(":")[0]) if ":" in raw_min else int(raw_min)
     return pts, mins
+
 
 def conclude_doc(ref, data, threshold=None):
     status = fetch_game_status(data["gameDate"], data["gameId"])
@@ -48,15 +69,16 @@ def conclude_doc(ref, data, threshold=None):
 
     update = {
         "gameStatus": "Concluded",
-        "points":      pts,
-        "minutes":     mins,
-        "finishedAt":  firestore.SERVER_TIMESTAMP,
+        "points": pts,
+        "minutes": mins,
+        "finishedAt": firestore.SERVER_TIMESTAMP,
     }
     if threshold is not None:
         update["bet_result"] = "WIN" if pts > threshold else "LOSS"
 
     ref.update(update)
     return True
+
 
 def check_active_players():
     coll = (
@@ -71,6 +93,7 @@ def check_active_players():
            and has_tipoff_passed(data["gameDate"], data["gameTime"]):
             conclude_doc(doc.reference, data)
 
+
 def check_user_picks():
     for user in db.collection("users").stream():
         picks = user.to_dict().get("picks", [])
@@ -84,6 +107,7 @@ def check_user_picks():
                     updated = True
         if updated:
             db.collection("users").document(user.id).update({"picks": picks})
+
 
 def check_active_bets():
     for user in db.collection("users").stream():
@@ -105,12 +129,12 @@ def check_active_bets():
             if all(p.get("gameStatus") == "Concluded" for p in bet.get("picks", [])):
                 overall = "WIN" if all(p.get("bet_result") == "WIN" for p in bet["picks"]) else "LOSS"
                 bet_doc.reference.update({
-                    "status":     "Concluded",
+                    "status": "Concluded",
                     "bet_result": overall,
                 })
 
+
 def check_games_handler(request):
-    """Cloud Function entry point."""
     try:
         check_active_players()
         check_user_picks()
