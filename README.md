@@ -163,13 +163,13 @@ firestore/
 │   │           └─ volatilityPlayOffsForecast: number
 │   └── concluded/ (document)
 │       └── thresholds/ (subcollection)
-│           └── {player_threshold_doc}/  
+│           └── {player_threshold}/  
 │               └─ (same fields as above) 
 ├─ users/{userId}/
 │   ├─ activeBets/{betId}
-│   │   └─ { betAmount, potentialWinnings, picks: [ {player_threshold_doc}/ (document), ... ], status, … }
+│   │   └─ { betAmount, potentialWinnings, picks: [ {firstName_lastName_threshold}/ (document), ... ], status, … }
 │   ├─ betHistory/{betId}
-│   │   └─ { ...betData, settledAt, picks: [ {player_threshold_doc}/ (document), ... ] }
+│   │   └─ { ...betData, settledAt, picks: [ {firstName_lastName_threshold}/ (document), ... ] }
 │   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
 └─  └─ profileData
 ```
