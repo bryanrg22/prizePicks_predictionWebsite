@@ -11,7 +11,7 @@ export const analyzePlayer = async (playerName, threshold) => {
 
     console.log("Sending to API:", { playerName, threshold: numericThreshold })
 
-    const response = await fetch(`${API_BASE_URL}/player`, {
+    const response = await fetch(`api/player`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
