@@ -34,11 +34,13 @@ def fetch_player_stats(game_id, player_id):
         return None, None
     row = bb.loc[mask].iloc[0]
     pts = int(row["PTS"])
+    
     raw_min = row["MIN"] or "0"
     mins = int(raw_min.split(":")[0]) if ":" in raw_min else int(raw_min)
+    print(f"points={pts}, mins={mins}")
     return pts, mins
 
-def conclude_doc(ref, data, threshold=None):
+def update_doc(ref, data, threshold=None):
     
     pts, mins = fetch_player_stats(data["gameId"], data["playerId"])
     if pts is None:
@@ -50,10 +52,9 @@ def conclude_doc(ref, data, threshold=None):
         "minutes": mins,
         "finishedAt": firestore.SERVER_TIMESTAMP,
     }
-    if threshold is not None:
-        update["bet_result"] = "WIN" if pts > threshold else "LOSS"
+    update["bet_result"] = "WIN" if pts > threshold else "LOSS"
 
-    ref.update(update)
+    # ref.update(update)
     return True
 
 
@@ -70,7 +71,9 @@ def check_active_players():
         if i == 1:
             data = doc.to_dict()
             if fetch_game_status(data):
-                conclude_doc
+                update_doc(doc.reference, data);
+                
+                # now move data to nee place
 
             
 
