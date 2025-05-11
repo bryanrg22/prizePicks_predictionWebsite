@@ -49,21 +49,6 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
 
   const handleAddToPicks = (player) => {
     if (onAddToPicks) {
-      const pick = {
-        id: player.playerId || player.id || Date.now().toString(),
-        player: player.name,
-        team: player.team,
-        teamLogo: player.teamLogo,
-        opponent: player.opponent,
-        opponentLogo: player.opponentLogo,
-        gameDate: player.gameDate,
-        gameTime: player.gameTime,
-        threshold: player.threshold,
-        recommendation: player.betExplanation?.recommendation?.toLowerCase().includes("over") ? "OVER" : "UNDER",
-        confidence: "High",
-        photoUrl: player.photoUrl,
-        gameId: player.gameId,
-      }
       onAddToPicks(pick)
 
       // Show confirmation
@@ -389,7 +374,14 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleAddToPicks(player)
+                        const [first, last] = name.split(" ")
+                        const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
+                        onAddToPicks({
+                            ...playerData,
+                            id: pickId,       // ← must be a string
+                            threshold,        // …and nothing else that might shadow it
+                        })
+                        onClose()
                       }}
                       className={`w-full py-2 rounded-md flex items-center justify-center transition-colors ${
                         isAdded ? "bg-green-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -420,7 +412,7 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
         <PlayerAnalysisModal
           playerData={selectedPlayer}
           onClose={handleCloseModal}
-          onAddToPicks={() => handleAddToPicks(selectedPlayer)}
+          onAddToPicks={handleAddToPicks}
         />
       )}
     </div>

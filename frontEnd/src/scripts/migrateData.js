@@ -35,31 +35,7 @@ const migrateUserData = async () => {
       // Update user document with profile object
       await updateDoc(userRef, { profile })
 
-      // Migrate picks to dailyPicks subcollection if they exist
-      if (userData.picks && userData.picks.length > 0) {
-        const today = new Date().toISOString().split("T")[0]
-        const picksRef = doc(db, "users", userId, "dailyPicks", today)
-
-        // Convert picks to new format
-        const newPicks = userData.picks.map((pick) => ({
-          playerId: pick.id,
-          playerName: pick.player,
-          playerTeam: pick.team,
-          playerTeamLogo: pick.teamLogo,
-          opponent: pick.opponent,
-          opponentLogo: pick.opponentLogo,
-          gameDate: pick.gameDate,
-          gameTime: pick.gameTime,
-          threshold: pick.threshold,
-          recommendation: pick.recommendation,
-          confidence: pick.confidence,
-          photoUrl: pick.photoUrl,
-          addedAt: serverTimestamp(),
-        }))
-
-        await setDoc(picksRef, { picks: newPicks })
-      }
-
+      
       // Migrate active bets to activeBets subcollection if they exist
       if (userData.bets && userData.bets.length > 0) {
         const activeBets = userData.bets.filter((bet) => bet.status === "Active")
