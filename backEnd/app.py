@@ -115,6 +115,8 @@ def parse_screenshot_endpoint():
             result = parse_image_data_url(data_url)
             players = result.get("players", [])
         except Exception:
+            app.logger.exception("Screenshot parsing failed")
+            parsed = {"players": [], "count": 0}
             continue
 
         for entry in players:
