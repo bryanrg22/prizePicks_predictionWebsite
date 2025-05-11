@@ -103,6 +103,6 @@ def check_active_bets():
                 })
 
 
-#check_active_players()
-check_user_picks()
+check_active_players()
+#check_user_picks()
 #check_active_bets()
