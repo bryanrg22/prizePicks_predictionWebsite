@@ -29,12 +29,17 @@ def parse_image_data_url(data_url: str) -> dict:
             ]
         }
     ]
+    try:
+        resp      = llm.chat.completions.create(
+            model="o4-mini",
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+    except Exception as e:
+        # this will catch the “did not match the expected pattern” error
+        print(f"[⚠️  LLM parse-error] {e}")
+        return {"players": [], "count": 0}
 
-    resp      = llm.chat.completions.create(
-        model="o4-mini",
-        messages=messages,
-        response_format={"type": "json_object"}
-    )
 
     raw_json  = resp.choices[0].message.content   # already a JSON-string
 
