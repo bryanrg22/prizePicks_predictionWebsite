@@ -103,7 +103,7 @@ def parse_screenshot_endpoint():
         return jsonify({"error": "No images uploaded"}), 400
 
     parsed = []
-    base = request.url_root.rstrip("/") 
+    base = request.url_root.rstrip("/").replace("http://", "https://", 1)
 
     for img in files:
         raw = img.read()
@@ -126,7 +126,7 @@ def parse_screenshot_endpoint():
             # Fire off your existing analyze route:
             try:
                 requests.post(
-                    f"{base}/api/player",
+                    f"/api/player",
                     json={"playerName": name, "threshold": threshold},
                     timeout=10
                 )
