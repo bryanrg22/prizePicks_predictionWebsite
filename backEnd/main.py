@@ -101,6 +101,7 @@ def check_user_picks():
         if updated:
             db.collection("users").document(user.id).update({"picks": picks})
 
+
 def check_active_bets():
     for user in db.collection("users").stream():
         sub = db.collection("users").document(user.id).collection("activeBets")

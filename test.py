@@ -11,25 +11,18 @@ cred = credentials.ApplicationDefault()
 initialize_app(cred, {"projectId": os.getenv("GOOGLE_CLOUD_PROJECT")})
 db = firestore.client()
 
-def has_tipoff_passed(date_str, time_str):
-    # date_str: "MM/DD/YYYY", time_str: "8:30 pm ET"
-    eastern = pytz.timezone("US/Eastern")
-    dt = datetime.datetime.strptime(
-        f"{date_str} {time_str.replace('ET', '').strip()}",
-        "%m/%d/%Y %I:%M %p",
-    )
-    tipoff_utc = eastern.localize(dt).astimezone(pytz.utc)
-    return datetime.datetime.utcnow().replace(tzinfo=pytz.utc) >= tipoff_utc
-
-def fetch_game_status(game_date, game_id):
-    """Return the GAME_STATUS_TEXT (e.g. 'Final') or None."""
-    sb = ScoreboardV2(game_date=game_date, league_id="00").game_header.get_data_frame()
+def fetch_game_status(data):
+    sb = ScoreboardV2(game_date=data["gameDate"], league_id="00").game_header.get_data_frame()
     if sb.empty:
-        return None
-    mask = sb["GAME_ID"] == int(game_id)
-    if not mask.any():
-        return None
-    return sb.loc[mask, "GAME_STATUS_TEXT"].iloc[0]
+        print("No game data available.")
+    
+    if data['gameId'] in sb['GAME_ID'].values:
+        mask = sb["GAME_ID"] == data['gameId']
+        # row = sb.loc[mask].iloc[0]
+        
+    if sb.loc[mask, "GAME_STATUS_TEXT"].iloc[0] == "Final":
+        return True
+
 
 def fetch_player_stats(game_id, player_id):
     """Return (points, minutes) or (None, None)."""
@@ -46,16 +39,7 @@ def fetch_player_stats(game_id, player_id):
     return pts, mins
 
 def conclude_doc(ref, data, threshold=None):
-    """
-    If the game is final, patch the document reference:
-      - gameStatus, points, minutes, finishedAt
-      - if threshold is provided, also compute bet_result
-    Returns True if we wrote anything.
-    """
-    status = fetch_game_status(data["gameDate"], data["gameId"])
-    if not status or not status.lower().startswith("final"):
-        return False
-
+    
     pts, mins = fetch_player_stats(data["gameId"], data["playerId"])
     if pts is None:
         return False
@@ -85,16 +69,9 @@ def check_active_players():
     for doc in coll.stream():
         if i == 1:
             data = doc.to_dict()
-            print(f"player_name: {data['name']}, gameDate: {data['gameDate']}, status = {data['gameStatus']}")
-            sb = ScoreboardV2(game_date=data["gameDate"], league_id="00").game_header.get_data_frame()
-            if sb.empty:
-                print("No game data available.")
-            
-            if data['gameId'] in sb['GAME_ID'].values:
-                mask = sb["GAME_ID"] == data['gameId']
-                # row = sb.loc[mask, "GAME_STATUS_TEXT"].iloc[0]
-                row = sb.loc[mask].iloc[0]
-                print(row)
+            if fetch_game_status(data):
+                conclude_doc
+
             
 
             i += 1
