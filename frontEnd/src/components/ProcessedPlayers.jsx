@@ -377,7 +377,7 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                         const [first, last] = player.name.split(" ")
                         const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
                         onAddToPicks({
-                            ...playerData,
+                            ...player,
                             id: pickId,       // ← must be a string
                             threshold,        // …and nothing else that might shadow it
                         })

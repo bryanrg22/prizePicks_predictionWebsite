@@ -69,11 +69,17 @@ def check_active_players():
 
 
 def check_user_picks():
-    for user in db.collection("users").stream():
-        picks = user.to_dict()
-        for pick in picks.get("picks", []):
-            if fetch_game_status(pick):
-                update_doc(pick.reference, pick)
+    for user_snap in db.collection("users").stream():
+        pick_refs = user_snap.get("picks") or []
+        for pick_ref in pick_refs:
+            pick_snap = pick_ref.get()
+            if not pick_snap.exists:
+                continue
+
+            pick_data = pick_snap.to_dict()
+            if fetch_game_status(pick_data):
+                # pass the ref and the dict into your updater
+                update_doc(pick_ref, pick_data)
             
 
 def check_active_bets():
@@ -97,6 +103,6 @@ def check_active_bets():
                 })
 
 
-check_active_players()
-#check_user_picks()
+#check_active_players()
+check_user_picks()
 #check_active_bets()
