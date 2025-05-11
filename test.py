@@ -70,8 +70,8 @@ def check_active_players():
 
 def check_user_picks():
     for user in db.collection("users").stream():
-        picks = user.to_dict().get("picks", [])
-        for pick in picks:
+        picks = user.to_dict()
+        for pick in picks.get("picks", []):
             if fetch_game_status(pick):
                 update_doc(pick.reference, pick)
             
@@ -97,6 +97,6 @@ def check_active_bets():
                 })
 
 
-#check_active_players()
-check_user_picks()
+check_active_players()
+#check_user_picks()
 #check_active_bets()

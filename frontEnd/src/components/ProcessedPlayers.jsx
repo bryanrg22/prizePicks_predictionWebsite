@@ -49,7 +49,7 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
 
   const handleAddToPicks = (player) => {
     if (onAddToPicks) {
-      onAddToPicks(pick)
+      onAddToPicks(player)
 
       // Show confirmation
       setAddedPlayers({
@@ -374,7 +374,7 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        const [first, last] = name.split(" ")
+                        const [first, last] = player.name.split(" ")
                         const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
                         onAddToPicks({
                             ...playerData,
