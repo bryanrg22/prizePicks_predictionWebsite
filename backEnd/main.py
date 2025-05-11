@@ -12,25 +12,18 @@ cred = credentials.ApplicationDefault()
 initialize_app(cred, {"projectId": os.getenv("GOOGLE_CLOUD_PROJECT")})
 db = firestore.client()
 
-def has_tipoff_passed(date_str, time_str):
-    # date_str: "MM/DD/YYYY", time_str: "8:30 pm ET"
-    eastern = pytz.timezone("US/Eastern")
-    dt = datetime.datetime.strptime(
-        f"{date_str} {time_str.replace('ET', '').strip()}",
-        "%m/%d/%Y %I:%M %p",
-    )
-    tipoff_utc = eastern.localize(dt).astimezone(pytz.utc)
-    return datetime.datetime.utcnow().replace(tzinfo=pytz.utc) >= tipoff_utc
-
-def fetch_game_status(game_date, game_id):
-    """Return the GAME_STATUS_TEXT (e.g. 'Final') or None."""
-    sb = ScoreboardV2(game_date=game_date, league_id="00").game_header.get_data_frame()
+# Helper functions
+def fetch_game_status(data):
+    sb = ScoreboardV2(game_date=data["gameDate"], league_id="00").game_header.get_data_frame()
     if sb.empty:
-        return None
-    mask = sb["GAME_ID"] == int(game_id)
-    if not mask.any():
-        return None
-    return sb.loc[mask, "GAME_STATUS_TEXT"].iloc[0]
+        print("No game data available.")
+    
+    if data['gameId'] in sb['GAME_ID'].values:
+        mask = sb["GAME_ID"] == data['gameId']
+        # row = sb.loc[mask].iloc[0]
+        
+    if sb.loc[mask, "GAME_STATUS_TEXT"].iloc[0] == "Final":
+        return True
 
 def fetch_player_stats(game_id, player_id):
     """Return (points, minutes) or (None, None)."""
@@ -42,86 +35,64 @@ def fetch_player_stats(game_id, player_id):
         return None, None
     row = bb.loc[mask].iloc[0]
     pts = int(row["PTS"])
+
     raw_min = row["MIN"] or "0"
-    mins = int(raw_min.split(":")[0]) if ":" in raw_min else int(raw_min)
+    mins = int(raw_min.split(":")[0].split(".")[0])
+    
     return pts, mins
 
-def conclude_doc(ref, data, threshold=None):
-    """
-    If the game is final, patch the document reference:
-      - gameStatus, points, minutes, finishedAt
-      - if threshold is provided, also compute bet_result
-    Returns True if we wrote anything.
-    """
-    status = fetch_game_status(data["gameDate"], data["gameId"])
-    if not status or not status.lower().startswith("final"):
-        return False
-
+def update_doc(ref, data):
+    
     pts, mins = fetch_player_stats(data["gameId"], data["playerId"])
     if pts is None:
         return False
-
+        
     update = {
         "gameStatus": "Concluded",
         "points": pts,
         "minutes": mins,
-        "finishedAt": firestore.SERVER_TIMESTAMP,
+        "finishedAt": firestore.SERVER_TIMESTAMP
     }
-    if threshold is not None:
-        update["bet_result"] = "WIN" if pts > threshold else "LOSS"
+    update["bet_result"] = "WIN" if pts > data['threshold'] else "LOSS"
 
     ref.update(update)
     return True
 
+
+# Main Functions
 def check_active_players():
     coll = (
         db.collection("processedPlayers")
           .document("players")
           .collection("active")
-          .where("gameStatus", "==", "Scheduled")
     )
     for doc in coll.stream():
         data = doc.to_dict()
-        if data.get("gameDate") and data.get("gameTime") \
-           and has_tipoff_passed(data["gameDate"], data["gameTime"]):
-            conclude_doc(doc.reference, data)
+        if fetch_game_status(data):
+            update_doc(doc.reference, data)
+
 
 def check_user_picks():
     for user in db.collection("users").stream():
         picks = user.to_dict().get("picks", [])
-        updated = False
         for pick in picks:
-            if pick.get("gameStatus") != "Scheduled":
-                continue
-            if pick.get("gameDate") and has_tipoff_passed(pick["gameDate"], pick["gameTime"]):
-                # patch with threshold so bet_result is set
-                if conclude_doc(user.reference, pick, threshold=pick.get("threshold", 0)):
-                    pick["gameStatus"] = "Concluded"
-                    updated = True
-        if updated:
-            db.collection("users").document(user.id).update({"picks": picks})
-
+            if fetch_game_status(pick):
+                update_doc(pick.reference, pick)
+            
 
 def check_active_bets():
     for user in db.collection("users").stream():
         sub = db.collection("users").document(user.id).collection("activeBets")
         for bet_doc in sub.stream():
             bet = bet_doc.to_dict()
-            changed = False
 
             # 1) Conclude each pick
             for p in bet.get("picks", []):
-                if p.get("gameStatus") == "Scheduled" \
-                   and has_tipoff_passed(p["gameDate"], p["gameTime"]):
-                    if conclude_doc(bet_doc.reference, p, threshold=p.get("threshold", 0)):
-                        p["gameStatus"] = "Concluded"
-                        changed = True
+                if fetch_game_status(p):
+                    update_doc(p.reference, p)
 
-            # 2) Write back updated picks
-            if changed:
-                bet_doc.reference.update({"picks": bet["picks"]})
 
-            # 3) If all picks concluded, settle the bet
+            # 2) If all picks concluded, settle the bet
             if all(p.get("gameStatus") == "Concluded" for p in bet.get("picks", [])):
                 overall = "WIN" if all(p.get("bet_result") == "WIN" for p in bet["picks"]) else "LOSS"
                 bet_doc.reference.update({
@@ -134,7 +105,7 @@ app = Flask(__name__)
 @app.route("/check_games", methods=["GET", "POST"])
 def check_games_handler(request):
     try:
-        check_active_players()
+        #check_active_players()
         check_user_picks()
         check_active_bets()
         return "OK", 200
