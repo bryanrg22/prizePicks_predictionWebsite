@@ -126,7 +126,7 @@ def parse_screenshot_endpoint():
             # Fire off your existing analyze route:
             try:
                 requests.post(
-                    f"/api/player",
+                    f"{base}/api/player",
                     json={"playerName": name, "threshold": threshold},
                     timeout=10
                 )
