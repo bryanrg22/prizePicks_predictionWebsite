@@ -165,9 +165,9 @@ firestore/
 │           └─ (same fields as above) 
 ├─ users/{userId}/
 │   ├─ activeBets/{YYYYMMDDTHHMMSSZ}
-│   │   └─ { betAmount, potentialWinnings, picks: [ {firstName_lastName_threshold}/ (document), ... ], status, … }
+│   │   └─ { betAmount, potentialWinnings, picks: [ [0] player_Document_References, [i]... ] }
 │   ├─ betHistory/{YYYYMMDDTHHMMSSZ}
-│   │   └─ { betData, settledAt, picks: [ {firstName_lastName_threshold}/ (document), ... ] }
-│   ├─ picks: [ {player_threshold_doc}/ (document), ... ]     
+│   │   └─ { betAmount, potentialWinnings, betResult, picks: [ [0] player_Document_References (+ points, minutes added), [i]... ] ] }
+│   ├─ picks: picks: [ [0] player_Document_References, [i]... ]     
 └─  └─ profileData
 ```
