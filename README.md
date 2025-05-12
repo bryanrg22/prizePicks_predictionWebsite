@@ -164,13 +164,10 @@ firestore/
 │       └── {first_last_threshold_YYYYMMDD}/  
 │           └─ (same fields as above) 
 ├─ users/{userId}/
-│   ├─ activeBets/{YYYYMMDDTHMSZ}
+│   ├─ activeBets/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betAmount, potentialWinnings, picks: [ {firstName_lastName_threshold}/ (document), ... ], status, … }
-│   ├─ betHistory/{betId}
+│   ├─ betHistory/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betData, settledAt, picks: [ {firstName_lastName_threshold}/ (document), ... ] }
-│   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
+│   ├─ picks: [ {player_threshold_doc}/ (document), ... ]     
 └─  └─ profileData
 ```
-
-gd = pick_data["gameDate"]  # a datetime
-    ts = gd.strftime("%Y%m%dT%H%M%SZ")
