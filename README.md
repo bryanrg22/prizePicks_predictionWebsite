@@ -135,31 +135,31 @@ firestore/
 │   │       ├─ opponent: string
 │   │       ├─ photoUrl: string
 │   │       ├─ teamLogo: string
-│   │           ├─ opponentLogo: string
-│   │           ├─ gameDate: Timestamp
-│   │           ├─ gameTime: string
-│   │           ├─ gameType: string
-│   │           ├─ teamPlayoffRank: number
-│   │           ├─ opponentPlayoffRank: number
-│   │           ├─ seasonAvgPoints: number
-│   │           ├─ last5RegularGamesAvg: number
-│   │           ├─ seasonAvgVsOpponent: number
-│   │           ├─ homeAwayAvg: number
-│   │           ├─ last5RegularGames: array<map>  
-│   │           │    └─ [{ date, points, opponent, opponentFullName, … }, …]
-│   │           ├─ advancedPerformance: map
-│   │           ├─ careerSeasonStats: array<map>
-│   │           ├─ injuryReport: map
-│   │           ├─ betExplanation: map
-│   │           ├─ poissonProbability: number
-│   │           ├─ monteCarloProbability: number
-│   │           ├─ volatilityForecast: number
-│   │           ├─ season_games_agst_opp: array<map>
-│   │           ├─ num_playoff_games: number
-│   │           ├─ playoffAvg: number
-│   │           ├─ playoff_games: array<map>  
-│   │           │    └─ [{ date, points, opponent, …, gameType: "Playoffs" }, …]
-│   │           └─ volatilityPlayOffsForecast: number
+│   │       ├─ opponentLogo: string
+│   │       ├─ gameDate: Timestamp
+│   │       ├─ gameTime: string
+│   │       ├─ gameType: string
+│   │       ├─ teamPlayoffRank: number
+│   │       ├─ opponentPlayoffRank: number
+│   │       ├─ seasonAvgPoints: number
+│   │       ├─ last5RegularGamesAvg: number
+│   │       ├─ seasonAvgVsOpponent: number
+│   │       ├─ homeAwayAvg: number
+│   │       ├─ last5RegularGames: array<map>  
+│   │       │    └─ [{ date, points, opponent, opponentFullName, … }, …]
+│   │       ├─ advancedPerformance: map
+│   │       ├─ careerSeasonStats: array<map>
+│   │       ├─ injuryReport: map
+│   │       ├─ betExplanation: map
+│   │       ├─ poissonProbability: number
+│   │       ├─ monteCarloProbability: number
+│   │       ├─ volatilityForecast: number
+│   │       ├─ season_games_agst_opp: array<map>
+│   │       ├─ num_playoff_games: number
+│   │       ├─ playoffAvg: number
+│   │       ├─ playoff_games: array<map>  
+│   │       │    └─ [{ date, points, opponent, …, gameType: "Playoffs" }, …]
+│   │       └─ volatilityPlayOffsForecast: number
 │   └── concluded/ (document)
 │       └── {first_last_threshold_YYYYMMDD}/  
 │           └─ (same fields as above) 
