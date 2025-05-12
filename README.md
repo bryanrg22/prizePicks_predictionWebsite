@@ -127,15 +127,14 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 firestore/
 ├─ processedPlayers/ (collection)
 │   ├── active/ (document)
-│   │   └── thresholds/ (subcollection)
-│   │       └── {firstName_lastName_threshold}/ (document)
-│   │           ├─ name: string
-│   │           ├─ playerId: string
-│   │           ├─ team: string
-│   │           ├─ position: string
-│   │           ├─ opponent: string
-│   │           ├─ photoUrl: string
-│   │           ├─ teamLogo: string
+│   │   └── {first_last_threshold_YYYYMMDD}/ (document)
+│   │       ├─ name: string
+│   │       ├─ playerId: string
+│   │       ├─ team: string
+│   │       ├─ position: string
+│   │       ├─ opponent: string
+│   │       ├─ photoUrl: string
+│   │       ├─ teamLogo: string
 │   │           ├─ opponentLogo: string
 │   │           ├─ gameDate: Timestamp
 │   │           ├─ gameTime: string
@@ -162,14 +161,16 @@ firestore/
 │   │           │    └─ [{ date, points, opponent, …, gameType: "Playoffs" }, …]
 │   │           └─ volatilityPlayOffsForecast: number
 │   └── concluded/ (document)
-│       └── thresholds/ (subcollection)
-│           └── {player_threshold}/  
-│               └─ (same fields as above) 
+│       └── {first_last_threshold_YYYYMMDD}/  
+│           └─ (same fields as above) 
 ├─ users/{userId}/
-│   ├─ activeBets/{betId}
+│   ├─ activeBets/{YYYYMMDDTHMSZ}
 │   │   └─ { betAmount, potentialWinnings, picks: [ {firstName_lastName_threshold}/ (document), ... ], status, … }
 │   ├─ betHistory/{betId}
 │   │   └─ { betData, settledAt, picks: [ {firstName_lastName_threshold}/ (document), ... ] }
 │   │  picks: picks: [ {player_threshold_doc}/ (document), ... ]     
 └─  └─ profileData
 ```
+
+gd = pick_data["gameDate"]  # a datetime
+    ts = gd.strftime("%Y%m%dT%H%M%SZ")
