@@ -105,9 +105,9 @@ app = Flask(__name__)
 @app.route("/check_games", methods=["GET", "POST"])
 def check_games_handler(request):
     try:
-        #check_active_players()
-        check_user_picks()
-        check_active_bets()
+        check_active_players
+        #check_user_picks()
+        #check_active_bets()
         return "OK", 200
     except Exception as e:
         print("ERROR in check_games:", e)
