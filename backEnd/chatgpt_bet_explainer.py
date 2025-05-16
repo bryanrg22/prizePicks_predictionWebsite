@@ -7,6 +7,12 @@ from openai import OpenAIError
 def safe_fmt(x, fmt="{:.2f}"):
     return fmt.format(x) if x is not None else "N/A"
 
+def to_float(x, default=0.0):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return default
+
 
 def get_bet_explanation_from_chatgpt(player_data: dict):
     """
@@ -22,16 +28,16 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
     name          = player_data.get("name", "")
     team          = player_data.get("team", "")
     opponent      = player_data.get("opponent", "")
-    threshold     = float(player_data.get("threshold", 0))
-    season_avg    = float(player_data.get("seasonAvgPoints", 0))
-    playoff_avg   = float(player_data.get("playoffAvg", 0))
-    vs_opp_avg    = float(player_data.get("seasonAvgVsOpponent", 0))
-    home_away_avg = float(player_data.get("homeAwayAvg", 0))
+    threshold     = to_float(float(player_data.get("threshold", 0)))
+    season_avg    = to_float(float(player_data.get("seasonAvgPoints", 0)))
+    playoff_avg   = to_float(float(player_data.get("playoffAvg", 0)))
+    vs_opp_avg    = to_float(float(player_data.get("seasonAvgVsOpponent", 0)))
+    home_away_avg = to_float(float(player_data.get("homeAwayAvg", 0)))
     poisson_p     = player_data.get("poissonProbability", 0)
     mc_p          = player_data.get("monteCarloProbability", 0)
     adv_stats     = player_data.get("advancedPerformance", {})
     injury        = player_data.get("injuryReport", {})
-    vol_playoffs  = float(player_data.get("volatilityPlayOffsForecast", 0))
+    vol_playoffs  = to_float(float(player_data.get("volatilityPlayOffsForecast", 0)))
     playoff_games = player_data.get("playoff_games", "N/A")
 
     # 2) Optional forecast line
