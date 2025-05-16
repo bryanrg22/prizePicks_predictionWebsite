@@ -162,7 +162,7 @@ firestore/
 │   │       └─ volatilityPlayOffsForecast: number
 │   └── concluded/ (document)
 │       └── {first_last_threshold_YYYYMMDD}/  
-│           └─ (same fields as above) 
+│           └─ (same fields as active/) 
 ├─ users/{userId}/
 │   ├─ activeBets/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betAmount, potentialWinnings, picks: [ [0] player_Document_References, [i]... ] }
