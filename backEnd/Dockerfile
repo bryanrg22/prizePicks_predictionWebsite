@@ -8,7 +8,7 @@ RUN apt-get update && \
       ocaml ocaml-findlib m4 make opam pkg-config libffi-dev curl && \
     rm -rf /var/lib/apt/lists/*
 
-    # 2) Bootstrap OPAM, create a switch, install ctypes & ctypes-foreign
+# 2) Bootstrap OPAM, create a switch, install ctypes & ctypes-foreign
 RUN opam init --disable-sandboxing --bare --no-setup && \
     opam switch create 4.14.0 --yes && \
     eval $(opam env) && \
