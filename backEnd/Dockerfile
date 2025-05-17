@@ -1,5 +1,15 @@
 # Stage 1: build the OCaml shared lib with OPAM
 FROM ocaml/opam:debian-12-ocaml-4.14 AS builder
+# switch to root so we can apt-get
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      pkg-config \
+      libffi-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# back to opam user for the opam commands
+USER opam
 WORKDIR /app
 
 # copy your OCaml file
@@ -13,6 +23,7 @@ RUN opam update && \
       -package ctypes,ctypes.foreign \
       -linkpkg \
       -shared -o libmontecarlo.so montecarlo.ml
+
 
 # Stage 2: runtime Python image
 FROM python:3.9-slim
