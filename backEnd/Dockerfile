@@ -1,40 +1,29 @@
-# backEnd/Dockerfile
 FROM python:3.9-slim
 WORKDIR /app
 
-# 1) Install OCaml, OPAM & build tools
+# 1) Install system deps + OCaml/opam
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ocaml ocaml-findlib m4 make opam pkg-config libffi-dev curl && \
-    rm -rf /var/lib/apt/lists/*
-
-# 2) Bootstrap OPAM, create a switch, install ctypes & ctypes-foreign
-RUN opam init --disable-sandboxing --bare --no-setup && \
+    rm -rf /var/lib/apt/lists/* && \
+# 2) Bootstrap OPAM, switch, install ctypes packages
+    opam init --disable-sandboxing --bare --no-setup && \
     opam switch create 4.14.0 --yes && \
-    eval $(opam env) && \
+    eval $(opam env --switch=4.14.0) && \
     opam update && \
-    opam install --yes ctypes ctypes-foreign
-
-# 3) Python dependencies
-COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install openai firebase-admin pdfplumber
-
-# 4) Copy OCaml source & compile shared lib within OPAM env
-RUN opam exec -- ocamlfind ocamlopt \
+    opam install --yes ctypes ctypes-foreign && \
+# 3) Copy & compile your .ml into a shared lib
+    cp montecarlo.ml /app/ && \
+    ocamlfind ocamlopt \
       -package ctypes.foreign \
-      -linkpkg               \
-      -shared -o libmontecarlo.so \
-    montecarlo.ml
+      -linkpkg \
+      -shared -o libmontecarlo.so montecarlo.ml
 
-# 5) Copy the rest of your app
+# 4) Python deps
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# 5) Copy rest of your code
 COPY . .
 
-# 6) Start the server
-CMD ["gunicorn", "app:app", \
-     "--bind", "0.0.0.0:8080", \
-     "--timeout", "120", \
-     "--workers", "2", \
-     "--capture-output", \
-     "--log-level", "debug"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8080", "--timeout", "120", "--workers", "2", "--capture-output", "--log-level", "debug"]
