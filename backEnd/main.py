@@ -103,7 +103,7 @@ def check_active_bets():
 app = Flask(__name__)
 
 @app.route("/check_games", methods=["GET", "POST"])
-def check_games_handler(request):
+def check_games_handler():
     try:
         check_active_players
         #check_user_picks()
