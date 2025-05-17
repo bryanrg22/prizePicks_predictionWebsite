@@ -5,7 +5,6 @@ from flask import Flask
 from firebase_admin import credentials, firestore, initialize_app
 from nba_api.stats.endpoints import ScoreboardV2, BoxScoreTraditionalV2
 
-db = firestore.client()
 
 # Helper functions
 def fetch_game_status(data):
@@ -37,7 +36,6 @@ def fetch_player_stats(game_id, player_id):
     return pts, mins
 
 def update_doc(ref, data):
-    
     pts, mins = fetch_player_stats(data["gameId"], data["playerId"])
     if pts is None:
         return False
@@ -56,6 +54,7 @@ def update_doc(ref, data):
 
 # Main Functions
 def check_active_players():
+    db = firestore.client()
     coll = (
         db.collection("processedPlayers")
           .document("players")
@@ -68,6 +67,7 @@ def check_active_players():
 
 
 def check_user_picks():
+    db = firestore.client()
     for user in db.collection("users").stream():
         picks = user.to_dict().get("picks", [])
         for pick in picks:
@@ -76,6 +76,7 @@ def check_user_picks():
             
 
 def check_active_bets():
+    db = firestore.client()
     for user in db.collection("users").stream():
         sub = db.collection("users").document(user.id).collection("activeBets")
         for bet_doc in sub.stream():
@@ -98,7 +99,7 @@ def check_active_bets():
 
 def check_games_handler():
     try:
-        check_active_players
+        check_active_players()
         #check_user_picks()
         #check_active_bets()
         return "OK", 200

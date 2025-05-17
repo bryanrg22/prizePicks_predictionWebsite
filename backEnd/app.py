@@ -4,7 +4,15 @@ from flask_cors import CORS
 
 import firebase_admin
 from firebase_admin import firestore
-import firebase_admin 
+
+try:
+    firebase_admin.initialize_app()
+except ValueError:
+    # already initialized
+    pass
+db = firestore.client()
+
+import player_analyzer
 
 import player_analyzer
 from prediction_analyzer import calculate_poisson_probability
@@ -29,15 +37,6 @@ CORS(app, resources={r"/api/*": {
         "https://prizepicks-backend-***.us-west2.run.app"
     ]
 }})
-
-# On Cloud Run the default service account is already bound to your project,
-# so this will pick it up automatically.
-try:
-    firebase_admin.initialize_app()
-except ValueError:
-    # already initialized
-    pass
-db = firestore.client()
 
 def pkey(name: str) -> str:
     return name.lower().replace(" ", "_")
