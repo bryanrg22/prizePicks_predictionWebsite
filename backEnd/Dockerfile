@@ -8,11 +8,13 @@ RUN apt-get update && \
       libctypes-foreign-ocaml-dev && \
     rm -rf /var/lib/apt/lists/*
 
+
 # 2) Python deps
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
     pip install openai firebase-admin pdfplumber
+
 
 # 3) Copy OCaml source & compile shared lib
 COPY montecarlo.ml .
@@ -20,8 +22,10 @@ RUN ocamlfind ocamlopt \
       -package ctypes.foreign -linkpkg \
       -shared -o libmontecarlo.so montecarlo.ml
 
+
 # 4) Copy the rest of your code
 COPY . .
+
 
 # 5) Launch
 CMD exec gunicorn app:app \
