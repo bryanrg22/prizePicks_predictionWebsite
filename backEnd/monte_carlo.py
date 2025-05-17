@@ -2,6 +2,15 @@ import numpy as np
 from nba_api.stats.static import players
 # Import helper functions from player_analyzer
 from player_analyzer import fetch_player_game_logs, get_current_season
+import os
+from ctypes import CDLL, c_double, c_uint64
+
+_ocaml_mc = None
+_so_path = os.path.join(os.path.dirname(__file__), "..", "libmontecarlo.so")
+if os.path.exists(_so_path):
+    _ocaml_mc = CDLL(_so_path)
+    _ocaml_mc.monte_carlo.argtypes = (c_double, c_double, c_double, c_uint64)
+    _ocaml_mc.monte_carlo.restype  = c_double
 
 def get_player_game_data(player_name, max_games=60):
     """
@@ -80,11 +89,16 @@ def monte_carlo_for_player(player_name,
     if sigma < 0.0001:
         sigma = 0.5
 
-    print(f"[monte_carlo] Running MC: μ={mu:.2f}, σ={sigma:.2f}, threshold={point_threshold}, dist={distribution}")
-    prob = run_monte_carlo_simulation(
-        mu, sigma,
-        point_threshold=point_threshold,
-        num_simulations=num_simulations,
-        distribution=distribution
-    )
+    print(f"[monte_carlo] Running MC: μ={mu:.2f}, σ={sigma:.2f}, threshold={point_threshold}")
+    if _ocaml_mc:
+        # call into OCaml for a pure-C binding
+        prob = _ocaml_mc.monte_carlo(mu, sigma, point_threshold, num_simulations)
+    else:
+        # fallback to Python NumPy version
+        prob = run_monte_carlo_simulation(
+            mu, sigma,
+            point_threshold=point_threshold,
+            num_simulations=num_simulations,
+            distribution=distribution
+        )
     return prob
