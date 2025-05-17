@@ -157,13 +157,12 @@ def more_games_endpoint(player_id):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+app.add_url_rule(
+    "/check_games",
+    endpoint="check_games",
+    view_func=check_games_handler,
+    methods=["GET", "POST"],
+)
+
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
-
-
-app.add_url_rule(
-  "/check_games",
-  "check_games",
-  check_games_handler,
-  methods=["GET", "POST"]
-)
