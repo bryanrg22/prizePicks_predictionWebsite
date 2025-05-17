@@ -22,11 +22,11 @@ RUN pip install --upgrade pip && \
     pip install openai firebase-admin pdfplumber
 
 # 4) Copy OCaml source & compile shared lib within OPAM env
-COPY montecarlo.ml .
-RUN . /root/.opam/opam-init/init.sh && \
-    ocamlfind ocamlopt \
-      -package ctypes.foreign -linkpkg \
-      -shared -o libmontecarlo.so montecarlo.ml
+RUN opam exec -- ocamlfind ocamlopt \
+      -package ctypes.foreign \
+      -linkpkg               \
+      -shared -o libmontecarlo.so \
+    montecarlo.ml
 
 # 5) Copy the rest of your app
 COPY . .
