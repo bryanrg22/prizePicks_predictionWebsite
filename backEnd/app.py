@@ -17,6 +17,8 @@ from screenshot_parser import parse_image_data_url
 import base64
 import requests
 
+from main import check_games_handler
+
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {
     "origins": [
@@ -157,3 +159,11 @@ def more_games_endpoint(player_id):
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
+
+
+app.add_url_rule(
+  "/check_games",
+  "check_games",
+  check_games_handler,
+  methods=["GET", "POST"]
+)
