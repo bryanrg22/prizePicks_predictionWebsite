@@ -1,32 +1,36 @@
-FROM python:3.9-slim
+# Stage 1: build the OCaml shared lib with OPAM
+FROM ocaml/opam:debian-12-ocaml-4.14 AS builder
 WORKDIR /app
 
-# 1) Install system deps + OCaml/opam
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      ocaml ocaml-findlib m4 make opam pkg-config libffi-dev curl && \
-    rm -rf /var/lib/apt/lists/*
-
-# 2) Copy OCaml source
+# copy your OCaml file
 COPY montecarlo.ml .
 
-# 3) Bootstrap OPAM, install ctypes & compile your .so
-RUN opam init --disable-sandboxing --bare --no-setup && \
-    opam switch create 4.14.0 --yes && \
-    eval $(opam env --switch=4.14.0) && \
-    opam update && \
+# install ctypes + ctypes-foreign and compile
+RUN opam update && \
     opam install --yes ctypes ctypes-foreign && \
+    eval $(opam env) && \
     ocamlfind ocamlopt \
-      -package ctypes.foreign \
+      -package ctypes,ctypes.foreign \
       -linkpkg \
       -shared -o libmontecarlo.so montecarlo.ml
 
-# 4) Python deps
-COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+# Stage 2: runtime Python image
+FROM python:3.9-slim
+WORKDIR /app
 
-# 5) Copy rest of your app
+# for using the .so
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libffi-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# pull in your compiled .so
+COPY --from=builder /app/libmontecarlo.so .
+
+# Python deps
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# your app sources
 COPY . .
 
 CMD ["gunicorn", "app:app", \
