@@ -5,9 +5,6 @@ from flask import Flask
 from firebase_admin import credentials, firestore, initialize_app
 from nba_api.stats.endpoints import ScoreboardV2, BoxScoreTraditionalV2
 
-# Initialize Firebase Admin SDK
-cred = credentials.ApplicationDefault()
-initialize_app(cred, {"projectId": os.getenv("GOOGLE_CLOUD_PROJECT")})
 db = firestore.client()
 
 # Helper functions

@@ -32,7 +32,11 @@ CORS(app, resources={r"/api/*": {
 
 # On Cloud Run the default service account is already bound to your project,
 # so this will pick it up automatically.
-firebase_admin.initialize_app()
+try:
+    firebase_admin.initialize_app()
+except ValueError:
+    # already initialized
+    pass
 db = firestore.client()
 
 def pkey(name: str) -> str:
