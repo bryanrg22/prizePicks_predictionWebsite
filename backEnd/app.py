@@ -49,20 +49,27 @@ def thr_doc_ref(name: str, threshold: float):
         .document(doc_id)
     )
 
+@app.route("/", methods=["GET"])
+def root():
+    return "OK", 200
+
 @app.route("/api/player", methods=["POST"])
 def analyze_player_endpoint():
     body      = request.json or {}
     name      = body.get("playerName")
     threshold = float(body.get("threshold", 0))
     key       = name.lower().replace(" ", "_")
-    ref = db.collection("processedPlayers") \
-            .document("players") \
-            .collection("active") \
-            .document(f"{key}_{threshold}")
-
-    snap = ref.get()
-    if snap.exists:
-        return jsonify(snap.to_dict()), 200
+    ref = (
+        db.collection("processedPlayers")
+          .document("players")
+          .collection("active")
+    )
+    
+    for doc in ref.stream():
+        data = doc.to_dict()
+        if key in data['pick_id'] and data["threshold"] == threshold:
+            return jsonify(data), 200
+        
 
     # 1) run your pipeline
     first, last = name.split(maxsplit=1)
@@ -74,7 +81,11 @@ def analyze_player_endpoint():
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
     pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or 0.0  
     pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
-    pdata["pick_id"]      = f"{pkey(name)}_{threshold}"
+
+    gd = pdata.get("gameDate")
+    game_dt = datetime.strptime(gd, "%m/%d/%Y")
+    ts_str = game_dt.strftime("%Y%m%d")
+    pdata["pick_id"]      = f"{pkey(name)}_{threshold}_{ts_str}"
 
     # — GARCH vol forecast —
     series = fetch_point_series(pdata, n_games=50)
@@ -86,6 +97,10 @@ def analyze_player_endpoint():
 
 
     # 2) persist it (writes to processedPlayers/players/active/{player_threshold})
+    ref = db.collection("processedPlayers") \
+            .document("players") \
+            .collection("active") \
+            .document(f"{pkey(name)}_{threshold}_{ts_str}")
     ref.set(pdata)
 
     # 3) return it
@@ -156,6 +171,13 @@ def more_games_endpoint(player_id):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+app.add_url_rule(
+    "/check_games",
+    endpoint="check_games",
+    view_func=check_games_handler,
+    methods=["GET", "POST"],
+)
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)

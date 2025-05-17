@@ -1,7 +1,5 @@
 # main.py
 import os
-import datetime
-import pytz
 
 from flask import Flask
 from firebase_admin import credentials, firestore, initialize_app
@@ -100,9 +98,7 @@ def check_active_bets():
                     "bet_result": overall,
                 })
 
-app = Flask(__name__)
 
-@app.route("/check_games", methods=["GET", "POST"])
 def check_games_handler():
     try:
         check_active_players
@@ -112,6 +108,3 @@ def check_games_handler():
     except Exception as e:
         print("ERROR in check_games:", e)
         return str(e), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
