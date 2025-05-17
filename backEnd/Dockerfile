@@ -1,29 +1,26 @@
-# Stage 1: build the OCaml shared lib with OPAM
+### Stage 1: build the OCaml shared library
 FROM ocaml/opam:debian-12-ocaml-4.14 AS builder
 
-# 1) as root, install pkg-config, libffi-dev (for ctypes) and ocaml-findlib (gives you ocamlfind)
 USER root
+# remove ocaml-findlib, keep only what the C bindings need
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      pkg-config \
-      libffi-dev \
-      ocaml-findlib && \
+        pkg-config libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# 2) back to the opam user for opam commands
 USER opam
 WORKDIR /app
-
 COPY montecarlo.ml .
 
-# 3) install only ctypes + ctypes-foreign, then build
+# install everything _inside_ the switch and compile
 RUN opam update && \
-    opam install --yes ctypes ctypes-foreign && \
-    eval $(opam env) && \
-    ocamlfind ocamlopt \
-      -package ctypes,ctypes.foreign \
-      -linkpkg \
-      -shared -o libmontecarlo.so montecarlo.ml
+    opam install -y ctypes ctypes-foreign   # brings its own findlib
+
+RUN opam exec -- \
+         ocamlfind ocamlopt \
+           -package ctypes,ctypes.foreign \
+           -linkpkg \
+           -shared -o libmontecarlo.so montecarlo.ml
 
 # Stage 2: runtime Python image
 FROM python:3.9-slim
