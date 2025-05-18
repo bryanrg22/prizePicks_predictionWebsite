@@ -52,7 +52,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
 
 CMD gunicorn app:app \
-     --bind 0.0.0.0:8080 \
+     --bind 0.0.0.0:${PORT:-8080} \
      --timeout 120 \
      --workers 2 \
      --capture-output \
