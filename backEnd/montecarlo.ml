@@ -1,5 +1,5 @@
 open Ctypes
-open Ctypes_foreign
+open Foreign
 
 (* Box–Muller transform for normal draws *)
 let gaussian mu sigma =
