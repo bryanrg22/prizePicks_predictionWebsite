@@ -22,7 +22,7 @@ RUN opam update && \
 # 1) compile OCaml -> position‑independent object file
 RUN opam exec -- \
     ocamlfind ocamlopt -thread -runtime-variant _pic \
-      -package ctypes, -linkpkg \
+      -package ctypes -linkpkg \
       -output-obj -o montecarlo.o montecarlo.ml
       
 # 2) compile the C shim
