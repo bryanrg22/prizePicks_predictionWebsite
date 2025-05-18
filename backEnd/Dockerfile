@@ -34,7 +34,6 @@ RUN gcc -shared -o libmontecarlo.so mc_stub.o montecarlo.o \
 FROM python:3.9-slim
 WORKDIR /app
 
-# libffi for ctypes‑foreign
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libffi-dev && \
     rm -rf /var/lib/apt/lists/*
@@ -46,10 +45,9 @@ COPY --from=builder /app/libmontecarlo.so .
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# your backend source (only the backend directory to keep the image lean)
-COPY backEnd/ .
+# your backend source (the whole build context)
+COPY . .
 
-# entrypoint
 CMD ["gunicorn", "app:app", \
      "--bind", "0.0.0.0:${PORT:-8080}", \
      "--timeout", "120", \
