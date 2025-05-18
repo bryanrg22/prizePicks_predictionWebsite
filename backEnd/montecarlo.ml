@@ -18,10 +18,5 @@ let monte_carlo mu sigma threshold sims =
   in
   loop sims 0
 
-let () =
-foreign_value "monte_carlo"
-  (double @-> double @-> double @-> ulong @-> returning double)
-  monte_carlo
-
 (* Register for OCaml‑side lookup; the C stub will fetch it *)
 let () = Callback.register "ocaml_monte_carlo" monte_carlo
