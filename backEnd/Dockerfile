@@ -16,7 +16,7 @@ WORKDIR /app
 COPY montecarlo.ml mc_stub.c ./
 
 RUN opam update && \
-    opam install -y ocamlfind ctypes ctypes-foreign
+    opam install -y ocamlfind ctypes.0.15.0 ctypes-foreign.0.15.0
 
 # ── build steps ───────────────────────────────────────────────────────────────
 # 1) compile OCaml -> position‑independent object file

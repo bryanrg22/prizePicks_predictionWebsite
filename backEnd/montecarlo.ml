@@ -1,3 +1,7 @@
+let () = Random.self_init ()
+open Ctypes
+open Foreign
+
 (* Box–Muller transform for normal draws *)
 let gaussian mu sigma =
   let u1 = Random.float 1.0 in
@@ -13,6 +17,11 @@ let monte_carlo mu sigma threshold sims =
       loop (i - 1) (count + if draw > threshold then 1 else 0)
   in
   loop sims 0
+
+let () =
+foreign_value "monte_carlo"
+  (double @-> double @-> double @-> ulong @-> returning double)
+  monte_carlo
 
 (* Register for OCaml‑side lookup; the C stub will fetch it *)
 let () = Callback.register "ocaml_monte_carlo" monte_carlo
