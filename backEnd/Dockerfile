@@ -26,8 +26,8 @@ RUN opam exec -- \
       -output-obj -o montecarlo_combined.o montecarlo.ml
 
 # 2) compile the C shim with verified OCaml header path
-RUN opam exec -- sh -c 'eval $$(opam env) && \
-    gcc -fPIC -I $$(ocamlc -where) -c mc_stub.c -o mc_stub.o'
+RUN opam exec -- sh -c "eval \$(opam env) && gcc -fPIC -I \$(ocamlc -where) -c mc_stub.c -o mc_stub.o"
+
 
 # 3) link both into a real .so
 RUN gcc -shared -o libmontecarlo.so mc_stub.o montecarlo_combined.o \
