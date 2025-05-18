@@ -22,8 +22,9 @@ RUN opam update && \
 # 1) compile OCaml -> position‑independent object file
 RUN opam exec -- \
     ocamlfind ocamlopt -thread -runtime-variant _pic \
-      -package ctypes,ctypes.foreign -linkpkg \
+      -package ctypes, -linkpkg \
       -output-obj -o montecarlo.o montecarlo.ml
+      
 # 2) compile the C shim
 RUN gcc -fPIC -c mc_stub.c -o mc_stub.o
 # 3) link both into a real .so  (math, dl & pthread are needed by the OCaml RTS)
