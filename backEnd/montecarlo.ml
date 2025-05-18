@@ -1,6 +1,6 @@
 let () = Random.self_init ()
 open Ctypes
-open Foreign
+open Ctypes_static 
 
 (* Box–Muller transform for normal draws *)
 let gaussian mu sigma =
