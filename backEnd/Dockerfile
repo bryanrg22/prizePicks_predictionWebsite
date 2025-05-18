@@ -19,16 +19,17 @@ RUN opam update && \
     opam install -y ocamlfind ctypes.0.15.0
 
 # ── build steps ───────────────────────────────────────────────────────────────
-# 1) compile OCaml -> position‑independent object file
+# 1) compile OCaml -> position‑independent object file (renamed output)
 RUN opam exec -- \
     ocamlfind ocamlopt -thread -runtime-variant _pic \
       -package ctypes -linkpkg \
-      -output-obj -o montecarlo.o montecarlo.ml
-      
+      -output-obj -o montecarlo_combined.o montecarlo.ml
+
 # 2) compile the C shim
 RUN gcc -fPIC -c mc_stub.c -o mc_stub.o
-# 3) link both into a real .so  (math, dl & pthread are needed by the OCaml RTS)
-RUN gcc -shared -o libmontecarlo.so mc_stub.o montecarlo.o \
+
+# 3) link both into a real .so (use renamed object)
+RUN gcc -shared -o libmontecarlo.so mc_stub.o montecarlo_combined.o \
       -lm -ldl -lpthread
 
 ########################  Stage 2 – slim runtime image  ########################
