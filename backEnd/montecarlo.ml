@@ -1,6 +1,3 @@
-open Ctypes
-open Foreign
-
 (* Box–Muller transform for normal draws *)
 let gaussian mu sigma =
   let u1 = Random.float 1.0 in
@@ -22,3 +19,7 @@ let () =
   foreign_value "monte_carlo"
     (double @-> double @-> double @-> ulong @-> returning double)
     monte_carlo
+
+    
+(* Register for OCaml-side lookup *)
+let () = Callback.register "ocaml_monte_carlo" monte_carlo

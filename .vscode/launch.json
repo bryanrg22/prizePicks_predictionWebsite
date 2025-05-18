@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/bryanramirez-gonzalez/Documents/GitHub/prizePicks_predictionWebsite/backEnd",
+      "program": "/Users/bryanramirez-gonzalez/Documents/GitHub/prizePicks_predictionWebsite/backEnd/build/Debug/outDebug"
+    }
+  ]
+}

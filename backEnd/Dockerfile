@@ -1,48 +1,57 @@
-### Stage 1 ─ build the shared library
+#######################  Stage 1 – build the shared library  ###################
 FROM ocaml/opam:debian-12-ocaml-4.14 AS builder
 
+# ── system deps ───────────────────────────────────────────────────────────────
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        libffi-dev pkg-config && \
+        build-essential libffi-dev pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
+# ── OCaml deps ────────────────────────────────────────────────────────────────
 USER opam
 WORKDIR /app
-COPY montecarlo.ml .
 
-# install everything the build needs _inside the switch_
+# copy sources: OCaml + C stub
+COPY montecarlo.ml mc_stub.c ./
+
 RUN opam update && \
     opam install -y ocamlfind ctypes ctypes-foreign
 
-# compile the .so with the switch‑local ocamlfind/ocamlopt
+# ── build steps ───────────────────────────────────────────────────────────────
+# 1) compile OCaml -> position‑independent object file
 RUN opam exec -- \
-    ocamlfind ocamlopt \
-      -package ctypes,ctypes.foreign \
-      -linkpkg \
-      -shared -o libmontecarlo.so montecarlo.ml
+    ocamlfind ocamlopt -thread -runtime-variant _pic \
+      -package ctypes,ctypes.foreign -linkpkg \
+      -output-obj -o montecarlo.o montecarlo.ml
+# 2) compile the C shim
+RUN gcc -fPIC -c mc_stub.c -o mc_stub.o
+# 3) link both into a real .so  (math, dl & pthread are needed by the OCaml RTS)
+RUN gcc -shared -o libmontecarlo.so mc_stub.o montecarlo.o \
+      -lm -ldl -lpthread
 
-# Stage 2: runtime Python image
+########################  Stage 2 – slim runtime image  ########################
 FROM python:3.9-slim
 WORKDIR /app
 
-# for using the .so
+# libffi for ctypes‑foreign
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libffi-dev && \
     rm -rf /var/lib/apt/lists/*
 
-# pull in your compiled .so
+# bring in the compiled shared object
 COPY --from=builder /app/libmontecarlo.so .
 
 # Python deps
 COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# your app sources
-COPY . .
+# your backend source (only the backend directory to keep the image lean)
+COPY backEnd/ .
 
+# entrypoint
 CMD ["gunicorn", "app:app", \
-     "--bind", "0.0.0.0:8080", \
+     "--bind", "0.0.0.0:${PORT:-8080}", \
      "--timeout", "120", \
      "--workers", "2", \
      "--capture-output", \
