@@ -51,9 +51,9 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # your backend source (the whole build context)
 COPY . .
 
-CMD ["gunicorn", "app:app", \
-     "--bind", "0.0.0.0:${PORT:-8080}", \
-     "--timeout", "120", \
-     "--workers", "2", \
-     "--capture-output", \
-     "--log-level", "debug"]
+CMD gunicorn app:app \
+     --bind 0.0.0.0:8080 \
+     --timeout 120 \
+     --workers 2 \
+     --capture-output \
+     --log-level debug
