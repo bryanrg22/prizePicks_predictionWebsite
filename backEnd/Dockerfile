@@ -25,10 +25,11 @@ RUN opam exec -- \
       -package ctypes -linkpkg \
       -output-obj -o montecarlo_combined.o montecarlo.ml
 
-# 2) compile the C shim
-RUN gcc -fPIC -c mc_stub.c -o mc_stub.o
+# 2) compile the C shim with OCaml header path
+RUN opam exec -- \
+    gcc -fPIC -I $(ocamlfind printconf stdlib)/../caml -c mc_stub.c -o mc_stub.o
 
-# 3) link both into a real .so (use renamed object)
+# 3) link both into a real .so (math, dl & pthread are needed by OCaml RTS)
 RUN gcc -shared -o libmontecarlo.so mc_stub.o montecarlo_combined.o \
       -lm -ldl -lpthread
 
