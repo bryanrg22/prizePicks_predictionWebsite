@@ -352,7 +352,7 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-white">Processing Players ({parsedPlayers.length})</h3>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {parsedPlayers.map((player, index) => (
                 <motion.div
                   key={index}
@@ -370,28 +370,32 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
                           : "bg-gray-800 border-gray-600"
                   }`}
                 >
-                  <div className="flex-1 mr-2 overflow-hidden">
-                    <ImageWithFallback
-                      src={player.image || "/placeholder.svg"}
+                  <div className="w-16 h-16 rounded-full overflow-hidden mr-4 flex-shrink-0 border-2 border-gray-600">
+                    <img
+                      src={player.image || "/placeholder.svg?height=64&width=64&query=basketball player"}
                       alt={player.playerName}
-                      className="w-8 h-8 rounded-full object-cover border-2 border-gray-300"
-                      fallbackSrc="/placeholder.svg?height=64&width=64"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = "/basketball-player-action.png"
+                      }}
                     />
-                    <p className="font-medium text-white truncate">{player.playerName}</p>
-                    <p className="text-sm text-gray-300 truncate">{player.threshold} pts</p>
+                  </div>
+                  <div className="flex-1 mr-2">
+                    <p className="text-xl font-medium text-white">{player.playerName}</p>
+                    <p className="text-lg text-gray-300">{player.threshold} pts</p>
                   </div>
                   <div className="flex-shrink-0">
                     {playerStatuses[index] === "processing" && (
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
                     )}
                     {playerStatuses[index] === "success" && (
-                      <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
-                        <Check className="h-3 w-3 text-white" />
+                      <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
+                        <Check className="h-5 w-5 text-white" />
                       </div>
                     )}
                     {playerStatuses[index] === "error" && (
-                      <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center">
-                        <AlertCircle className="h-3 w-3 text-white" />
+                      <div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center">
+                        <AlertCircle className="h-5 w-5 text-white" />
                       </div>
                     )}
                     {playerStatuses[index] === "pending" && <div className="h-5 w-5 rounded-full bg-gray-500"></div>}
