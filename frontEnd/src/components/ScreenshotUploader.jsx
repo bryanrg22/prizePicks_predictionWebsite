@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react"
 import { Upload, X, Check, AlertCircle, Loader2, Camera, FileText, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import ImageWithFallback from "./ImageWithFallback"
 
 
 const ScreenshotUploader = ({ onUploadComplete }) => {
@@ -370,6 +371,12 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
                   }`}
                 >
                   <div className="flex-1 mr-2 overflow-hidden">
+                    <ImageWithFallback
+                      src={player.image || "/placeholder.svg"}
+                      alt={player.playerName}
+                      className="w-8 h-8 rounded-full object-cover border-2 border-gray-300"
+                      fallbackSrc="/placeholder.svg?height=64&width=64"
+                    />
                     <p className="font-medium text-white truncate">{player.playerName}</p>
                     <p className="text-sm text-gray-300 truncate">{player.threshold} pts</p>
                   </div>

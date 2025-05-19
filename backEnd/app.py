@@ -1,4 +1,5 @@
-import datetime, traceback
+from datetime import datetime
+import traceback
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -41,6 +42,7 @@ CORS(app, resources={r"/api/*": {
 def pkey(name: str) -> str:
     return name.lower().replace(" ", "_")
 
+
 def thr_doc_ref(name: str, threshold: float):
     doc_id = f"{pkey(name)}_{threshold}"
     # now under processedPlayers → players → active → {doc_id}
@@ -52,9 +54,11 @@ def thr_doc_ref(name: str, threshold: float):
         .document(doc_id)
     )
 
+
 @app.route("/", methods=["GET"])
 def root():
     return "OK", 200
+
 
 @app.route("/api/player", methods=["POST"])
 def analyze_player_endpoint():
@@ -140,7 +144,7 @@ def parse_screenshot_endpoint():
             threshold = entry.get("threshold")
             image = entry.get("image")
             if name and threshold is not None:
-                parsed.append({ "playerName": name, "threshold": threshold, image: image })
+                parsed.append({ "playerName": name, "threshold": threshold, "image": image })
 
     return jsonify({
         "status":       "ok",
@@ -156,45 +160,6 @@ def parse_screenshot_endpoint():
     #files = request.files.getlist("images")
     #if not files:
     #    return jsonify({"error": "No images uploaded"}), 400
-#
-    #parsed = []
-    #base = request.url_root.rstrip("/").replace("http://", "https://", 1)
-#
-    #for img in files:
-    #    raw = img.read()
-    #    ext = img.filename.rsplit(".", 1)[-1].lower()
-    #    mime = f"image/{'jpeg' if ext=='jpg' else ext}"
-    #    data_url = f"data:{mime};base64," + base64.b64encode(raw).decode()
-#
-    #    try:
-    #        result = parse_image_data_url(data_url)
-    #        players = result.get("players", [])
-    #    except Exception:
-    #        app.logger.exception("Screenshot parsing failed")
-    #        parsed = {"players": [], "count": 0}
-    #        continue
-#
-    #    for entry in players:
-    #        name      = entry.get("player")
-    #        threshold = entry.get("threshold")
-    #        if not name or threshold is None:
-    #            continue
-#
-    #        # Fire off your existing analyze route:
-    #        try:
-    #            requests.post(
-    #                f"{base}/api/player",
-    #                json={"playerName": name, "threshold": threshold},
-    #                timeout=10
-    #            )
-    #        except Exception:
-    #            # swallow any network or timeout errors
-    #            pass
-#
-    #        parsed.append({"playerName": name, "threshold": threshold})
-    #        print(f"[→ POST]/api/player  {name}  @ {threshold}")
-#
-    #return jsonify({"status": "ok", "parsedPlayers": parsed}), 200
 
 
 @app.route("/api/player/<player_id>/more_games", methods=["GET"])
@@ -210,12 +175,14 @@ def more_games_endpoint(player_id):
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
+
 app.add_url_rule(
     "/check_games",
     endpoint="check_games",
     view_func=check_games_handler,
     methods=["GET", "POST"],
 )
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1", port=5000)
