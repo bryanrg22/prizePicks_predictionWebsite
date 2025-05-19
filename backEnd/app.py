@@ -118,13 +118,9 @@ def parse_screenshot_endpoint():
     3) For each pair: POST to /api/player so it goes through your normal pipeline.
     4) Return the flat list of all parsed entries.
     """
-    files = request.files.getlist("images")
-    if not files:
-        return jsonify({"error": "No images uploaded"}), 400
 
     parsed = []
-    base = request.url_root.rstrip("/").replace("http://", "https://", 1)
-
+    files = request.files.getlist("images")
     for img in files:
         raw = img.read()
         ext = img.filename.rsplit(".", 1)[-1].lower()
@@ -136,30 +132,68 @@ def parse_screenshot_endpoint():
             players = result.get("players", [])
         except Exception:
             app.logger.exception("Screenshot parsing failed")
-            parsed = {"players": [], "count": 0}
-            continue
+            players = []
 
+        # Collect all names + thresholds, but do NOT call /api/player here
         for entry in players:
             name      = entry.get("player")
             threshold = entry.get("threshold")
-            if not name or threshold is None:
-                continue
+            if name and threshold is not None:
+                parsed.append({ "playerName": name, "threshold": threshold })
 
-            # Fire off your existing analyze route:
-            try:
-                requests.post(
-                    f"{base}/api/player",
-                    json={"playerName": name, "threshold": threshold},
-                    timeout=10
-                )
-            except Exception:
-                # swallow any network or timeout errors
-                pass
+    return jsonify({
+        "status":       "ok",
+        "parsedPlayers": parsed,
+        "count":         len(parsed)
+    }), 200
 
-            parsed.append({"playerName": name, "threshold": threshold})
-            print(f"[→ POST]/api/player  {name}  @ {threshold}")
+    
 
-    return jsonify({"status": "ok", "parsedPlayers": parsed}), 200
+
+    ######################## OLD CODE THAT WORKS ###########################
+
+    #files = request.files.getlist("images")
+    #if not files:
+    #    return jsonify({"error": "No images uploaded"}), 400
+#
+    #parsed = []
+    #base = request.url_root.rstrip("/").replace("http://", "https://", 1)
+#
+    #for img in files:
+    #    raw = img.read()
+    #    ext = img.filename.rsplit(".", 1)[-1].lower()
+    #    mime = f"image/{'jpeg' if ext=='jpg' else ext}"
+    #    data_url = f"data:{mime};base64," + base64.b64encode(raw).decode()
+#
+    #    try:
+    #        result = parse_image_data_url(data_url)
+    #        players = result.get("players", [])
+    #    except Exception:
+    #        app.logger.exception("Screenshot parsing failed")
+    #        parsed = {"players": [], "count": 0}
+    #        continue
+#
+    #    for entry in players:
+    #        name      = entry.get("player")
+    #        threshold = entry.get("threshold")
+    #        if not name or threshold is None:
+    #            continue
+#
+    #        # Fire off your existing analyze route:
+    #        try:
+    #            requests.post(
+    #                f"{base}/api/player",
+    #                json={"playerName": name, "threshold": threshold},
+    #                timeout=10
+    #            )
+    #        except Exception:
+    #            # swallow any network or timeout errors
+    #            pass
+#
+    #        parsed.append({"playerName": name, "threshold": threshold})
+    #        print(f"[→ POST]/api/player  {name}  @ {threshold}")
+#
+    #return jsonify({"status": "ok", "parsedPlayers": parsed}), 200
 
 
 @app.route("/api/player/<player_id>/more_games", methods=["GET"])

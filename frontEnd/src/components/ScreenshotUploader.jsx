@@ -14,6 +14,9 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef(null)
   const dropZoneRef = useRef(null)
+  const [parsedPlayers, setParsedPlayers] = useState([])
+  const [playerStatuses, setPlayerStatuses] = useState({})
+  
 
   // Simulate progress during upload
   const simulateProgress = useCallback(() => {
@@ -119,6 +122,35 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
     }
   }
 
+  const processPlayers = async (players) => {
+    // initialize all to "pending"
+    const initial = players.reduce((acc, _, i) => ({ ...acc, [i]: 'pending' }), {});
+    setPlayerStatuses(initial);
+  
+    for (let i = 0; i < players.length; i++) {
+      const { playerName, threshold } = players[i];
+      setPlayerStatuses(ps => ({ ...ps, [i]: 'processing' }));
+      try {
+        const res = await fetch('/api/player', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerName, threshold })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await res.json();
+        setPlayerStatuses(ps => ({ ...ps, [i]: 'success' }));
+      } catch (e) {
+        setPlayerStatuses(ps => ({ ...ps, [i]: 'error' }));
+      }
+    }
+  
+    // once all done, clear previews & files
+    previews.forEach(p => URL.revokeObjectURL(p.url));
+    setFiles([]);
+    setPreviews([]);
+    setSuccess(`Processed all ${players.length} players.`);
+  }
+
   const handleUpload = async () => {
     if (files.length === 0) {
       setError("Please select at least one screenshot to upload")
@@ -153,22 +185,10 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
 
       // Set progress to 100% when complete
       setUploadProgress(100)
-
-      // Clear the files and previews after successful upload
-      files.forEach((_, index) => {
-        URL.revokeObjectURL(previews[index].url)
-      })
-
-      setFiles([])
-      setPreviews([])
-
-      // Set success message with the number of players parsed
-      setSuccess(`Successfully processed ${result.parsedPlayers.length} players from your screenshots!`)
-
-      // Call the callback function to notify parent component
-      if (onUploadComplete) {
-        onUploadComplete(result.parsedPlayers)
-      }
+      // keep the parsed list in state
+      setParsedPlayers(result.parsedPlayers)
+      // kick off the player-by-player processing
+      processPlayers(result.parsedPlayers)
     } catch (error) {
       console.error("Error uploading screenshots:", error)
       setError(error.message || "Failed to process screenshots. Please try again.")
