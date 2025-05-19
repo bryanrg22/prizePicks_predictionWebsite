@@ -19,9 +19,9 @@ def get_player_image_url(player_id):
     return f"https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/260x190/{player_id}.png"
 
 def player_image_loading(player_name):
-    nba_found = players.find_players_by_full_name(full_name)
+    nba_found = players.find_players_by_full_name(player_name)
     if not nba_found:
-        return {"error": f"No matching NBA Stats player found for {full_name}"}
+        return {"error": f"No matching NBA Stats player found for {player_name}"}
     nba_player_id = nba_found[0]["id"]
     return get_player_image_url(nba_player_id)
 

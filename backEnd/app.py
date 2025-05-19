@@ -138,8 +138,9 @@ def parse_screenshot_endpoint():
         for entry in players:
             name      = entry.get("player")
             threshold = entry.get("threshold")
+            image = entry.get("image")
             if name and threshold is not None:
-                parsed.append({ "playerName": name, "threshold": threshold })
+                parsed.append({ "playerName": name, "threshold": threshold, image: image })
 
     return jsonify({
         "status":       "ok",

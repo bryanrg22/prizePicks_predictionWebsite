@@ -137,10 +137,11 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
           body: JSON.stringify({ playerName, threshold })
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        await res.json();
-        setPlayerStatuses(ps => ({ ...ps, [i]: 'success' }));
-      } catch (e) {
-        setPlayerStatuses(ps => ({ ...ps, [i]: 'error' }));
+        await res.json()
+        setPlayerStatuses((ps) => ({ ...ps, [i]: "success" }))
+        } catch (e) {
+          console.error(`Error processing ${playerName}:`, e)     // NEW: detailed log
+          setPlayerStatuses((ps) => ({ ...ps, [i]: "error" }))
       }
     }
   
@@ -334,6 +335,63 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
           >
             <Check className="text-green-400 w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
             <p className="text-green-300">{success}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Parsed Players Status */}
+      <AnimatePresence>
+        {parsedPlayers.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-6"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white">Processing Players ({parsedPlayers.length})</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {parsedPlayers.map((player, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
+                  className={`relative rounded-full px-4 py-3 flex items-center shadow-md border transition-colors ${
+                    playerStatuses[index] === "processing"
+                      ? "bg-blue-900/20 border-blue-500"
+                      : playerStatuses[index] === "success"
+                        ? "bg-green-900/20 border-green-500"
+                        : playerStatuses[index] === "error"
+                          ? "bg-red-900/20 border-red-500"
+                          : "bg-gray-800 border-gray-600"
+                  }`}
+                >
+                  <div className="flex-1 mr-2 overflow-hidden">
+                    <p className="font-medium text-white truncate">{player.playerName}</p>
+                    <p className="text-sm text-gray-300 truncate">{player.threshold} pts</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {playerStatuses[index] === "processing" && (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                    )}
+                    {playerStatuses[index] === "success" && (
+                      <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                    {playerStatuses[index] === "error" && (
+                      <div className="h-5 w-5 rounded-full bg-red-500 flex items-center justify-center">
+                        <AlertCircle className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                    {playerStatuses[index] === "pending" && <div className="h-5 w-5 rounded-full bg-gray-500"></div>}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

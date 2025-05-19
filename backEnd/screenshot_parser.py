@@ -1,5 +1,6 @@
 import os, base64, json            # ← add json
 from openai import OpenAI
+from player_analyzer import player_image_loading
 
 key = os.getenv("OPENAI_API_KEY", "YOUR_API_KEY_HERE")
 llm  = OpenAI(api_key=key)
@@ -40,7 +41,6 @@ def parse_image_data_url(data_url: str) -> dict:
         print(f"[⚠️  LLM parse-error] {e}")
         return {"players": [], "count": 0}
 
-
     raw_json  = resp.choices[0].message.content   # already a JSON-string
 
     try:
@@ -51,6 +51,12 @@ def parse_image_data_url(data_url: str) -> dict:
 
     # insert “count”, then print nice summary
     data["count"] = len(data.get("players", []))
+
+    for player in data["players"]:
+        player["image"] = player_image_loading(player["player"])
+       
+
+
     print(f"[✓ Parsed] Found {data['count']} player(s).\n")
 
     return data
