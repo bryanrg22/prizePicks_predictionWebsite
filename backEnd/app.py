@@ -15,7 +15,6 @@ db = firestore.client()
 
 import player_analyzer
 
-import player_analyzer
 from prediction_analyzer import calculate_poisson_probability
 from monte_carlo import monte_carlo_for_player
 from chatgpt_bet_explainer import get_bet_explanation_from_chatgpt
@@ -27,6 +26,7 @@ import base64
 import requests
 
 from main import check_games_handler
+from full_injury_report import get_full_injury_report
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {
