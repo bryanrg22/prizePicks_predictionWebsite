@@ -112,6 +112,10 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
                "confidenceRange": short human phrase,
                "explanation": 2‑3 dense paragraphs (no bullet points) justifying the pick
              }}
+        4. If the player appears in the injury report, include that info in the
+           "explanation" field. Specifically, if the player is "Out," then make the
+           recommendation be "No!" and explain it is that way because there is 0% chance he 
+           plays in the game, meaning zero percant chance of scoring over the threshold.
 
         ───────── FULL DATA ─────────
         ```json
