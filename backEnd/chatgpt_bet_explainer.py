@@ -1,105 +1,130 @@
-import os
-import json
-import textwrap
-from openai import OpenAI
-from openai import OpenAIError
+# chatgpt_bet_explainer.py  (REPLACE the old get_bet_explanation_from_chatgpt)
 
-def safe_fmt(x, fmt="{:.2f}"):
-    return fmt.format(x) if x is not None else "N/A"
+import os, json, textwrap
+from openai import OpenAI, OpenAIError
 
-def to_float(x, default=0.0):
+# ---------- TEAM‑LEVEL one‑off context (hard‑coded for now) ----------
+_TEAM_CTX = {
+    "Timberwolves": {
+        "seed"      : 3,
+        "arena"     : "Away @ OKC – Paycom Center",
+        "narrative" : (
+            "Coming off a historic comeback to upset Denver in 7. "
+            "Anthony Edwards emerging as a top‑5 playoff scorer; team leads all "
+            "remaining clubs in defensive rating (101.4) this post‑season."
+        ),
+    },
+    "Thunder": {
+        "seed"      : 1,
+        "arena"     : "Home – Paycom Center (LOUD crowd advantage)",
+        "narrative" : (
+            "Youngest 1‑seed ever; Shai Gilgeous‑Alexander averaging 32.2 PPG "
+            "and shooting 63 TS% vs DAL. Chet Holmgren protecting rim (3.2 blk)."
+        ),
+    },
+    "Knicks": {
+        "seed"      : 3,
+        "arena"     : "Home – Madison Square Garden (NYC spotlight)",
+        "narrative" : (
+            "First ECF trip since 2000. City starving for a title – crowd and "
+            "media pressure cranked to 11. Jalen Brunson averaging 26.2 PPG "
+            "despite constant traps."
+        ),
+    },
+    "Pacers": {
+        "seed"      : 4,
+        "arena"     : "Away @ MSG",
+        "narrative" : (
+            "Blew out #1 Cleveland in 5 with NBA‑best 121.1 offensive rating. "
+            "Tyrese Haliburton fresh after short series."
+        ),
+    },
+}
+
+def _fmt(label, val, decimals=2):
+    """Return 'label : 12.34' or '' if val falsy/zero/None."""
     try:
-        return float(x)
+        v = float(val)
     except (TypeError, ValueError):
-        return default
-
+        return ""
+    return "" if v == 0 else f"  • {label:<26}: {v:.{decimals}f}"
 
 def get_bet_explanation_from_chatgpt(player_data: dict):
-    """
-    player_data contains keys like:
-      name, threshold, team, opponent,
-      seasonAvgPoints, playoffAvg, seasonAvgVsOpponent,
-      homeAwayAvg, poissonProbability, monteCarloProbability,
-      advancedPerformance, injuryReport, volatilityPlayOffsForecast,
-      playoff_games, etc.
-    """
+    # ------------------------------------------------------------------
+    # 1) Pull out headline fields (safe defaults)
+    # ------------------------------------------------------------------
+    name      = player_data.get("name", "")
+    team      = player_data.get("team", "")
+    opponent  = player_data.get("opponent", "")
+    threshold = float(player_data.get("threshold", 0) or 0)
 
-    # 1) Pull out and coerce our inputs
-    name          = player_data.get("name", "")
-    team          = player_data.get("team", "")
-    opponent      = player_data.get("opponent", "")
-    threshold     = to_float(float(player_data.get("threshold", 0)))
-    season_avg    = to_float(float(player_data.get("seasonAvgPoints", 0)))
-    playoff_avg   = to_float(float(player_data.get("playoffAvg", 0)))
-    vs_opp_avg    = to_float(float(player_data.get("seasonAvgVsOpponent", 0)))
-    home_away_avg = to_float(float(player_data.get("homeAwayAvg", 0)))
-    poisson_p     = player_data.get("poissonProbability", 0)
-    mc_p          = player_data.get("monteCarloProbability", 0)
-    adv_stats     = player_data.get("advancedPerformance", {})
-    injury        = player_data.get("injuryReport", {})
-    vol_playoffs  = to_float(float(player_data.get("volatilityPlayOffsForecast", 0)))
-    playoff_games = player_data.get("playoff_games", "N/A")
+    # ------------------------------------------------------------------
+    # 2) Team / arena context (hard‑coded for this round)
+    # ------------------------------------------------------------------
+    team_ctx     = _TEAM_CTX.get(team, {})
+    opponent_ctx = _TEAM_CTX.get(opponent, {})
 
-    # 2) Optional forecast line
-    forecast_line = (
-        f"  • Forecasted playoff vol    : {vol_playoffs:.2f}"
-        if vol_playoffs > 0
-        else ""
-    )
+    # ------------------------------------------------------------------
+    # 3) Compose human‑readable summary lines
+    # ------------------------------------------------------------------
+    summary_lines = [
+        _fmt("Season avg points",          player_data.get("seasonAvgPoints")),
+        _fmt("Playoff avg (last 5)",       player_data.get("playoffAvg")),
+        _fmt(f"Season avg vs {opponent}",  player_data.get("seasonAvgVsOpponent")),
+        _fmt("Home/Away avg",              player_data.get("homeAwayAvg")),
+        _fmt("Poisson probability",        player_data.get("poissonProbability")),
+        _fmt("Monte‑Carlo probability",    player_data.get("monteCarloProbability")),
+        _fmt("Volatility forecast",        player_data.get("volatilityPlayOffsForecast")),
+    ]
+    summary_block = "\n".join(l for l in summary_lines if l)
 
-    # 3) Build prompt via .format(), doubling {{ }} around the JSON example
-    prompt = textwrap.dedent("""
-    PLAYOFF BETTING ANALYSIS for {name} in {team} vs {opponent}
+    # ------------------------------------------------------------------
+    # 4) Dump EVERY field for maximum context
+    # ------------------------------------------------------------------
+    raw_json = json.dumps(player_data, indent=2, default=str)
 
-    Series & last game:
-    {playoff_games}
+    # ------------------------------------------------------------------
+    # 5) Build the prompt
+    # ------------------------------------------------------------------
+    prompt = textwrap.dedent(f"""
+        CONFERENCE‑FINALS GAME‑1 BETTING ANALYSIS — {team} @ {opponent}
 
-    Player playoff metrics:
-      • Season avg points         : {season_avg:.1f}
-      • Last 5 playoff games avg   : {playoff_avg:.1f}
-      • Season avg vs {opponent}  : {vs_opp_avg:.1f}
-      • Home/Away avg              : {home_away_avg:.1f}
-      • Poisson probability        : {pp:.2f}
-      • Monte Carlo probability    : {mc:.2f}
-      • Advanced stats             : {adv_stats}
-      • Injury report              : {injury}
-    {forecast_line}
+        Player: {name}
+        Over/Under threshold: {threshold:.1f} points
 
-    Task:
-    Given these data, decide how likely {name} is to score over {threshold:.1f} points in this playoff game,
-    picking exactly one:
-      • “100% YES”
-      • “90–100% YES”
-      • “80–90% possible”
-      • “0% possible”
+        ───────── CONTEXT ─────────
+        • Team seed & venue : {team_ctx.get('seed')}‑seed, {team_ctx.get('arena')}
+        • Opponent seed     : {opponent_ctx.get('seed')}
+        • Team narrative    : {team_ctx.get('narrative')}
+        • Opp narrative     : {opponent_ctx.get('narrative')}
 
-    Also consider series momentum and the chance of a blowout
+        ───────── METRICS ─────────
+    {summary_block or '  • (no point‑probability metrics available)'}
 
-    Return strict JSON:
-    {{  "recommendation":"...",  "confidenceRange":"...",  "explanation":"..."  }}
-    """).format(
-        name=name,
-        team=team,
-        opponent=opponent,
-        playoff_games=playoff_games,
-        season_avg=season_avg,
-        playoff_avg=playoff_avg,
-        vs_opp_avg=vs_opp_avg,
-        home_away_avg=home_away_avg,
-        pp=poisson_p,
-        mc=mc_p,
-        adv_stats=json.dumps(adv_stats),
-        injury=json.dumps(injury),
-        forecast_line=forecast_line,
-        threshold=threshold,
-    )
+        ───────── TASK ─────────
+        1. Use ALL information below (including full playoff game logs) to judge the
+           likelihood that {name} will score **over** {threshold:.1f} points tonight.
+        2. Weigh home‑court, fatigue, momentum, injury status, blow‑out risk, NYC media
+           pressure (for Knicks), and the fact this is Game‑1 (teams still adjusting).
+        3. Output STRICT JSON with three keys:
+             {{
+               "recommendation": one of ["100% YES","90–100% YES","80–90% possible","0% possible"],
+               "confidenceRange": short human phrase,
+               "explanation": 2‑3 dense paragraphs (no bullet points) justifying the pick
+             }}
 
-    # 4) Load API key from env, error if missing
+        ───────── FULL DATA ─────────
+        ```json
+        {raw_json}
+        ```
+    """).strip()
+
+    # ------------------------------------------------------------------
+    # 6) Call OpenAI (same model as before) and return its JSON
+    # ------------------------------------------------------------------
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError(
-            "OpenAI API key not set. Please set the OPENAI_API_KEY environment variable."
-        )
+        raise RuntimeError("OPENAI_API_KEY env var not set.")
 
     client = OpenAI(api_key=api_key)
 
@@ -108,15 +133,15 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
             model="o4-mini",
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
+            timeout=45,   # seconds – keeps Cloud Run from hanging too long
         )
-        raw = resp.choices[0].message.content
-        return json.loads(raw)
+        return json.loads(resp.choices[0].message.content)
     except OpenAIError as e:
-        # If it's an auth error or any API error, raise a clear message
         raise RuntimeError(f"OpenAI API error: {e}") from e
     except json.JSONDecodeError:
-        # Malformed JSON from the model; return raw for debugging
+        # If the model spits malformed JSON, surface raw text for debugging
         return {
             "recommendation": "Error",
+            "confidenceRange": "N/A",
             "explanation": resp.choices[0].message.content.strip(),
         }
