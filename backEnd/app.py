@@ -26,7 +26,6 @@ import base64
 import requests
 
 from main import check_games_handler
-from full_injury_report import get_full_injury_report
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {
