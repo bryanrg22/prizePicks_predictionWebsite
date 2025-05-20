@@ -1,0 +1,5 @@
+firebase-admin
+functions-framework
+pdfplumber
+requests
+pytz
