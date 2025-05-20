@@ -104,20 +104,19 @@ def get_player_injury_status(player_name):
             continue
         game_date, game_time, matchup, team, player, status, reason = row[:7]
 
-        
-
-        if player:
+        if "t:" in game_date or "player" in player:
+            continue
             
-            # Clean up the reason field - remove newlines and extra spaces
-            clean_reason = reason.replace("\n", " ").strip() if reason else ""
-            players.append( {
-                #"gameDate": game_date,
-                #"gameTime": game_time,
-                "matchup": matchup,
-                "player": player,
-                "status": status,
-                "reason": clean_reason
-            })
+        # Clean up the reason field - remove newlines and extra spaces
+        clean_reason = reason.replace("\n", " ").strip() if reason else ""
+        players.append( {
+            #"gameDate": game_date,
+            #"gameTime": game_time,
+            "matchup": matchup,
+            "player": player,
+            "status": status,
+            "reason": clean_reason
+        })
         
     return players
     
