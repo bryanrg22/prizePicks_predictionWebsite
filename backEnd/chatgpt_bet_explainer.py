@@ -108,7 +108,7 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
            pressure (for Knicks), and the fact this is Game‑1 (teams still adjusting).
         3. Output STRICT JSON with three keys:
              {{
-               "recommendation": one of ["100% YES","90–100% YES","80–90% possible","0% possible"],
+               "recommendation": one of ["Yes","A High Possible","Maybe","No!"],
                "confidenceRange": short human phrase,
                "explanation": 2‑3 dense paragraphs (no bullet points) justifying the pick
              }}
