@@ -5,6 +5,7 @@ from flask import Flask
 from firebase_admin import credentials, firestore, initialize_app
 from nba_api.stats.endpoints import ScoreboardV2, BoxScoreTraditionalV2
 from requests.exceptions import ReadTimeout
+from flask import Response
 
 # Helper functions
 def fetch_game_status(data):
@@ -61,10 +62,12 @@ def check_active_players():
           .document("players")
           .collection("active")
     )
-    for doc in coll.stream():
-        data = doc.to_dict()
-        if fetch_game_status(data):
-            update_doc(doc.reference, data)
+    for snap in coll.stream():
+        original = snap.to_dict()
+
+        updated  = fetch_game_status(original)   # None if nothing to change
+        if updated:                              # got a dict with new fields
+            update_doc(snap.reference, updated)  # push the updated version
 
 
 def check_user_picks():
@@ -98,7 +101,7 @@ def check_active_bets():
                 })
 
 
-def check_games_handler():
+def check_games_handler(request):
     try:
         check_active_players()
         #check_user_picks()
@@ -106,4 +109,4 @@ def check_games_handler():
         return "OK", 200
     except Exception as e:
         print("ERROR in check_games:", e)
-        return str(e), 500
+        return Response(str(e), status=500)
