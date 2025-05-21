@@ -85,6 +85,9 @@ export default function SignIn() {
           />
           <h1 className="text-3xl font-bold">PrizePicks Analyzer</h1>
           <p className="text-xl text-gray-300 mt-2">Make smarter bets</p>
+          <p className="text-xl text-gray-300 mt-2">Jane Street Employee? Sign in using these metrics:</p>
+          <p className="text-xl text-gray-300 mt-2">Username: jane_street</p>
+          <p className="text-xl text-gray-300 mt-2">Password: test123</p>
         </div>
         <div className="w-full max-w-sm bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           <div className="px-8 py-10">
