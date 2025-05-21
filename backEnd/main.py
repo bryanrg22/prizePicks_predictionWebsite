@@ -106,7 +106,7 @@ def check_games_handler(request):
         check_active_players()
         #check_user_picks()
         #check_active_bets()
-        return "OK", 200
+        return Response("OK", status=200)
     except Exception as e:
         print("ERROR in check_games:", e)
         return Response(str(e), status=500)
