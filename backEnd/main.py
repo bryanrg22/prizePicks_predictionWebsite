@@ -3,26 +3,12 @@ import os
 
 from flask import Flask
 from firebase_admin import credentials, firestore, initialize_app
-from time import sleep
 from nba_api.stats.endpoints import ScoreboardV2, BoxScoreTraditionalV2
 from requests.exceptions import ReadTimeout
 
-def safe_scoreboard(date_str, retries=3, t_out=8):
-    for i in range(retries):
-        try:
-            return ScoreboardV2(game_date=date_str,
-                                league_id="00",
-                                timeout=t_out).game_header.get_data_frame()
-        except ReadTimeout:
-            if i < retries - 1:
-                sleep(2 ** i)          # 1 s, 2 s, 4 s back‑off
-            else:
-                print(f"⚠️ NBA API gave up after {retries} tries for {date_str}")
-                return None
-
 # Helper functions
 def fetch_game_status(data):
-    sb = safe_scoreboard(data["gameDate"])
+    sb = ScoreboardV2(game_date=data["gameDate"], league_id="00").game_header.get_data_frame()
     if sb is None or sb.empty:
         print("No game data available.")
         return
