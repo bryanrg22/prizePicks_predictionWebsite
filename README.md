@@ -65,11 +65,11 @@ Aggregated player cards across all users.
 
 ### Back-End  
 - **Python 3.9+**  
+- **OCaml** - Monte Carlo
 - **Flask** – REST API  
 - **gunicorn** – WSGI server (Cloud Run)  
 - **firebase-admin** – Firestore & Auth  
 - **openai** – ChatGPT o4-mini integration
-- **!!Coming Soon!!** - OCaml written to speed up Poisson, Monte Carlo, and GARCH Model
 
 ### 📈 Data & Analytics  
 - **Poisson & Monte Carlo** – Probability pipelines  
@@ -87,7 +87,59 @@ Aggregated player cards across all users.
 - **GitHub Actions** – CI/CD (build → deploy Hosting & Cloud Run)  
 - **Docker** – Back-end container  
 
+
 ---
+
+
+## 📊 Probability & Forecasting Methods
+
+Below is a quick reference on how each analytical value is produced inside the player documents.
+
+### 🔢 Poisson Probability (`poissonProbability`)
+- **Data window:** *All* regular‑season games from the current season  
+- **Library:** Native Python `math` (no external deps)  
+- **Computation:**  
+  - Calculate the season scoring average `λ`  
+  - Evaluate $$P(X \ge t) \;=\; 1 - \sum_{k=0}^{\lceil t\rceil-1} \frac{e^{-\lambda}\lambda^{k}}{k!}$$  
+    where **`t`** is the user‑selected points threshold  
+- **Interpretation:** Purely distribution‑based likelihood a player scores **over** the line given their season‑long mean
+
+---
+
+### 🎲 Monte Carlo Probability (`monteCarloProbability`)
+- **Data window:** Up to **60** most‑recent games (regular *and* playoff)  
+- **Stats used:** sample mean `μ` & standard deviation `σ`  
+- **Simulations:** **100 000** random seasons per query  
+- **Engine priority:**  
+  1. **OCaml** routine exposed through a C shared library (`mc_stub.c`) for speed  
+  2. Fallback to NumPy’s `np.random.normal()` if the native lib isn’t available  
+- **Output:** Fraction of simulations where the random score ≥ user threshold  
+- **Why Monte Carlo?** Captures hot/cold streaks and non‑Gaussian tails better than a single closed‑form model
+
+---
+
+### 📈 GARCH Volatility Forecast (`volatilityForecast`, `volatilityPlayOffsForecast`)
+- **Data window:** **Last 50** games (or all playoff games once ≥ 5 exist)  
+- **Library:** [`arch`](https://github.com/bashtage/arch) – fits a **GARCH(1,1)** model  
+- **Pipeline:**  
+  1. Convert the points series to “returns” via first differences  
+  2. Fit GARCH(1,1) on those returns  
+  3. Return the 1‑step‑ahead forecasted **σ** (square‑root of the predicted variance)  
+- **Interpretation:** Forward‑looking volatility that reflects clustering of high‑variance performances
+
+---
+
+Together, these three metrics give a balanced outlook:
+
+| Metric | Scope | Strength |
+| ------ | ----- | -------- |
+| **Poisson** | Season‑long | Fast analytical baseline |
+| **Monte Carlo** | Last ≤ 60 games | Empirical tail‑risk capture |
+| **GARCH σ** | Last 50 games | Short‑run variance / streak detection |
+
+
+---
+
 
 ### Project Scheme
 ```plaintext
