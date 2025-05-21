@@ -4,14 +4,13 @@ import { useState } from "react"
 import { Plus, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Activity, BarChart2 } from "lucide-react"
 import ImageWithFallback from "./ImageWithFallback"
 
-
-  const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
+const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
   const [expandedSection, setExpandedSection] = useState("main")
 
-  const [moreGames, setMoreGames] = useState([]);
-  const [showMoreGames, setShowMoreGames] = useState(false);
-  const [loadingMoreGames, setLoadingMoreGames] = useState(false);
-  const [moreGamesError, setMoreGamesError] = useState(null);
+  const [moreGames, setMoreGames] = useState([])
+  const [showMoreGames, setShowMoreGames] = useState(false)
+  const [loadingMoreGames, setLoadingMoreGames] = useState(false)
+  const [moreGamesError, setMoreGamesError] = useState(null)
 
   if (!playerData) return null
 
@@ -102,25 +101,23 @@ import ImageWithFallback from "./ImageWithFallback"
   const handleToggleMoreGames = async () => {
     if (showMoreGames) {
       // simply hide if already showing
-      return setShowMoreGames(false);
+      return setShowMoreGames(false)
     }
-    setLoadingMoreGames(true);
-    setMoreGamesError(null);
+    setLoadingMoreGames(true)
+    setMoreGamesError(null)
     try {
-      const res = await fetch(
-        `/api/player/${playerData.playerId}/more_games`
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setMoreGames(data);
-      setShowMoreGames(true);
+      const res = await fetch(`/api/player/${playerData.playerId}/more_games`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setMoreGames(data)
+      setShowMoreGames(true)
     } catch (err) {
-      console.error(err);
-      setMoreGamesError("Failed to load more games.");
+      console.error(err)
+      setMoreGamesError("Failed to load more games.")
     } finally {
-      setLoadingMoreGames(false);
+      setLoadingMoreGames(false)
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -242,26 +239,22 @@ import ImageWithFallback from "./ImageWithFallback"
 
         <div className="bg-gray-800 p-4 rounded-lg">
           <p className="text-gray-400 text-sm">Season Average @ Home</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics['avg_points_home'], threshold)}`}>
-            {formatNumber(advancedMetrics['avg_points_home'])} pts
+          <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_home"], threshold)}`}>
+            {formatNumber(advancedMetrics["avg_points_home"])} pts
           </p>
         </div>
         <div className="bg-gray-800 p-4 rounded-lg">
           <p className="text-gray-400 text-sm">Season Average @ Away</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics['avg_points_away'], threshold)}`}>
-            {formatNumber(advancedMetrics['avg_points_away'])} pts
+          <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_away"], threshold)}`}>
+            {formatNumber(advancedMetrics["avg_points_away"])} pts
           </p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <div className="bg-gray-800 p-4 rounded-lg">
           <p className="text-gray-400 text-sm">Regular Season Volatility Forecast</p>
-          <p
-            className={`text-2xl font-bold ${
-              getComparisonColor(volatility_regular, threshold)
-            }`}
-          >
+          <p className={`text-2xl font-bold ${getComparisonColor(volatility_regular, threshold)}`}>
             {formatNumber(volatility_regular)} pts
           </p>
         </div>
@@ -269,11 +262,7 @@ import ImageWithFallback from "./ImageWithFallback"
         {volatility_PlayOffs != 0 && (
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-gray-400 text-sm">Playoffs Volatility Forecast</p>
-            <p
-              className={`text-2xl font-bold ${
-                getComparisonColor(volatility_PlayOffs, threshold)
-              }`}
-            >
+            <p className={`text-2xl font-bold ${getComparisonColor(volatility_PlayOffs, threshold)}`}>
               {formatNumber(volatility_PlayOffs)} pts
             </p>
           </div>
@@ -282,17 +271,13 @@ import ImageWithFallback from "./ImageWithFallback"
         {num_playoff_games !== 0 && (
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-gray-400 text-sm">Playoffs Average</p>
-            <p
-              className={`text-2xl font-bold ${
-                getComparisonColor(playoffAvg, threshold)
-              }`}
-            >
+            <p className={`text-2xl font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
               {formatNumber(playoffAvg)} pts
             </p>
           </div>
         )}
       </div>
-      
+
       {/* Recent Encounters Section */}
       <div className="bg-gray-800 rounded-lg overflow-hidden">
         <div
@@ -309,7 +294,7 @@ import ImageWithFallback from "./ImageWithFallback"
         {expandedSection === "recentEncounters" && (
           <div className="p-4 border-t border-gray-700">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700">
                     <th className="pb-2">Date</th>
@@ -373,7 +358,7 @@ import ImageWithFallback from "./ImageWithFallback"
           {expandedSection === "playoffsLog" && (
             <div className="p-4 border-t border-gray-700">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[500px]">
                   <thead>
                     <tr className="text-left text-gray-400 border-b border-gray-700">
                       <th className="pb-2">Date</th>
@@ -439,7 +424,7 @@ import ImageWithFallback from "./ImageWithFallback"
           <div className="p-4 border-t border-gray-700 flex flex-col">
             {/* first 5 games */}
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700">
                     <th className="pb-2">Date</th>
@@ -471,13 +456,9 @@ import ImageWithFallback from "./ImageWithFallback"
                       <td className="py-3 text-right">
                         {threshold && (
                           <span
-                            className={
-                              game.points > parseFloat(threshold)
-                                ? "text-green-500"
-                                : "text-red-500"
-                            }
+                            className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
                           >
-                            {game.points > parseFloat(threshold) ? "OVER" : "UNDER"}
+                            {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                           </span>
                         )}
                       </td>
@@ -490,7 +471,7 @@ import ImageWithFallback from "./ImageWithFallback"
             {/* extra games (conditionally) */}
             {showMoreGames && moreGames.length > 0 && (
               <div className="overflow-x-auto mt-6">
-                <table className="w-full">
+                <table className="w-full min-w-[500px]">
                   <thead>
                     <tr className="text-left text-gray-400 border-b border-gray-700">
                       <th className="pb-2">Date</th>
@@ -522,15 +503,9 @@ import ImageWithFallback from "./ImageWithFallback"
                         <td className="py-3 text-right">
                           {threshold && (
                             <span
-                              className={
-                                game.points > parseFloat(threshold)
-                                  ? "text-green-500"
-                                  : "text-red-500"
-                              }
+                              className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
                             >
-                              {game.points > parseFloat(threshold)
-                                ? "OVER"
-                                : "UNDER"}
+                              {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                             </span>
                           )}
                         </td>
@@ -542,9 +517,7 @@ import ImageWithFallback from "./ImageWithFallback"
             )}
 
             {/* error message */}
-            {moreGamesError && (
-              <p className="text-red-400 text-center mt-4">{moreGamesError}</p>
-            )}
+            {moreGamesError && <p className="text-red-400 text-center mt-4">{moreGamesError}</p>}
 
             {/* See More / See Less button always at bottom */}
             <div className="mt-auto flex justify-center">
@@ -553,19 +526,13 @@ import ImageWithFallback from "./ImageWithFallback"
                 disabled={loadingMoreGames}
                 className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
               >
-                {loadingMoreGames
-                  ? "Loading…"
-                  : showMoreGames
-                  ? "See Less Games"
-                  : "See More Games"}
+                {loadingMoreGames ? "Loading…" : showMoreGames ? "See Less Games" : "See More Games"}
               </button>
             </div>
           </div>
         )}
       </div>
 
-
-      
       {/* Injury Status Section */}
       <div className="bg-gray-800 rounded-lg overflow-hidden">
         <div
@@ -722,7 +689,7 @@ import ImageWithFallback from "./ImageWithFallback"
                 <div className="bg-gray-700 p-4 rounded-lg">
                   <h4 className="text-lg font-semibold mb-3">Career Season Stats</h4>
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[500px]">
                       <thead>
                         <tr className="text-left text-gray-400 border-b border-gray-700">
                           <th className="pb-2">Season</th>
@@ -756,19 +723,20 @@ import ImageWithFallback from "./ImageWithFallback"
 
       {/* Add to Picks Button */}
       <button
-        onClick={e => {
+        onClick={(e) => {
           e.stopPropagation()
           // build the proper pick_id string
           const [first, last] = name.split(" ")
           const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
           onAddToPicks({
             ...playerData,
-            id: pick_id,        // must be a string
-            pick_id,            // also store under pick_id
+            id: pick_id, // must be a string
+            pick_id, // also store under pick_id
             threshold,
           })
         }}
-        className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors">
+        className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors"
+      >
         <Plus className="w-5 h-5 mr-2" />
         <span>Add to Picks</span>
       </button>

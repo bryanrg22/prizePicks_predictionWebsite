@@ -117,7 +117,7 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
 
               {showRecentSearches && recentSearches.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden">
+                <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden max-h-[200px] overflow-y-auto">
                   <div className="p-2 border-b border-gray-700 flex justify-between items-center">
                     <span className="text-xs text-gray-400 font-medium">Recent Searches</span>
                     <History className="w-3 h-3 text-gray-500" />

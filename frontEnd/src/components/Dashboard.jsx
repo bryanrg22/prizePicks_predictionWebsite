@@ -132,7 +132,7 @@ export default function Dashboard({
 
       {/* Player Stats Display */}
       {searchPerformed && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Player Info Card */}
           <div className="lg:col-span-3">
             <PlayerCard player={mockPlayerData} />
@@ -154,7 +154,7 @@ export default function Dashboard({
               <h3 className="text-xl font-bold mb-4">Last 5 Games</h3>
 
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[500px]">
                   <thead>
                     <tr className="text-left text-gray-400 border-b border-gray-700">
                       <th className="pb-2">Date</th>
@@ -208,4 +208,3 @@ export default function Dashboard({
     </>
   )
 }
-

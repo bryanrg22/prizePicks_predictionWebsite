@@ -45,10 +45,10 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
     return value > threshold ? "text-green-500" : "text-red-500"
   }
 
-  const [moreGames, setMoreGames] = useState([]);
-  const [showMoreGames, setShowMoreGames] = useState(false);
-  const [loadingMoreGames, setLoadingMoreGames] = useState(false);
-  const [moreGamesError, setMoreGamesError] = useState(null);
+  const [moreGames, setMoreGames] = useState([])
+  const [showMoreGames, setShowMoreGames] = useState(false)
+  const [loadingMoreGames, setLoadingMoreGames] = useState(false)
+  const [moreGamesError, setMoreGamesError] = useState(null)
 
   // Extract data
   const name = playerData.name
@@ -102,25 +102,23 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const handleToggleMoreGames = async () => {
     if (showMoreGames) {
       // simply hide if already showing
-      return setShowMoreGames(false);
+      return setShowMoreGames(false)
     }
-    setLoadingMoreGames(true);
-    setMoreGamesError(null);
+    setLoadingMoreGames(true)
+    setMoreGamesError(null)
     try {
-      const res = await fetch(
-        `/api/player/${playerData.playerId}/more_games`
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setMoreGames(data);
-      setShowMoreGames(true);
+      const res = await fetch(`/api/player/${playerData.playerId}/more_games`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setMoreGames(data)
+      setShowMoreGames(true)
     } catch (err) {
-      console.error(err);
-      setMoreGamesError("Failed to load more games.");
+      console.error(err)
+      setMoreGamesError("Failed to load more games.")
     } finally {
-      setLoadingMoreGames(false);
+      setLoadingMoreGames(false)
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -252,14 +250,14 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
 
             <div className="bg-gray-800 p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Season Average @ Home</p>
-              <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics['avg_points_home'], threshold)}`}>
-                {formatNumber(advancedMetrics['avg_points_home'])} pts
+              <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_home"], threshold)}`}>
+                {formatNumber(advancedMetrics["avg_points_home"])} pts
               </p>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Season Average @ Away</p>
-              <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics['avg_points_away'], threshold)}`}>
-                {formatNumber(advancedMetrics['avg_points_away'])} pts
+              <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_away"], threshold)}`}>
+                {formatNumber(advancedMetrics["avg_points_away"])} pts
               </p>
             </div>
           </div>
@@ -267,11 +265,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <div className="bg-gray-800 p-4 rounded-lg">
               <p className="text-gray-400 text-sm">Regular Season Volatility Forecast</p>
-              <p
-                className={`text-2xl font-bold ${
-                  getComparisonColor(volatility_regular, threshold)
-                }`}
-              >
+              <p className={`text-2xl font-bold ${getComparisonColor(volatility_regular, threshold)}`}>
                 {formatNumber(volatility_regular)} pts
               </p>
             </div>
@@ -279,11 +273,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             {volatility_PlayOffs != 0 && (
               <div className="bg-gray-800 p-4 rounded-lg">
                 <p className="text-gray-400 text-sm">Playoffs Volatility Forecast</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    getComparisonColor(volatility_PlayOffs, threshold)
-                  }`}
-                >
+                <p className={`text-2xl font-bold ${getComparisonColor(volatility_PlayOffs, threshold)}`}>
                   {formatNumber(volatility_PlayOffs)} pts
                 </p>
               </div>
@@ -292,17 +282,13 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             {num_playoff_games !== 0 && (
               <div className="bg-gray-800 p-4 rounded-lg">
                 <p className="text-gray-400 text-sm">Playoffs Average</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    getComparisonColor(playoffAvg, threshold)
-                  }`}
-                >
+                <p className={`text-2xl font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
                   {formatNumber(playoffAvg)} pts
                 </p>
               </div>
             )}
           </div>
-          
+
           {/* Recent Encounters Section */}
           <div className="bg-gray-800 rounded-lg overflow-hidden">
             <div
@@ -319,7 +305,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             {expandedSection === "recentEncounters" && (
               <div className="p-4 border-t border-gray-700">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[500px]">
                     <thead>
                       <tr className="text-left text-gray-400 border-b border-gray-700">
                         <th className="pb-2">Date</th>
@@ -351,7 +337,9 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                           <td className="py-3 text-right">
                             {threshold && (
                               <span
-                                className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
+                                className={
+                                  game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"
+                                }
                               >
                                 {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                               </span>
@@ -383,7 +371,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
               {expandedSection === "playoffsLog" && (
                 <div className="p-4 border-t border-gray-700">
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[500px]">
                       <thead>
                         <tr className="text-left text-gray-400 border-b border-gray-700">
                           <th className="pb-2">Date</th>
@@ -415,7 +403,9 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                             <td className="py-3 text-right">
                               {threshold && (
                                 <span
-                                  className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
+                                  className={
+                                    game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"
+                                  }
                                 >
                                   {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                                 </span>
@@ -449,7 +439,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
               <div className="p-4 border-t border-gray-700 flex flex-col">
                 {/* first 5 games */}
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[500px]">
                     <thead>
                       <tr className="text-left text-gray-400 border-b border-gray-700">
                         <th className="pb-2">Date</th>
@@ -482,12 +472,10 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                             {threshold && (
                               <span
                                 className={
-                                  game.points > parseFloat(threshold)
-                                    ? "text-green-500"
-                                    : "text-red-500"
+                                  game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"
                                 }
                               >
-                                {game.points > parseFloat(threshold) ? "OVER" : "UNDER"}
+                                {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                               </span>
                             )}
                           </td>
@@ -500,7 +488,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                 {/* extra games (conditionally) */}
                 {showMoreGames && moreGames.length > 0 && (
                   <div className="overflow-x-auto mt-6">
-                    <table className="w-full">
+                    <table className="w-full min-w-[500px]">
                       <thead>
                         <tr className="text-left text-gray-400 border-b border-gray-700">
                           <th className="pb-2">Date</th>
@@ -533,14 +521,10 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                               {threshold && (
                                 <span
                                   className={
-                                    game.points > parseFloat(threshold)
-                                      ? "text-green-500"
-                                      : "text-red-500"
+                                    game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"
                                   }
                                 >
-                                  {game.points > parseFloat(threshold)
-                                    ? "OVER"
-                                    : "UNDER"}
+                                  {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                                 </span>
                               )}
                             </td>
@@ -552,9 +536,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                 )}
 
                 {/* error message */}
-                {moreGamesError && (
-                  <p className="text-red-400 text-center mt-4">{moreGamesError}</p>
-                )}
+                {moreGamesError && <p className="text-red-400 text-center mt-4">{moreGamesError}</p>}
 
                 {/* See More / See Less button always at bottom */}
                 <div className="mt-auto flex justify-center">
@@ -563,11 +545,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                     disabled={loadingMoreGames}
                     className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {loadingMoreGames
-                      ? "Loading…"
-                      : showMoreGames
-                      ? "See Less Games"
-                      : "See More Games"}
+                    {loadingMoreGames ? "Loading…" : showMoreGames ? "See Less Games" : "See More Games"}
                   </button>
                 </div>
               </div>
@@ -732,7 +710,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                     <div className="bg-gray-700 p-4 rounded-lg">
                       <h4 className="text-lg font-semibold mb-3">Career Season Stats</h4>
                       <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[500px]">
                           <thead>
                             <tr className="text-left text-gray-400 border-b border-gray-700">
                               <th className="pb-2">Season</th>
@@ -766,18 +744,19 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
 
           {/* Add to Picks Button */}
           <button
-            onClick={e => {
+            onClick={(e) => {
               e.stopPropagation()
               const [first, last] = name.split(" ")
               const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
               onAddToPicks({
-                  ...playerData,
-                  id: pickId,       // ← must be a string
-                  threshold,        // …and nothing else that might shadow it
+                ...playerData,
+                id: pickId, // ← must be a string
+                threshold, // …and nothing else that might shadow it
               })
               onClose()
             }}
-            className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors">
+            className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors"
+          >
             <Plus className="w-5 h-5 mr-2" />
             <span>Add to Picks</span>
           </button>
