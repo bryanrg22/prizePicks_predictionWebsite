@@ -71,10 +71,10 @@ def analyze_player_endpoint():
           .collection("active")
     )
     
-    for doc in ref.stream():
-        data = doc.to_dict()
-        if key in data['pick_id'] and data["threshold"] == threshold:
-            return jsonify(data), 200
+    #for doc in ref.stream():
+    #    data = doc.to_dict()
+    #    if key in data['pick_id'] and data["threshold"] == threshold:
+    #        return jsonify(data), 200
         
 
     # 1) run your pipeline
