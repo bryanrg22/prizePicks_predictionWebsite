@@ -5,6 +5,106 @@
   text-align: center;
 }
 
+/* Mobile-first approach - these styles apply to mobile by default */
+@media (max-width: 768px) {
+  #root {
+    padding: 0.5rem;
+    max-width: 100%;
+  }
+
+  /* Force all content to stack vertically on mobile */
+  .flex {
+    flex-direction: column !important;
+  }
+
+  /* Make sure no content overflows horizontally */
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Fix the main layout container */
+  .min-h-screen {
+    padding: 0 !important;
+  }
+
+  /* Adjust padding for mobile */
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  .p-4 {
+    padding: 0.75rem !important;
+  }
+
+  /* Make grids single column on mobile */
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Fix text sizes for mobile */
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  /* Make tables scrollable horizontally */
+  .overflow-x-auto {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure tables have minimum width for scrolling */
+  table {
+    min-width: 500px !important;
+  }
+
+  /* Fix modal to be full screen on mobile */
+  .fixed.inset-0 {
+    padding: 0 !important;
+  }
+
+  .fixed.inset-0 > div {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Hide horizontal scrollbar on body */
+  body {
+    overflow-x: hidden !important;
+  }
+
+  /* Make images responsive */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Fix button sizes */
+  button {
+    min-height: 44px !important; /* iOS touch target size */
+  }
+
+  /* Make form inputs full width */
+  input,
+  select,
+  textarea {
+    width: 100% !important;
+  }
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -39,69 +139,4 @@
 
 .read-the-docs {
   color: #888;
-}
-
-/* Add these mobile-specific styles at the end of your existing CSS */
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-  /* General adjustments */
-  body {
-    overflow-x: hidden;
-  }
-
-  /* Grid adjustments */
-  .grid {
-    grid-template-columns: 1fr !important;
-  }
-
-  /* Tables */
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Modal adjustments */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50.p-4.overflow-y-auto {
-    padding: 0;
-  }
-
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50.p-4.overflow-y-auto > div {
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    margin: 0;
-    border-radius: 0;
-  }
-
-  /* Flex direction changes for mobile */
-  .flex.flex-col.md\:flex-row {
-    flex-direction: column !important;
-  }
-
-  /* Adjust font sizes for mobile */
-  h1,
-  .text-3xl {
-    font-size: 1.5rem !important;
-  }
-
-  h2,
-  .text-2xl {
-    font-size: 1.25rem !important;
-  }
-
-  /* Adjust padding and margins */
-  .p-6 {
-    padding: 1rem !important;
-  }
-
-  .mb-6 {
-    margin-bottom: 1rem !important;
-  }
-
-  /* Make images responsive */
-  img {
-    max-width: 100%;
-    height: auto;
-  }
 }
