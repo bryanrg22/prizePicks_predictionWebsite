@@ -106,35 +106,34 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h2 className="text-2xl font-bold mb-6">Already Processed Players</h2>
+    <div className="space-y-4 lg:space-y-6">
+      <div className="bg-gray-800 p-4 lg:p-6 rounded-lg">
+        <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6">Already Processed Players</h2>
 
         {/* Search bar */}
-        <div className="mb-6">
+        <div className="mb-4 lg:mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 lg:h-5 lg:w-5" />
             <input
               type="text"
               placeholder="Search players by name or team..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 lg:pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
             />
           </div>
         </div>
 
         {/* Filter options */}
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-wrap gap-4">
+        <div className="mb-4 lg:mb-6 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-gray-400 mb-1">Filter by Team</label>
               <select
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                 onChange={(e) => {
                   const teamFilter = e.target.value
                   if (teamFilter === "all") {
-                    // Reset to current search results
                     const searchFiltered =
                       searchTerm.trim() === ""
                         ? players
@@ -145,14 +144,10 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                           )
                     setFilteredPlayers(searchFiltered)
                   } else {
-                    // Filter by team and maintain search filter
                     const teamFiltered = (searchTerm.trim() === "" ? players : filteredPlayers).filter(
                       (player) => player.team === teamFilter,
                     )
-
-                    // Sort alphabetically by name within team
                     teamFiltered.sort((a, b) => a.name.localeCompare(b.name))
-
                     setFilteredPlayers(teamFiltered)
                   }
                 }}
@@ -172,11 +167,10 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-gray-400 mb-1">Filter by AI Recommendation</label>
               <select
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                 onChange={(e) => {
                   const recFilter = e.target.value
                   if (recFilter === "all") {
-                    // Reset to current search results
                     const searchFiltered =
                       searchTerm.trim() === ""
                         ? players
@@ -187,7 +181,6 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                           )
                     setFilteredPlayers(searchFiltered)
                   } else {
-                    // Filter by recommendation
                     const recFiltered = (searchTerm.trim() === "" ? players : filteredPlayers).filter((player) => {
                       const rec = player.betExplanation?.recommendation || ""
 
@@ -222,15 +215,15 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
         {/* Loading state */}
         {loading && (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 lg:h-12 lg:w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         )}
 
         {/* Error state */}
         {error && !loading && (
-          <div className="bg-red-900 bg-opacity-30 border border-red-700 p-4 rounded-lg mb-4 flex items-start">
-            <Activity className="text-red-400 w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-            <p className="text-red-300">{error}</p>
+          <div className="bg-red-900 bg-opacity-30 border border-red-700 p-3 lg:p-4 rounded-lg mb-4 flex items-start">
+            <Activity className="text-red-400 w-4 h-4 lg:w-5 lg:h-5 mr-2 flex-shrink-0 mt-0.5" />
+            <p className="text-red-300 text-sm lg:text-base">{error}</p>
           </div>
         )}
 
@@ -244,9 +237,9 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
 
         {/* Player grid */}
         {!loading && !error && filteredPlayers.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
             {filteredPlayers.map((player) => {
-              const playerId        = player.playerId || player.id || player.name
+              const playerId = player.playerId || player.id || player.name
               const uniquePlayerKey = `${playerId}_${player.threshold}`
               const isAdded = addedPlayers[playerId]
               const poissonProbability = player.poissonProbability
@@ -261,43 +254,47 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                   onClick={() => handleOpenModal(player)}
                 >
                   {/* Player header */}
-                  <div className="p-4 bg-gradient-to-r from-gray-900 to-gray-800">
+                  <div className="p-3 lg:p-4 bg-gradient-to-r from-gray-900 to-gray-800">
                     <div className="flex items-center">
                       <div className="relative">
                         <ImageWithFallback
                           src={player.photoUrl || "/placeholder.svg"}
                           alt={player.name}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-700"
+                          className="w-12 h-12 lg:w-16 lg:h-16 rounded-full object-cover border-2 border-gray-700"
                           fallbackSrc="/placeholder.svg?height=64&width=64"
                         />
                         <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-0.5 border border-gray-700">
                           <ImageWithFallback
                             src={player.teamLogo || "/placeholder.svg"}
                             alt={player.team}
-                            className="w-6 h-6"
+                            className="w-4 h-4 lg:w-6 lg:h-6"
                             fallbackSrc="/placeholder.svg?height=24&width=24"
                           />
                         </div>
                       </div>
-                      <div className="ml-3">
-                        <h3 className="font-bold text-lg">{player.name}</h3>
-                        <p className="text-sm text-gray-400">{player.team}</p>
+                      <div className="ml-2 lg:ml-3 flex-1 min-w-0">
+                        <h3 className="font-bold text-base lg:text-lg truncate">{player.name}</h3>
+                        <p className="text-xs lg:text-sm text-gray-400">{player.team}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Stats section */}
-                  <div className="p-4">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="p-3 lg:p-4">
+                    <div className="grid grid-cols-2 gap-2 lg:gap-3 mb-3">
                       <div className="bg-gray-800 p-2 rounded">
                         <p className="text-xs text-gray-400">Season Avg</p>
-                        <p className={`font-bold ${getComparisonColor(player.seasonAvgPoints, threshold)}`}>
+                        <p
+                          className={`font-bold text-sm lg:text-base ${getComparisonColor(player.seasonAvgPoints, threshold)}`}
+                        >
                           {player.seasonAvgPoints?.toFixed(1) || "N/A"} pts
                         </p>
                       </div>
                       <div className="bg-gray-800 p-2 rounded">
                         <p className="text-xs text-gray-400">Last 5 Games</p>
-                        <p className={`font-bold ${getComparisonColor(player.last5GamesAvg, threshold)}`}>
+                        <p
+                          className={`font-bold text-sm lg:text-base ${getComparisonColor(player.last5GamesAvg, threshold)}`}
+                        >
                           {player.last5GamesAvg?.toFixed(1) || "N/A"} pts
                         </p>
                       </div>
@@ -310,17 +307,17 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                           <ImageWithFallback
                             src={player.teamLogo || "/placeholder.svg"}
                             alt={player.team}
-                            className="w-5 h-5 mr-1"
+                            className="w-4 h-4 mr-1"
                             fallbackSrc="/placeholder.svg?height=20&width=20"
                           />
                           <span className="text-xs mx-1">vs</span>
                           <ImageWithFallback
                             src={player.opponentLogo || "/placeholder.svg"}
                             alt={player.opponent}
-                            className="w-5 h-5 mr-1"
+                            className="w-4 h-4 mr-1"
                             fallbackSrc="/placeholder.svg?height=20&width=20"
                           />
-                          <span className="text-xs">{player.opponent}</span>
+                          <span className="text-xs truncate">{player.opponent}</span>
                         </div>
                         <span className="text-xs text-gray-400">{player.gameDate}</span>
                       </div>
@@ -330,11 +327,11 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                     <div className="flex items-center justify-between mb-3 bg-gray-800 p-2 rounded">
                       <div>
                         <p className="text-xs text-gray-400">Threshold</p>
-                        <p className="font-bold">{threshold} pts</p>
+                        <p className="font-bold text-sm lg:text-base">{threshold} pts</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-gray-400">Probability</p>
-                        <p className={`font-bold ${getProbabilityColor(poissonProbability)}`}>
+                        <p className={`font-bold text-sm lg:text-base ${getProbabilityColor(poissonProbability)}`}>
                           {formatPercent(poissonProbability)}
                         </p>
                       </div>
@@ -342,16 +339,18 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
 
                     {/* AI Recommendation */}
                     {recommendation !== "N/A" && (
-                      <div className="bg-gray-800 p-3 rounded mb-3">
+                      <div className="bg-gray-800 p-2 lg:p-3 rounded mb-3">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-400">AI Pick</p>
-                          <p className={`font-bold ${getRecommendationColor(recommendation)}`}>
+                          <p className="text-xs lg:text-sm text-gray-400">AI Pick</p>
+                          <p
+                            className={`font-bold text-xs lg:text-sm ${getRecommendationColor(recommendation)} flex items-center`}
+                          >
                             {recommendation.toLowerCase().includes("over") ? (
-                              <TrendingUp className="inline-block w-4 h-4 mr-1" />
+                              <TrendingUp className="inline-block w-3 h-3 lg:w-4 lg:h-4 mr-1" />
                             ) : (
-                              <TrendingDown className="inline-block w-4 h-4 mr-1" />
+                              <TrendingDown className="inline-block w-3 h-3 lg:w-4 lg:h-4 mr-1" />
                             )}
-                            {recommendation}
+                            <span className="truncate">{recommendation}</span>
                           </p>
                         </div>
                       </div>
@@ -364,7 +363,7 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                           <BarChart2 className="w-3 h-3 mr-1 text-gray-400" />
                           <p className="text-xs text-gray-400">Monte Carlo</p>
                         </div>
-                        <p className={`font-bold ${getProbabilityColor(monteCarloProbability)}`}>
+                        <p className={`font-bold text-xs lg:text-sm ${getProbabilityColor(monteCarloProbability)}`}>
                           {formatPercent(monteCarloProbability)}
                         </p>
                       </div>
@@ -376,14 +375,13 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                         e.stopPropagation()
                         const [first, last] = player.name.split(" ")
                         const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
-                        onAddToPicks({
-                            ...player,
-                            id: pickId,       // ← must be a string
-                            threshold,        // …and nothing else that might shadow it
+                        handleAddToPicks({
+                          ...player,
+                          id: pickId,
+                          threshold,
                         })
-                        onClose()
                       }}
-                      className={`w-full py-2 rounded-md flex items-center justify-center transition-colors ${
+                      className={`w-full py-2 lg:py-3 rounded-md flex items-center justify-center transition-colors min-h-[44px] ${
                         isAdded ? "bg-green-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
                       }`}
                     >
@@ -409,11 +407,7 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
 
       {/* Player Analysis Modal */}
       {selectedPlayer && (
-        <PlayerAnalysisModal
-          playerData={selectedPlayer}
-          onClose={handleCloseModal}
-          onAddToPicks={handleAddToPicks}
-        />
+        <PlayerAnalysisModal playerData={selectedPlayer} onClose={handleCloseModal} onAddToPicks={handleAddToPicks} />
       )}
     </div>
   )

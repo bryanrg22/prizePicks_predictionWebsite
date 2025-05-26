@@ -1,109 +1,12 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0;
+  text-align: left;
 }
 
-/* Mobile-first approach - these styles apply to mobile by default */
-@media (max-width: 768px) {
-  #root {
-    padding: 0.5rem;
-    max-width: 100%;
-  }
-
-  /* Force all content to stack vertically on mobile */
-  .flex {
-    flex-direction: column !important;
-  }
-
-  /* Make sure no content overflows horizontally */
-  * {
-    max-width: 100% !important;
-    box-sizing: border-box;
-  }
-
-  /* Fix the main layout container */
-  .min-h-screen {
-    padding: 0 !important;
-  }
-
-  /* Adjust padding for mobile */
-  .p-6 {
-    padding: 1rem !important;
-  }
-
-  .p-4 {
-    padding: 0.75rem !important;
-  }
-
-  /* Make grids single column on mobile */
-  .grid {
-    grid-template-columns: 1fr !important;
-    gap: 1rem !important;
-  }
-
-  /* Fix text sizes for mobile */
-  .text-3xl {
-    font-size: 1.5rem !important;
-  }
-
-  .text-2xl {
-    font-size: 1.25rem !important;
-  }
-
-  .text-xl {
-    font-size: 1.125rem !important;
-  }
-
-  /* Make tables scrollable horizontally */
-  .overflow-x-auto {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Ensure tables have minimum width for scrolling */
-  table {
-    min-width: 500px !important;
-  }
-
-  /* Fix modal to be full screen on mobile */
-  .fixed.inset-0 {
-    padding: 0 !important;
-  }
-
-  .fixed.inset-0 > div {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Hide horizontal scrollbar on body */
-  body {
-    overflow-x: hidden !important;
-  }
-
-  /* Make images responsive */
-  img {
-    max-width: 100% !important;
-    height: auto !important;
-  }
-
-  /* Fix button sizes */
-  button {
-    min-height: 44px !important; /* iOS touch target size */
-  }
-
-  /* Make form inputs full width */
-  input,
-  select,
-  textarea {
-    width: 100% !important;
-  }
-}
+/* Remove the problematic mobile CSS that was causing issues */
+/* The new components handle mobile responsiveness through Tailwind classes */
 
 .logo {
   height: 6em;
@@ -139,4 +42,22 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Ensure proper touch targets on mobile */
+@media (max-width: 768px) {
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Prevent zoom on input focus on iOS */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

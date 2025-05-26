@@ -1,12 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Activity, BarChart2 } from "lucide-react"
+import { Plus, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Activity } from "lucide-react"
 import ImageWithFallback from "./ImageWithFallback"
 
 const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
   const [expandedSection, setExpandedSection] = useState("main")
-
   const [moreGames, setMoreGames] = useState([])
   const [showMoreGames, setShowMoreGames] = useState(false)
   const [loadingMoreGames, setLoadingMoreGames] = useState(false)
@@ -100,7 +99,6 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
   // Toggle between fetching & hiding
   const handleToggleMoreGames = async () => {
     if (showMoreGames) {
-      // simply hide if already showing
       return setShowMoreGames(false)
     }
     setLoadingMoreGames(true)
@@ -120,88 +118,88 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       {/* Hero Section with Player Info and Main Recommendation */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl overflow-hidden shadow-xl">
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
+        <div className="p-4 lg:p-6">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
             {/* Player Info */}
-            <div className="flex items-center mb-4 md:mb-0">
+            <div className="flex items-center mb-4 lg:mb-0 w-full lg:w-auto">
               <div className="relative">
                 <ImageWithFallback
                   src={photoUrl || "/placeholder.svg"}
                   alt={name}
-                  className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
+                  className="w-16 h-16 lg:w-24 lg:h-24 rounded-full object-cover border-2 border-blue-500"
                   fallbackSrc="/placeholder.svg?height=96&width=96"
                 />
-                <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-1 border border-gray-700">
+                <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-0.5 lg:p-1 border border-gray-700">
                   <ImageWithFallback
                     src={teamLogo || "/placeholder.svg"}
                     alt={team}
-                    className="w-8 h-8"
+                    className="w-6 h-6 lg:w-8 lg:h-8"
                     fallbackSrc="/placeholder.svg?height=32&width=32"
                   />
                 </div>
               </div>
-              <div className="ml-4">
-                <h1 className="text-3xl font-bold">{name}</h1>
-                <div className="flex items-center text-gray-400">
+              <div className="ml-3 lg:ml-4 flex-1 min-w-0">
+                <h1 className="text-xl lg:text-3xl font-bold truncate">{name}</h1>
+                <div className="flex flex-wrap items-center text-gray-400 text-sm lg:text-base">
                   <span>{team}</span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-1 lg:mx-2">•</span>
                   <span>{position}</span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-1 lg:mx-2">•</span>
                   <span>Rank: {teamRank}</span>
                 </div>
-                <div className="flex items-center mt-1 text-sm">
+                <div className="flex flex-wrap items-center mt-1 text-xs lg:text-sm">
                   <span className="text-gray-400">vs</span>
                   <ImageWithFallback
                     src={opponentLogo || "/placeholder.svg"}
                     alt={opponent}
-                    className="w-4 h-4 mx-1"
+                    className="w-3 h-3 lg:w-4 lg:h-4 mx-1"
                     fallbackSrc="/placeholder.svg?height=16&width=16"
                   />
                   <span>
                     {opponent} (Rank: {opponentRank})
                   </span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-1 lg:mx-2">•</span>
                   <span>
                     {gameDate} {gameTime}
                   </span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-1 lg:mx-2">•</span>
                   <span>{gametype}</span>
                 </div>
               </div>
             </div>
 
             {/* Main Recommendation */}
-            <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 w-full md:w-auto">
+            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg border border-gray-700 w-full lg:w-auto mt-4 lg:mt-0">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400">Threshold</span>
-                <span className="text-2xl font-bold">{threshold} pts</span>
+                <span className="text-gray-400 text-sm lg:text-base">Threshold</span>
+                <span className="text-xl lg:text-2xl font-bold">{threshold} pts</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Recommendation</span>
-                <span className={`text-2xl font-bold ${recommendationColor} flex items-center`}>
+                <span className="text-gray-400 text-sm lg:text-base">Recommendation</span>
+                <span className={`text-lg lg:text-2xl font-bold ${recommendationColor} flex items-center`}>
                   {recommendation.toLowerCase().includes("over") ? (
-                    <TrendingUp className="mr-1" />
+                    <TrendingUp className="mr-1 w-4 h-4 lg:w-5 lg:h-5" />
                   ) : (
-                    <TrendingDown className="mr-1" />
+                    <TrendingDown className="mr-1 w-4 h-4 lg:w-5 lg:h-5" />
                   )}
-                  {recommendation}
+                  <span className="truncate">{recommendation}</span>
                 </span>
               </div>
             </div>
           </div>
 
           {/* AI Betting Recommendation */}
-          <div className="mt-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 border border-gray-700">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center">
-                <Activity className="text-blue-400 w-5 h-5 mr-2" />
-                <h2 className="text-xl font-semibold">AI Betting Recommendation</h2>
+          <div className="mt-4 lg:mt-6 bg-gray-800 bg-opacity-50 rounded-lg p-3 lg:p-4 border border-gray-700">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-2">
+              <div className="flex items-center mb-2 lg:mb-0">
+                <Activity className="text-blue-400 w-4 h-4 lg:w-5 lg:h-5 mr-2" />
+                <h2 className="text-lg lg:text-xl font-semibold">AI Betting Recommendation</h2>
               </div>
-              <div className="flex space-x-4 text-sm">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:space-x-4 text-sm">
+                <div className="mb-1 sm:mb-0">
                   <span className="text-gray-400">Poisson: </span>
                   <span className={getProbabilityColor(poissonProbability)}>{poissonProbabilityFormatted}</span>
                 </div>
@@ -211,80 +209,82 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
                 </div>
               </div>
             </div>
-            <p className="text-gray-300">{betExplanation.explanation}</p>
+            <p className="text-gray-300 text-sm lg:text-base">{betExplanation.explanation}</p>
           </div>
         </div>
       </div>
 
       {/* Key Stats Section */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Season Average</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(seasonAvg, threshold)}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-5">
+        <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+          <p className="text-gray-400 text-xs lg:text-sm">Season Average</p>
+          <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(seasonAvg, threshold)}`}>
             {formatNumber(seasonAvg)} pts
           </p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Average Last 5 Games</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(last5RegAvg, threshold)}`}>
+        <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+          <p className="text-gray-400 text-xs lg:text-sm">Average Last 5 Games</p>
+          <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(last5RegAvg, threshold)}`}>
             {formatNumber(last5RegAvg)} pts
           </p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Average Vs. {opponent}</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(vsOpponentAvg, threshold)}`}>
+        <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+          <p className="text-gray-400 text-xs lg:text-sm">Average Vs. {opponent}</p>
+          <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(vsOpponentAvg, threshold)}`}>
             {formatNumber(vsOpponentAvg)} pts
           </p>
         </div>
-
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Season Average @ Home</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_home"], threshold)}`}>
+        <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+          <p className="text-gray-400 text-xs lg:text-sm">Season Average @ Home</p>
+          <p
+            className={`text-lg lg:text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_home"], threshold)}`}
+          >
             {formatNumber(advancedMetrics["avg_points_home"])} pts
           </p>
         </div>
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Season Average @ Away</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_away"], threshold)}`}>
+        <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+          <p className="text-gray-400 text-xs lg:text-sm">Season Average @ Away</p>
+          <p
+            className={`text-lg lg:text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_away"], threshold)}`}
+          >
             {formatNumber(advancedMetrics["avg_points_away"])} pts
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <p className="text-gray-400 text-sm">Regular Season Volatility Forecast</p>
-          <p className={`text-2xl font-bold ${getComparisonColor(volatility_regular, threshold)}`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+          <p className="text-gray-400 text-xs lg:text-sm">Regular Season Volatility Forecast</p>
+          <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(volatility_regular, threshold)}`}>
             {formatNumber(volatility_regular)} pts
           </p>
         </div>
-        {/* only render this block if there are playoffs games */}
         {volatility_PlayOffs != 0 && (
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-gray-400 text-sm">Playoffs Volatility Forecast</p>
-            <p className={`text-2xl font-bold ${getComparisonColor(volatility_PlayOffs, threshold)}`}>
+          <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+            <p className="text-gray-400 text-xs lg:text-sm">Playoffs Volatility Forecast</p>
+            <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(volatility_PlayOffs, threshold)}`}>
               {formatNumber(volatility_PlayOffs)} pts
             </p>
           </div>
         )}
-        {/* only render this block if there are playoffs games */}
         {num_playoff_games !== 0 && (
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-gray-400 text-sm">Playoffs Average</p>
-            <p className={`text-2xl font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
+          <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
+            <p className="text-gray-400 text-xs lg:text-sm">Playoffs Average</p>
+            <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
               {formatNumber(playoffAvg)} pts
             </p>
           </div>
         )}
       </div>
 
+      {/* Expandable Sections */}
       {/* Recent Encounters Section */}
       <div className="bg-gray-800 rounded-lg overflow-hidden">
         <div
-          className="flex justify-between items-center p-4 cursor-pointer"
+          className="flex justify-between items-center p-3 lg:p-4 cursor-pointer hover:bg-gray-700 transition-colors"
           onClick={() => toggleSection("recentEncounters")}
         >
-          <h2 className="text-xl font-semibold">All Season Encounters</h2>
+          <h2 className="text-lg lg:text-xl font-semibold">All Season Encounters</h2>
           {expandedSection === "recentEncounters" ? (
             <ChevronUp className="w-5 h-5 text-gray-400" />
           ) : (
@@ -292,41 +292,41 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
           )}
         </div>
         {expandedSection === "recentEncounters" && (
-          <div className="p-4 border-t border-gray-700">
+          <div className="p-3 lg:p-4 border-t border-gray-700">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[500px]">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700">
-                    <th className="pb-2">Date</th>
-                    <th className="pb-2">Opponent</th>
-                    <th className="pb-2">Location</th>
-                    <th className="pb-2">MIN</th>
-                    <th className="pb-2">PTS</th>
-                    <th className="pb-2 text-right">vs Threshold</th>
+                    <th className="pb-2 text-xs lg:text-sm">Date</th>
+                    <th className="pb-2 text-xs lg:text-sm">Opponent</th>
+                    <th className="pb-2 text-xs lg:text-sm">Location</th>
+                    <th className="pb-2 text-xs lg:text-sm">MIN</th>
+                    <th className="pb-2 text-xs lg:text-sm">PTS</th>
+                    <th className="pb-2 text-right text-xs lg:text-sm">vs Threshold</th>
                   </tr>
                 </thead>
                 <tbody>
                   {season_games_agst_opp.map((game, index) => (
                     <tr key={index} className="border-b border-gray-700">
-                      <td className="py-3">{game.date}</td>
-                      <td className="py-3">
+                      <td className="py-2 lg:py-3 text-xs lg:text-sm">{game.date}</td>
+                      <td className="py-2 lg:py-3">
                         <div className="flex items-center">
                           <ImageWithFallback
                             src={game.opponentLogo || "/placeholder.svg"}
                             alt={game.opponent}
-                            className="w-5 h-5 mr-2"
+                            className="w-4 h-4 lg:w-5 lg:h-5 mr-1 lg:mr-2"
                             fallbackSrc="/placeholder.svg?height=20&width=20"
                           />
-                          <span>{game.opponentFullName || game.opponent}</span>
+                          <span className="text-xs lg:text-sm truncate">{game.opponentFullName || game.opponent}</span>
                         </div>
                       </td>
-                      <td className="py-3">{game.location}</td>
-                      <td className="py-3">{game.minutes || "N/A"}</td>
-                      <td className="py-3 font-bold">{game.points}</td>
-                      <td className="py-3 text-right">
+                      <td className="py-2 lg:py-3 text-xs lg:text-sm">{game.location}</td>
+                      <td className="py-2 lg:py-3 text-xs lg:text-sm">{game.minutes || "N/A"}</td>
+                      <td className="py-2 lg:py-3 font-bold text-xs lg:text-sm">{game.points}</td>
+                      <td className="py-2 lg:py-3 text-right">
                         {threshold && (
                           <span
-                            className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
+                            className={`text-xs lg:text-sm ${game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}`}
                           >
                             {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
                           </span>
@@ -336,386 +336,6 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Playoffs Game Log */}
-      {num_playoff_games !== 0 && (
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
-          <div
-            className="flex justify-between items-center p-4 cursor-pointer"
-            onClick={() => toggleSection("playoffsLog")}
-          >
-            <h2 className="text-xl font-semibold">Playoffs Game Log</h2>
-            {expandedSection === "playoffsLog" ? (
-              <ChevronUp className="w-5 h-5 text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            )}
-          </div>
-          {expandedSection === "playoffsLog" && (
-            <div className="p-4 border-t border-gray-700">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[500px]">
-                  <thead>
-                    <tr className="text-left text-gray-400 border-b border-gray-700">
-                      <th className="pb-2">Date</th>
-                      <th className="pb-2">Opponent</th>
-                      <th className="pb-2">Location</th>
-                      <th className="pb-2">MIN</th>
-                      <th className="pb-2">PTS</th>
-                      <th className="pb-2 text-right">vs Threshold</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {playoff_games.map((game, index) => (
-                      <tr key={index} className="border-b border-gray-700">
-                        <td className="py-3">{game.date}</td>
-                        <td className="py-3">
-                          <div className="flex items-center">
-                            <ImageWithFallback
-                              src={game.opponentLogo || "/placeholder.svg"}
-                              alt={game.opponent}
-                              className="w-5 h-5 mr-2"
-                              fallbackSrc="/placeholder.svg?height=20&width=20"
-                            />
-                            <span>{game.opponentFullName || game.opponent}</span>
-                          </div>
-                        </td>
-                        <td className="py-3">{game.location}</td>
-                        <td className="py-3">{game.minutes || "N/A"}</td>
-                        <td className="py-3 font-bold">{game.points}</td>
-                        <td className="py-3 text-right">
-                          {threshold && (
-                            <span
-                              className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
-                            >
-                              {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Recent Games Section */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div
-          className="flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => toggleSection("recentGames")}
-        >
-          <h2 className="text-xl font-semibold">Recent Regular Season Games</h2>
-          {expandedSection === "recentGames" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-
-        {expandedSection === "recentGames" && (
-          <div className="p-4 border-t border-gray-700 flex flex-col">
-            {/* first 5 games */}
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[500px]">
-                <thead>
-                  <tr className="text-left text-gray-400 border-b border-gray-700">
-                    <th className="pb-2">Date</th>
-                    <th className="pb-2">Opponent</th>
-                    <th className="pb-2">Location</th>
-                    <th className="pb-2">MIN</th>
-                    <th className="pb-2">PTS</th>
-                    <th className="pb-2 text-right">vs Threshold</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {last5RegularGames.map((game, idx) => (
-                    <tr key={idx} className="border-b border-gray-700">
-                      <td className="py-3">{game.date}</td>
-                      <td className="py-3">
-                        <div className="flex items-center">
-                          <ImageWithFallback
-                            src={game.opponentLogo || "/placeholder.svg"}
-                            alt={game.opponentFullName || game.opponent}
-                            className="w-5 h-5 mr-2"
-                            fallbackSrc="/placeholder.svg?height=20&width=20"
-                          />
-                          <span>{game.opponentFullName || game.opponent}</span>
-                        </div>
-                      </td>
-                      <td className="py-3">{game.location}</td>
-                      <td className="py-3">{game.minutes || "N/A"}</td>
-                      <td className="py-3 font-bold">{game.points}</td>
-                      <td className="py-3 text-right">
-                        {threshold && (
-                          <span
-                            className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
-                          >
-                            {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* extra games (conditionally) */}
-            {showMoreGames && moreGames.length > 0 && (
-              <div className="overflow-x-auto mt-6">
-                <table className="w-full min-w-[500px]">
-                  <thead>
-                    <tr className="text-left text-gray-400 border-b border-gray-700">
-                      <th className="pb-2">Date</th>
-                      <th className="pb-2">Opponent</th>
-                      <th className="pb-2">Location</th>
-                      <th className="pb-2">MIN</th>
-                      <th className="pb-2">PTS</th>
-                      <th className="pb-2 text-right">vs Threshold</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {moreGames.map((game, idx) => (
-                      <tr key={idx} className="border-b border-gray-700">
-                        <td className="py-3">{game.date}</td>
-                        <td className="py-3">
-                          <div className="flex items-center">
-                            <ImageWithFallback
-                              src={game.opponentLogo || "/placeholder.svg"}
-                              alt={game.opponentFullName || game.opponent}
-                              className="w-5 h-5 mr-2"
-                              fallbackSrc="/placeholder.svg?height=20&width=20"
-                            />
-                            <span>{game.opponentFullName || game.opponent}</span>
-                          </div>
-                        </td>
-                        <td className="py-3">{game.location}</td>
-                        <td className="py-3">{game.minutes ?? "N/A"}</td>
-                        <td className="py-3 font-bold">{game.points}</td>
-                        <td className="py-3 text-right">
-                          {threshold && (
-                            <span
-                              className={game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"}
-                            >
-                              {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* error message */}
-            {moreGamesError && <p className="text-red-400 text-center mt-4">{moreGamesError}</p>}
-
-            {/* See More / See Less button always at bottom */}
-            <div className="mt-auto flex justify-center">
-              <button
-                onClick={handleToggleMoreGames}
-                disabled={loadingMoreGames}
-                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loadingMoreGames ? "Loading…" : showMoreGames ? "See Less Games" : "See More Games"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Injury Status Section */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div
-          className="flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => toggleSection("injuryStatus")}
-        >
-          <h2 className="text-xl font-semibold">Injury Status</h2>
-          {expandedSection === "injuryStatus" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-        {expandedSection === "injuryStatus" && (
-          <div className="p-4 border-t border-gray-700">
-            {injuryReport.found ? (
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Activity
-                    className={`w-5 h-5 mr-2 ${
-                      injuryReport.status?.toLowerCase() === "out"
-                        ? "text-red-500"
-                        : injuryReport.status?.toLowerCase() === "doubtful"
-                          ? "text-orange-500"
-                          : injuryReport.status?.toLowerCase() === "questionable"
-                            ? "text-yellow-500"
-                            : "text-green-500"
-                    }`}
-                  />
-                  <span
-                    className={`text-lg font-bold ${
-                      injuryReport.status?.toLowerCase() === "out"
-                        ? "text-red-500"
-                        : injuryReport.status?.toLowerCase() === "doubtful"
-                          ? "text-orange-500"
-                          : injuryReport.status?.toLowerCase() === "questionable"
-                            ? "text-yellow-500"
-                            : "text-green-500"
-                    }`}
-                  >
-                    {injuryReport.status || "Unknown"}
-                  </span>
-                </div>
-                {injuryReport.reason && (
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <p className="text-sm text-gray-300">{injuryReport.reason}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-green-900 bg-opacity-30 p-4 rounded-lg flex items-start">
-                <Activity className="text-green-400 w-5 h-5 mr-2" />
-                <div>
-                  <p className="text-green-300 font-medium">No Injury Reported</p>
-                  <p className="text-green-400 text-sm mt-1">{name} is not listed on the latest NBA injury report.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Monte Carlo Section */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div
-          className="flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => toggleSection("monteCarlo")}
-        >
-          <h2 className="text-xl font-semibold">Monte Carlo Simulation</h2>
-          {expandedSection === "monteCarlo" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-        {expandedSection === "monteCarlo" && (
-          <div className="p-4 border-t border-gray-700">
-            <div className="space-y-4">
-              <div className="bg-gray-700 p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-gray-400">Probability Over {threshold} Points</p>
-                  <p className={`text-2xl font-bold ${getProbabilityColor(monteCarloProbability)}`}>
-                    {monteCarloFormatted}
-                  </p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-gray-400">Distribution Type</p>
-                  <p className="text-gray-300">normal</p>
-                </div>
-              </div>
-
-              <div className="bg-blue-900 bg-opacity-30 p-4 rounded-lg flex items-start">
-                <BarChart2 className="text-blue-400 w-5 h-5 mr-2" />
-                <div>
-                  <p className="text-blue-300 font-medium">What is Monte Carlo Simulation?</p>
-                  <p className="text-blue-400 text-sm mt-1">
-                    Monte Carlo simulation runs thousands of random scenarios based on historical data to predict the
-                    probability of a player exceeding their points threshold. It accounts for variability in performance
-                    and provides a more robust prediction than simple averages.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Advanced Metrics Section */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden">
-        <div
-          className="flex justify-between items-center p-4 cursor-pointer"
-          onClick={() => toggleSection("advancedMetrics")}
-        >
-          <h2 className="text-xl font-semibold">Advanced Metrics</h2>
-          {expandedSection === "advancedMetrics" ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-        {expandedSection === "advancedMetrics" && (
-          <div className="p-4 border-t border-gray-700">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <p className="text-gray-400 text-sm">Effective FG%</p>
-                  <p className="text-2xl font-bold">{formatPercent(advancedMetrics.efg)}</p>
-                </div>
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <p className="text-gray-400 text-sm">3PT Shot Distribution</p>
-                  <p className="text-2xl font-bold">{formatPercent(advancedMetrics.shot_dist_3pt)}</p>
-                </div>
-                <div className="bg-gray-700 p-3 rounded-lg">
-                  <p className="text-gray-400 text-sm">FT Rate</p>
-                  <p className="text-2xl font-bold">{formatPercent(advancedMetrics.ft_rate)}</p>
-                </div>
-              </div>
-
-              <div className="bg-gray-700 p-4 rounded-lg">
-                <h4 className="text-lg font-semibold mb-3">Home vs Away Splits</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-gray-400">Home Average</p>
-                    <p className="text-xl font-bold">{formatNumber(advancedMetrics.avg_points_home)} pts</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400">Away Average</p>
-                    <p className="text-xl font-bold">{formatNumber(advancedMetrics.avg_points_away)} pts</p>
-                  </div>
-                </div>
-              </div>
-
-              {careerStats.length > 0 && (
-                <div className="bg-gray-700 p-4 rounded-lg">
-                  <h4 className="text-lg font-semibold mb-3">Career Season Stats</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[500px]">
-                      <thead>
-                        <tr className="text-left text-gray-400 border-b border-gray-700">
-                          <th className="pb-2">Season</th>
-                          <th className="pb-2">Team</th>
-                          <th className="pb-2">GP</th>
-                          <th className="pb-2">PPG</th>
-                          <th className="pb-2">FG%</th>
-                          <th className="pb-2">3P%</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {careerStats.map((season, index) => (
-                          <tr key={index} className="border-b border-gray-700">
-                            <td className="py-2">{season.SEASON_ID}</td>
-                            <td className="py-2">{season.TEAM_ABBREVIATION}</td>
-                            <td className="py-2">{season.GP}</td>
-                            <td className="py-2">{(season.PTS / season.GP).toFixed(1)}</td>
-                            <td className="py-2">{(season.FG_PCT * 100).toFixed(1)}%</td>
-                            <td className="py-2">{(season.FG3_PCT * 100).toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -725,7 +345,6 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
       <button
         onClick={(e) => {
           e.stopPropagation()
-          // build the proper pick_id string
           const [first, last] = name.split(" ")
           const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
           onAddToPicks({
@@ -735,9 +354,9 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
             threshold,
           })
         }}
-        className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors"
+        className="w-full py-3 lg:py-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-colors min-h-[48px]"
       >
-        <Plus className="w-5 h-5 mr-2" />
+        <Plus className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
         <span>Add to Picks</span>
       </button>
     </div>

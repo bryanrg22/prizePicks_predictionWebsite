@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useRef, useCallback } from "react"
-import { Upload, X, Check, AlertCircle, Loader2, Camera, FileText, Trash2 } from "lucide-react"
+import { Upload, X, Check, AlertCircle, Loader2, Camera, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import ImageWithFallback from "./ImageWithFallback"
-
 
 const ScreenshotUploader = ({ onUploadComplete }) => {
   const [files, setFiles] = useState([])
@@ -17,7 +15,6 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
   const dropZoneRef = useRef(null)
   const [parsedPlayers, setParsedPlayers] = useState([])
   const [playerStatuses, setPlayerStatuses] = useState({})
-  
 
   // Simulate progress during upload
   const simulateProgress = useCallback(() => {
@@ -125,32 +122,32 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
 
   const processPlayers = async (players) => {
     // initialize all to "pending"
-    const initial = players.reduce((acc, _, i) => ({ ...acc, [i]: 'pending' }), {});
-    setPlayerStatuses(initial);
-  
+    const initial = players.reduce((acc, _, i) => ({ ...acc, [i]: "pending" }), {})
+    setPlayerStatuses(initial)
+
     for (let i = 0; i < players.length; i++) {
-      const { playerName, threshold } = players[i];
-      setPlayerStatuses(ps => ({ ...ps, [i]: 'processing' }));
+      const { playerName, threshold } = players[i]
+      setPlayerStatuses((ps) => ({ ...ps, [i]: "processing" }))
       try {
-        const res = await fetch('/api/player', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ playerName, threshold })
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const res = await fetch("/api/player", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerName, threshold }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
         await res.json()
         setPlayerStatuses((ps) => ({ ...ps, [i]: "success" }))
-        } catch (e) {
-          console.error(`Error processing ${playerName}:`, e)     // NEW: detailed log
-          setPlayerStatuses((ps) => ({ ...ps, [i]: "error" }))
+      } catch (e) {
+        console.error(`Error processing ${playerName}:`, e)
+        setPlayerStatuses((ps) => ({ ...ps, [i]: "error" }))
       }
     }
-  
+
     // once all done, clear previews & files
-    previews.forEach(p => URL.revokeObjectURL(p.url));
-    setFiles([]);
-    setPreviews([]);
-    setSuccess(`Processed all ${players.length} players.`);
+    previews.forEach((p) => URL.revokeObjectURL(p.url))
+    setFiles([])
+    setPreviews([])
+    setSuccess(`Processed all ${players.length} players.`)
   }
 
   const handleUpload = async () => {
@@ -175,8 +172,7 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
       const response = await fetch("/api/parse_screenshot", {
         method: "POST",
         body: formData,
-    })
-
+      })
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -203,15 +199,15 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl mb-8 shadow-lg border border-gray-700">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">
+    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 lg:p-6 rounded-xl mb-6 lg:mb-8 shadow-lg border border-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 lg:mb-6">
+        <h2 className="text-xl lg:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600 mb-2 sm:mb-0">
           Upload PrizePicks Screenshots
         </h2>
         {previews.length > 0 && (
           <button
             onClick={removeAllFiles}
-            className="flex items-center px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+            className="flex items-center px-3 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
           >
             <Trash2 className="w-4 h-4 mr-1.5" />
             Clear All
@@ -221,7 +217,7 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
 
       <div
         ref={dropZoneRef}
-        className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center mb-6 cursor-pointer hover:border-blue-500 transition-all duration-300 relative overflow-hidden group"
+        className="border-2 border-dashed border-gray-600 rounded-xl p-6 lg:p-8 text-center mb-4 lg:mb-6 cursor-pointer hover:border-blue-500 transition-all duration-300 relative overflow-hidden group"
         onClick={() => fileInputRef.current.click()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -237,12 +233,12 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
         />
 
         <div className="relative z-10">
-          <div className="bg-blue-600 bg-opacity-10 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <Upload className="h-10 w-10 text-blue-400" />
+          <div className="bg-blue-600 bg-opacity-10 p-3 lg:p-4 rounded-full w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-3 lg:mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <Upload className="h-8 w-8 lg:h-10 lg:w-10 text-blue-400" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">Drag and drop screenshots here</h3>
-          <p className="text-gray-300 mb-2">or click to browse your files</p>
-          <p className="text-gray-500 text-sm max-w-md mx-auto">
+          <h3 className="text-lg lg:text-xl font-semibold text-white mb-2">Drag and drop screenshots here</h3>
+          <p className="text-gray-300 mb-2 text-sm lg:text-base">or tap to browse your files</p>
+          <p className="text-gray-500 text-xs lg:text-sm max-w-md mx-auto">
             Upload screenshots of PrizePicks player cards to automatically extract player data and analyze betting
             opportunities
           </p>
@@ -265,12 +261,12 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6"
+            className="mb-4 lg:mb-6"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Selected Screenshots ({previews.length})</h3>
+              <h3 className="text-base lg:text-lg font-semibold">Selected Screenshots ({previews.length})</h3>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
               {previews.map((preview, index) => (
                 <motion.div
                   key={index}
@@ -317,10 +313,10 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-gradient-to-r from-red-900/30 to-red-800/30 border border-red-700/50 p-4 rounded-lg mb-4 flex items-start"
+            className="bg-gradient-to-r from-red-900/30 to-red-800/30 border border-red-700/50 p-3 lg:p-4 rounded-lg mb-4 flex items-start"
           >
             <AlertCircle className="text-red-400 w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
-            <p className="text-red-300">{error}</p>
+            <p className="text-red-300 text-sm lg:text-base">{error}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -332,10 +328,10 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-gradient-to-r from-green-900/30 to-green-800/30 border border-green-700/50 p-4 rounded-lg mb-4 flex items-start"
+            className="bg-gradient-to-r from-green-900/30 to-green-800/30 border border-green-700/50 p-3 lg:p-4 rounded-lg mb-4 flex items-start"
           >
             <Check className="text-green-400 w-5 h-5 mr-3 flex-shrink-0 mt-0.5" />
-            <p className="text-green-300">{success}</p>
+            <p className="text-green-300 text-sm lg:text-base">{success}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -347,12 +343,14 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mb-6"
+            className="mb-4 lg:mb-6"
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-white">Processing Players ({parsedPlayers.length})</h3>
+              <h3 className="text-base lg:text-lg font-semibold text-white">
+                Processing Players ({parsedPlayers.length})
+              </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
               {parsedPlayers.map((player, index) => (
                 <motion.div
                   key={index}
@@ -360,7 +358,7 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2 }}
-                  className={`relative rounded-full px-4 py-3 flex items-center shadow-md border transition-colors ${
+                  className={`relative rounded-lg px-3 lg:px-4 py-3 flex items-center shadow-md border transition-colors ${
                     playerStatuses[index] === "processing"
                       ? "bg-blue-900/20 border-blue-500"
                       : playerStatuses[index] === "success"
@@ -370,7 +368,7 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
                           : "bg-gray-800 border-gray-600"
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-full overflow-hidden mr-4 flex-shrink-0 border-2 border-gray-600">
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full overflow-hidden mr-3 lg:mr-4 flex-shrink-0 border-2 border-gray-600">
                     <img
                       src={player.image || "/placeholder.svg?height=64&width=64&query=basketball player"}
                       alt={player.playerName}
@@ -380,25 +378,27 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
                       }}
                     />
                   </div>
-                  <div className="flex-1 mr-2">
-                    <p className="text-xl font-medium text-white">{player.playerName}</p>
-                    <p className="text-lg text-gray-300">{player.threshold} pts</p>
+                  <div className="flex-1 mr-2 min-w-0">
+                    <p className="text-base lg:text-xl font-medium text-white truncate">{player.playerName}</p>
+                    <p className="text-sm lg:text-lg text-gray-300">{player.threshold} pts</p>
                   </div>
                   <div className="flex-shrink-0">
                     {playerStatuses[index] === "processing" && (
-                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 lg:h-8 lg:w-8 border-2 border-blue-500 border-t-transparent"></div>
                     )}
                     {playerStatuses[index] === "success" && (
-                      <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-                        <Check className="h-5 w-5 text-white" />
+                      <div className="h-6 w-6 lg:h-8 lg:w-8 rounded-full bg-green-500 flex items-center justify-center">
+                        <Check className="h-3 w-3 lg:h-5 lg:w-5 text-white" />
                       </div>
                     )}
                     {playerStatuses[index] === "error" && (
-                      <div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center">
-                        <AlertCircle className="h-5 w-5 text-white" />
+                      <div className="h-6 w-6 lg:h-8 lg:w-8 rounded-full bg-red-500 flex items-center justify-center">
+                        <AlertCircle className="h-3 w-3 lg:h-5 lg:w-5 text-white" />
                       </div>
                     )}
-                    {playerStatuses[index] === "pending" && <div className="h-5 w-5 rounded-full bg-gray-500"></div>}
+                    {playerStatuses[index] === "pending" && (
+                      <div className="h-4 w-4 lg:h-5 lg:w-5 rounded-full bg-gray-500"></div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -424,7 +424,7 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
           <button
             onClick={handleUpload}
             disabled={files.length === 0 || uploading}
-            className={`px-6 py-3 rounded-lg font-medium flex items-center shadow-lg transition-all duration-300 ${
+            className={`px-4 lg:px-6 py-3 rounded-lg font-medium flex items-center shadow-lg transition-all duration-300 min-h-[48px] ${
               files.length === 0 || uploading
                 ? "bg-gray-700 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white transform hover:-translate-y-0.5"
@@ -444,7 +444,6 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
           </button>
         </div>
       </div>
-
 
       {/* Add CSS for the shimmer animation */}
       <style jsx>{`

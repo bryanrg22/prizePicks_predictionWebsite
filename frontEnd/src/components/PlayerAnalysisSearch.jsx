@@ -58,24 +58,27 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
   ]
 
   return (
-    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-lg shadow-lg mb-8 border border-gray-700">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Sparkles className="w-6 h-6 text-blue-400 mr-3" />
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+    <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 lg:p-6 rounded-lg shadow-lg mb-6 lg:mb-8 border border-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 lg:mb-6">
+        <div className="flex items-center mb-2 sm:mb-0">
+          <Sparkles className="w-5 h-5 lg:w-6 lg:h-6 text-blue-400 mr-2 lg:mr-3" />
+          <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             Player Analysis
           </h2>
         </div>
-        <button onClick={() => setShowTips(!showTips)} className="text-gray-400 hover:text-blue-400 transition-colors">
+        <button
+          onClick={() => setShowTips(!showTips)}
+          className="text-gray-400 hover:text-blue-400 transition-colors p-2 rounded-md hover:bg-gray-700 self-start sm:self-auto"
+        >
           <Info className="w-5 h-5" />
         </button>
       </div>
 
       {showTips && (
-        <div className="mb-6 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+        <div className="mb-4 lg:mb-6 bg-gray-800/50 p-3 lg:p-4 rounded-lg border border-gray-700">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-medium text-blue-400">Search Tips</h3>
-            <button onClick={() => setShowTips(false)} className="text-gray-500 hover:text-gray-300">
+            <button onClick={() => setShowTips(false)} className="text-gray-500 hover:text-gray-300 p-1">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -91,14 +94,14 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
       )}
 
       {error && (
-        <div className="mb-6 bg-red-900/20 border border-red-800/50 text-red-300 p-4 rounded-lg">
-          <p>{error}</p>
+        <div className="mb-4 lg:mb-6 bg-red-900/20 border border-red-800/50 text-red-300 p-3 lg:p-4 rounded-lg">
+          <p className="text-sm lg:text-base">{error}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="relative">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
-          <div className="md:col-span-8 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-4 mb-4">
+          <div className="lg:col-span-8 relative">
             <label htmlFor="playerName" className="block text-sm font-medium text-gray-300 mb-1">
               Player Name
             </label>
@@ -106,7 +109,7 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
               <input
                 type="text"
                 id="playerName"
-                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pl-10"
+                className="w-full px-4 py-3 lg:py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pl-10 text-base"
                 placeholder="e.g. LeBron James"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
@@ -126,7 +129,7 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
                     {recentSearches.map((search, index) => (
                       <li
                         key={index}
-                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer flex justify-between items-center"
+                        className="px-3 py-3 hover:bg-gray-700 cursor-pointer flex justify-between items-center"
                         onClick={() => handleRecentSearchClick(search)}
                       >
                         <div>
@@ -142,14 +145,14 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
             </div>
           </div>
 
-          <div className="md:col-span-4">
+          <div className="lg:col-span-4">
             <label htmlFor="pointsThreshold" className="block text-sm font-medium text-gray-300 mb-1">
               Points Threshold
             </label>
             <input
               type="number"
               id="pointsThreshold"
-              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 lg:py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
               placeholder="e.g. 19.5"
               value={pointsThreshold}
               onChange={(e) => setPointsThreshold(e.target.value)}
@@ -163,7 +166,7 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className={`px-6 py-3 rounded-lg font-medium flex items-center justify-center min-w-[140px] transition-all ${
+            className={`px-4 lg:px-6 py-3 rounded-lg font-medium flex items-center justify-center min-w-[140px] min-h-[48px] transition-all ${
               loading
                 ? "bg-gray-700 cursor-not-allowed"
                 : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-lg hover:shadow-blue-500/20"
@@ -199,7 +202,7 @@ const PlayerAnalysisSearch = ({ onSearch, loading, error }) => {
       </form>
 
       {loading && (
-        <div className="mt-8 border-t border-gray-700 pt-8">
+        <div className="mt-6 lg:mt-8 border-t border-gray-700 pt-6 lg:pt-8">
           <ChatGptThinking text="Analyzing player statistics and calculating probabilities..." />
         </div>
       )}
