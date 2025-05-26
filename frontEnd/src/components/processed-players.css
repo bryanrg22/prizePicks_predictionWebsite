@@ -1,22 +1,31 @@
-/* Add this to your global CSS or create a new CSS file and import it */
-
-/* Card hover effect */
+/* Mobile-optimized player cards */
 .player-card {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
 }
 
 .player-card:hover {
   transform: scale(1.02);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
   z-index: 10;
+}
+
+/* Mobile touch feedback */
+.player-card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
 }
 
 /* Smooth transitions for all interactive elements */
 button,
 .player-card,
 .expandable-section {
-  transition: all 0.2s ease-in-out;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced button hover states for mobile */
+button:active {
+  transform: scale(0.95);
 }
 
 /* Pulse animation for the "Add to Picks" confirmation */
@@ -34,4 +43,60 @@ button,
 
 .pulse {
   animation: pulse 1.5s infinite;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Ensure touch targets are large enough */
+  .player-card {
+    min-height: 400px;
+  }
+
+  /* Better spacing for mobile */
+  .player-card .stats-grid {
+    gap: 0.75rem;
+  }
+
+  /* Improved text readability on mobile */
+  .player-card h3 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+
+  /* Better button sizing for mobile */
+  .player-card button {
+    min-height: 52px;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+}
+
+/* Loading animation improvements */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smooth fade-in for cards */
+.player-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

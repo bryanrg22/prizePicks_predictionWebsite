@@ -113,13 +113,13 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
         {/* Search bar */}
         <div className="mb-4 lg:mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 lg:h-5 lg:w-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <input
               type="text"
               placeholder="Search players by name or team..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 lg:pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+              className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base min-h-[48px]"
             />
           </div>
         </div>
@@ -128,9 +128,9 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
         <div className="mb-4 lg:mb-6 space-y-4">
           <div className="flex flex-col lg:flex-row lg:flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-400 mb-1">Filter by Team</label>
+              <label className="block text-sm font-medium text-gray-400 mb-2">Filter by Team</label>
               <select
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-3 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base min-h-[48px]"
                 onChange={(e) => {
                   const teamFilter = e.target.value
                   if (teamFilter === "all") {
@@ -165,9 +165,9 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
             </div>
 
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-400 mb-1">Filter by AI Recommendation</label>
+              <label className="block text-sm font-medium text-gray-400 mb-2">Filter by AI Recommendation</label>
               <select
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg text-white py-3 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-base min-h-[48px]"
                 onChange={(e) => {
                   const recFilter = e.target.value
                   if (recFilter === "all") {
@@ -221,8 +221,8 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
 
         {/* Error state */}
         {error && !loading && (
-          <div className="bg-red-900 bg-opacity-30 border border-red-700 p-3 lg:p-4 rounded-lg mb-4 flex items-start">
-            <Activity className="text-red-400 w-4 h-4 lg:w-5 lg:h-5 mr-2 flex-shrink-0 mt-0.5" />
+          <div className="bg-red-900 bg-opacity-30 border border-red-700 p-4 rounded-lg mb-4 flex items-start">
+            <Activity className="text-red-400 w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
             <p className="text-red-300 text-sm lg:text-base">{error}</p>
           </div>
         )}
@@ -250,50 +250,51 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
               return (
                 <div
                   key={uniquePlayerKey}
-                  className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl overflow-hidden shadow-lg border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] cursor-pointer"
+                  className="bg-gradient-to-br from-gray-800 to-gray-700 rounded-xl overflow-hidden shadow-lg border border-gray-700 hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] cursor-pointer active:scale-[0.98]"
                   onClick={() => handleOpenModal(player)}
                 >
                   {/* Player header */}
-                  <div className="p-3 lg:p-4 bg-gradient-to-r from-gray-900 to-gray-800">
-                    <div className="flex items-center">
-                      <div className="relative">
+                  <div className="p-4 bg-gradient-to-r from-gray-900 to-gray-800">
+                    <div className="flex items-center space-x-3">
+                      <div className="relative flex-shrink-0">
                         <ImageWithFallback
                           src={player.photoUrl || "/placeholder.svg"}
                           alt={player.name}
-                          className="w-12 h-12 lg:w-16 lg:h-16 rounded-full object-cover border-2 border-gray-700"
-                          fallbackSrc="/placeholder.svg?height=64&width=64"
+                          className="w-16 h-16 lg:w-20 lg:h-20 rounded-full object-cover border-2 border-gray-700"
+                          fallbackSrc="/placeholder.svg?height=80&width=80"
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-0.5 border border-gray-700">
+                        <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-1 border border-gray-700">
                           <ImageWithFallback
                             src={player.teamLogo || "/placeholder.svg"}
                             alt={player.team}
-                            className="w-4 h-4 lg:w-6 lg:h-6"
+                            className="w-6 h-6"
                             fallbackSrc="/placeholder.svg?height=24&width=24"
                           />
                         </div>
                       </div>
-                      <div className="ml-2 lg:ml-3 flex-1 min-w-0">
-                        <h3 className="font-bold text-base lg:text-lg truncate">{player.name}</h3>
-                        <p className="text-xs lg:text-sm text-gray-400">{player.team}</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg lg:text-xl text-white truncate">{player.name}</h3>
+                        <p className="text-sm lg:text-base text-gray-400 truncate">{player.team}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Stats section */}
-                  <div className="p-3 lg:p-4">
-                    <div className="grid grid-cols-2 gap-2 lg:gap-3 mb-3">
-                      <div className="bg-gray-800 p-2 rounded">
-                        <p className="text-xs text-gray-400">Season Avg</p>
+                  <div className="p-4 space-y-4">
+                    {/* Season stats */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-xs text-gray-400 mb-1">Season Avg</p>
                         <p
-                          className={`font-bold text-sm lg:text-base ${getComparisonColor(player.seasonAvgPoints, threshold)}`}
+                          className={`font-bold text-base lg:text-lg ${getComparisonColor(player.seasonAvgPoints, threshold)}`}
                         >
                           {player.seasonAvgPoints?.toFixed(1) || "N/A"} pts
                         </p>
                       </div>
-                      <div className="bg-gray-800 p-2 rounded">
-                        <p className="text-xs text-gray-400">Last 5 Games</p>
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-xs text-gray-400 mb-1">Last 5 Games</p>
                         <p
-                          className={`font-bold text-sm lg:text-base ${getComparisonColor(player.last5GamesAvg, threshold)}`}
+                          className={`font-bold text-base lg:text-lg ${getComparisonColor(player.last5GamesAvg, threshold)}`}
                         >
                           {player.last5GamesAvg?.toFixed(1) || "N/A"} pts
                         </p>
@@ -301,69 +302,69 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                     </div>
 
                     {/* Game info */}
-                    <div className="bg-gray-800 p-2 rounded mb-3">
+                    <div className="bg-gray-800 p-3 rounded-lg">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center">
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
                           <ImageWithFallback
                             src={player.teamLogo || "/placeholder.svg"}
                             alt={player.team}
-                            className="w-4 h-4 mr-1"
+                            className="w-5 h-5 flex-shrink-0"
                             fallbackSrc="/placeholder.svg?height=20&width=20"
                           />
-                          <span className="text-xs mx-1">vs</span>
+                          <span className="text-sm text-gray-300">vs</span>
                           <ImageWithFallback
                             src={player.opponentLogo || "/placeholder.svg"}
                             alt={player.opponent}
-                            className="w-4 h-4 mr-1"
+                            className="w-5 h-5 flex-shrink-0"
                             fallbackSrc="/placeholder.svg?height=20&width=20"
                           />
-                          <span className="text-xs truncate">{player.opponent}</span>
+                          <span className="text-sm text-white truncate">{player.opponent}</span>
                         </div>
-                        <span className="text-xs text-gray-400">{player.gameDate}</span>
+                        <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{player.gameDate}</span>
                       </div>
                     </div>
 
-                    {/* Threshold and probabilities */}
-                    <div className="flex items-center justify-between mb-3 bg-gray-800 p-2 rounded">
-                      <div>
-                        <p className="text-xs text-gray-400">Threshold</p>
-                        <p className="font-bold text-sm lg:text-base">{threshold} pts</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-400">Probability</p>
-                        <p className={`font-bold text-sm lg:text-base ${getProbabilityColor(poissonProbability)}`}>
-                          {formatPercent(poissonProbability)}
-                        </p>
+                    {/* Threshold and probability */}
+                    <div className="bg-gray-800 p-3 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-xs text-gray-400">Threshold</p>
+                          <p className="font-bold text-lg text-white">{threshold} pts</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-400">Probability</p>
+                          <p className={`font-bold text-lg ${getProbabilityColor(poissonProbability)}`}>
+                            {formatPercent(poissonProbability)}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
                     {/* AI Recommendation */}
                     {recommendation !== "N/A" && (
-                      <div className="bg-gray-800 p-2 lg:p-3 rounded mb-3">
+                      <div className="bg-gray-800 p-3 rounded-lg">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs lg:text-sm text-gray-400">AI Pick</p>
-                          <p
-                            className={`font-bold text-xs lg:text-sm ${getRecommendationColor(recommendation)} flex items-center`}
-                          >
+                          <p className="text-sm text-gray-400">AI Pick</p>
+                          <div className={`flex items-center space-x-1 ${getRecommendationColor(recommendation)}`}>
                             {recommendation.toLowerCase().includes("over") ? (
-                              <TrendingUp className="inline-block w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <TrendingUp className="w-4 h-4" />
                             ) : (
-                              <TrendingDown className="inline-block w-3 h-3 lg:w-4 lg:h-4 mr-1" />
+                              <TrendingDown className="w-4 h-4" />
                             )}
-                            <span className="truncate">{recommendation}</span>
-                          </p>
+                            <span className="font-bold text-sm truncate max-w-[120px]">{recommendation}</span>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {/* Monte Carlo */}
-                    <div className="bg-gray-800 p-2 rounded mb-4">
+                    <div className="bg-gray-800 p-3 rounded-lg">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <BarChart2 className="w-3 h-3 mr-1 text-gray-400" />
-                          <p className="text-xs text-gray-400">Monte Carlo</p>
+                        <div className="flex items-center space-x-2">
+                          <BarChart2 className="w-4 h-4 text-gray-400" />
+                          <p className="text-sm text-gray-400">Monte Carlo</p>
                         </div>
-                        <p className={`font-bold text-xs lg:text-sm ${getProbabilityColor(monteCarloProbability)}`}>
+                        <p className={`font-bold text-sm ${getProbabilityColor(monteCarloProbability)}`}>
                           {formatPercent(monteCarloProbability)}
                         </p>
                       </div>
@@ -381,18 +382,20 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                           threshold,
                         })
                       }}
-                      className={`w-full py-2 lg:py-3 rounded-md flex items-center justify-center transition-colors min-h-[44px] ${
-                        isAdded ? "bg-green-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
+                      className={`w-full py-4 rounded-lg flex items-center justify-center transition-all duration-200 min-h-[52px] font-medium text-base ${
+                        isAdded
+                          ? "bg-green-600 text-white shadow-lg"
+                          : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-lg hover:shadow-xl"
                       }`}
                     >
                       {isAdded ? (
                         <>
-                          <Check className="w-4 h-4 mr-1" />
+                          <Check className="w-5 h-5 mr-2" />
                           <span>Added to Picks</span>
                         </>
                       ) : (
                         <>
-                          <Plus className="w-4 h-4 mr-1" />
+                          <Plus className="w-5 h-5 mr-2" />
                           <span>Add to Picks</span>
                         </>
                       )}

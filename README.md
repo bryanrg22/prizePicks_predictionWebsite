@@ -181,7 +181,7 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 firestore/
 ├─ processedPlayers/ (collection)
 │   ├── active/ (document)
-│   │   └── {first_last_threshold_YYYYMMDD}/ (document)
+│   │   └── {first_last_threshold_YYYYMMDD (e.g. aaron_gordon_11.5_20250511)}/ (document)
 │   │       ├─ name: string
 │   │       ├─ playerId: string
 │   │       ├─ team: string
@@ -214,9 +214,17 @@ firestore/
 │   │       ├─ playoff_games: array<map>  
 │   │       │    └─ [{ date, points, opponent, …, gameType: "Playoffs" }, …]
 │   │       └─ volatilityPlayOffsForecast: number
-│   └── concluded/ (document)
-│       └── {first_last_threshold_YYYYMMDD}/  
-│           └─ (same fields as active/) 
+│   ├── concluded/ (document)
+│   │       └── {first_last_threshold_YYYYMMDD}/  
+│   │           └─ (same fields as active/) 
+│   └── injury_report/ (document)
+│           └── {team_name (e.g. indiana_pacers)}/ (document)
+│               ├─ lastUpdated: timestamp 
+│               ├─ players: array<map>
+│               │   ├─ gameDate: string
+│               │   ├─ gameTime: string
+│               │   └─ reason: string
+│               └─ team: string
 ├─ users/{userId}/
 │   ├─ activeBets/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betAmount, potentialWinnings, picks: [ [0] player_Document_References, [i]... ] }
