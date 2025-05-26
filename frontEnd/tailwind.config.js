@@ -42,6 +42,8 @@ module.exports = {
         "slide-out-right": "slideOutRight 0.3s ease-in",
         "fade-in": "fadeIn 0.2s ease-out",
         "fade-out": "fadeOut 0.2s ease-in",
+        spin: "spin 1s linear infinite",
+        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
         slideInRight: {
@@ -59,6 +61,13 @@ module.exports = {
         fadeOut: {
           "0%": { opacity: "1" },
           "100%": { opacity: "0" },
+        },
+        spin: {
+          to: { transform: "rotate(360deg)" },
+        },
+        pulse: {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: ".5" },
         },
       },
     },
