@@ -182,11 +182,11 @@ firestore/
 ├─ processedPlayers/ (collection)
 │   ├── active/ (document)
 │   │   └── {first_last_threshold_YYYYMMDD (e.g. aaron_gordon_11.5_20250511)}/ (document)
-│   │       ├─ name: string
-│   │       ├─ playerId: string
-│   │       ├─ team: string
-│   │       ├─ position: string
-│   │       ├─ opponent: string
+│   │       ├─ name: string (e.g. Aaron Wiggins)
+│   │       ├─ playerId: string (e.g. 1630598)
+│   │       ├─ team: string (e.g. Oklahoma City Thunder)
+│   │       ├─ position: string (e.g. G)
+│   │       ├─ opponent: string (e.g. Minnesota Timberwolves)
 │   │       ├─ photoUrl: string
 │   │       ├─ teamLogo: string
 │   │       ├─ opponentLogo: string
@@ -199,7 +199,7 @@ firestore/
 │   │       ├─ last5RegularGamesAvg: number
 │   │       ├─ seasonAvgVsOpponent: number
 │   │       ├─ homeAwayAvg: number
-│   │       ├─ last5RegularGames: array<map>  
+│   │       ├─ last5RegularGames: array<map> 
 │   │       │    └─ [{ date, points, opponent, opponentFullName, … }, …]
 │   │       ├─ advancedPerformance: map
 │   │       ├─ careerSeasonStats: array<map>
@@ -211,25 +211,37 @@ firestore/
 │   │       ├─ season_games_agst_opp: array<map>
 │   │       ├─ num_playoff_games: number
 │   │       ├─ playoffAvg: number
-│   │       ├─ playoff_games: array<map>  
+│   │       ├─ playoff_games: array<map> 
 │   │       │    └─ [{ date, points, opponent, …, gameType: "Playoffs" }, …]
 │   │       └─ volatilityPlayOffsForecast: number
 │   ├── concluded/ (document)
-│   │       └── {first_last_threshold_YYYYMMDD}/  
-│   │           └─ (same fields as active/) 
+│   │       └── {first_last_threshold_YYYYMMDD}/ 
+│   │           └─ (same fields as active/)
 │   └── injury_report/ (document)
 │           └── {team_name (e.g. indiana_pacers)}/ (document)
-│               ├─ lastUpdated: timestamp 
+│               ├─ lastUpdated: timestamp
 │               ├─ players: array<map>
 │               │   ├─ gameDate: string
 │               │   ├─ gameTime: string
 │               │   └─ reason: string
 │               └─ team: string
-├─ users/{userId}/
+├─ users/{userId}/ (collection)
 │   ├─ activeBets/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betAmount, potentialWinnings, picks: [ [0] player_Document_References, [i]... ] }
 │   ├─ betHistory/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betAmount, potentialWinnings, betResult, picks: [ [0] player_Document_References (+ points, minutes added), [i]... ] ] }
-│   ├─ picks: picks: [ [0] player_Document_References, [i]... ]     
-└─  └─ profileData
+│   ├─ picks: picks: [ [0] player_Document_References, [i]... ]    
+│   └─ profileData
+└─ admin/
+    ├── profile/ 
+    ├── analytics/
+    │   ├── daily_stats/
+    │   ├── user_metrics/
+    │   └── system_health/
+    ├── monitoring/
+    │   ├── api_performance/
+    │   └── error_logs/
+    └── reports/
+        ├── bet_performance/
+        └── player_analytics/
 ```

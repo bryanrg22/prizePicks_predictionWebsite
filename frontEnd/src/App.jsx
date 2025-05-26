@@ -4,6 +4,8 @@ import DashboardPage from "./pages/DashboardPage"
 import ProcessedPlayersPage from "./pages/ProcessedPlayersPage"
 import PreviousBetsPage from "./pages/PreviousBetsPage"
 import AlertsPage from "./pages/AlertsPage"
+import AdminLogin from "./pages/AdminLogin"
+import AdminDashboard from "./pages/AdminDashboard"
 
 const App = () => (
   <Router>
@@ -15,6 +17,8 @@ const App = () => (
       <Route path="/alerts" element={<AlertsPage />} />
       {/* Legacy route redirect */}
       <Route path="/HomePage" element={<DashboardPage />} />
+      <Route path="/admin" element={<AdminLogin />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
     </Routes>
   </Router>
 )
