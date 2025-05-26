@@ -1,10 +1,30 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { Menu, X, Home, Users, History, Bell } from "lucide-react"
 
 export default function MobileLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const NavItem = ({ path, icon: Icon, label }) => {
+    const isActive = location.pathname === path
+
+    return (
+      <button
+        className={`block p-2 rounded w-full text-left ${isActive ? "bg-gray-600" : "hover:bg-gray-700"}`}
+        onClick={() => {
+          navigate(path)
+          setSidebarOpen(false)
+        }}
+      >
+        <Icon className="w-5 h-5 inline mr-2" />
+        {label}
+      </button>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -28,22 +48,10 @@ export default function MobileLayout({ children }) {
           </div>
 
           <nav className="space-y-2">
-            <a href="#" className="block p-2 rounded hover:bg-gray-700">
-              <Home className="w-5 h-5 inline mr-2" />
-              Home
-            </a>
-            <a href="#" className="block p-2 rounded hover:bg-gray-700">
-              <Users className="w-5 h-5 inline mr-2" />
-              Already Processed Players
-            </a>
-            <a href="#" className="block p-2 rounded hover:bg-gray-700">
-              <History className="w-5 h-5 inline mr-2" />
-              Previous Bets
-            </a>
-            <a href="#" className="block p-2 rounded hover:bg-gray-700">
-              <Bell className="w-5 h-5 inline mr-2" />
-              Alerts
-            </a>
+            <NavItem path="/dashboard" icon={Home} label="Home" />
+            <NavItem path="/processed-players" icon={Users} label="Already Processed Players" />
+            <NavItem path="/previous-bets" icon={History} label="Previous Bets" />
+            <NavItem path="/alerts" icon={Bell} label="Alerts" />
           </nav>
         </div>
 
@@ -52,22 +60,10 @@ export default function MobileLayout({ children }) {
           <div className="md:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}>
             <div className="fixed left-0 top-0 bottom-0 w-64 bg-gray-800 p-4" onClick={(e) => e.stopPropagation()}>
               <nav className="space-y-2 mt-16">
-                <a href="#" className="block p-2 rounded hover:bg-gray-700">
-                  <Home className="w-5 h-5 inline mr-2" />
-                  Home
-                </a>
-                <a href="#" className="block p-2 rounded hover:bg-gray-700">
-                  <Users className="w-5 h-5 inline mr-2" />
-                  Already Processed Players
-                </a>
-                <a href="#" className="block p-2 rounded hover:bg-gray-700">
-                  <History className="w-5 h-5 inline mr-2" />
-                  Previous Bets
-                </a>
-                <a href="#" className="block p-2 rounded hover:bg-gray-700">
-                  <Bell className="w-5 h-5 inline mr-2" />
-                  Alerts
-                </a>
+                <NavItem path="/dashboard" icon={Home} label="Home" />
+                <NavItem path="/processed-players" icon={Users} label="Already Processed Players" />
+                <NavItem path="/previous-bets" icon={History} label="Previous Bets" />
+                <NavItem path="/alerts" icon={Bell} label="Alerts" />
               </nav>
             </div>
           </div>
