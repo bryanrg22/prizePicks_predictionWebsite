@@ -68,7 +68,8 @@ const resolveDocumentReferences = async (docRefs) => {
       .map((ref) => {
         if (typeof ref === "string") {
           return doc(db, ref)
-        } else if (ref && typeof ref.get === "function") {
+        } else if (ref && ref.firestore && ref.type === "document") {
+          // This is a Firestore DocumentReference object
           return ref
         } else {
           console.warn("Invalid reference:", ref)
