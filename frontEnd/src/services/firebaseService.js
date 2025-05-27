@@ -20,19 +20,29 @@ import { db } from "../firebase"
  */
 const resolveDocumentReference = async (docRef) => {
   try {
-    if (!docRef || typeof docRef.get !== "function") {
+    // Handle both DocumentReference objects and path strings
+    let actualRef = docRef
+
+    if (typeof docRef === "string") {
+      // If it's a path string, convert to DocumentReference
+      actualRef = doc(db, docRef)
+    } else if (!docRef || typeof docRef.get !== "function") {
       console.warn("Invalid document reference:", docRef)
       return null
     }
 
-    const docSnap = await getDoc(docRef)
+    console.log("Resolving document reference:", actualRef.path)
+    const docSnap = await getDoc(actualRef)
+
     if (docSnap.exists()) {
-      return {
+      const data = {
         id: docSnap.id,
         ...docSnap.data(),
       }
+      console.log("Successfully resolved document:", actualRef.path, data)
+      return data
     } else {
-      console.warn("Document not found:", docRef.path)
+      console.warn("Document not found:", actualRef.path)
       return null
     }
   } catch (error) {
@@ -46,12 +56,31 @@ const resolveDocumentReference = async (docRef) => {
  */
 const resolveDocumentReferences = async (docRefs) => {
   if (!docRefs || !Array.isArray(docRefs) || docRefs.length === 0) {
+    console.log("No document references to resolve")
     return []
   }
 
   try {
-    // Filter out invalid references
-    const validRefs = docRefs.filter((ref) => ref && typeof ref.get === "function")
+    console.log("Resolving", docRefs.length, "document references")
+
+    // Convert all references to DocumentReference objects
+    const validRefs = docRefs
+      .map((ref) => {
+        if (typeof ref === "string") {
+          return doc(db, ref)
+        } else if (ref && typeof ref.get === "function") {
+          return ref
+        } else {
+          console.warn("Invalid reference:", ref)
+          return null
+        }
+      })
+      .filter(Boolean)
+
+    if (validRefs.length === 0) {
+      console.warn("No valid document references found")
+      return []
+    }
 
     // Batch fetch all documents
     const promises = validRefs.map((ref) => getDoc(ref))
@@ -59,20 +88,104 @@ const resolveDocumentReferences = async (docRefs) => {
 
     // Convert snapshots to data objects
     const resolvedData = snapshots
-      .map((snap) => {
+      .map((snap, index) => {
         if (snap.exists()) {
-          return {
+          const data = {
             id: snap.id,
             ...snap.data(),
           }
+          console.log("Resolved document:", validRefs[index].path)
+          return data
+        } else {
+          console.warn("Document not found:", validRefs[index].path)
+          return null
         }
-        return null
       })
       .filter(Boolean) // Remove null entries
 
+    console.log("Successfully resolved", resolvedData.length, "out of", docRefs.length, "documents")
     return resolvedData
   } catch (error) {
     console.error("Error resolving document references:", error)
+    return []
+  }
+}
+
+export const getUserPicks = async (username) => {
+  try {
+    console.log("Getting picks for user:", username)
+    const userRef = doc(db, "users", username)
+    const userSnap = await getDoc(userRef)
+
+    if (!userSnap.exists()) {
+      console.log("User document not found:", username)
+      return []
+    }
+
+    const userData = userSnap.data()
+    const picks = userData.picks || []
+
+    console.log("Raw picks from database:", picks)
+
+    if (picks.length === 0) {
+      console.log("No picks found for user")
+      return []
+    }
+
+    // Check if picks are already full objects (legacy)
+    if (picks.length > 0 && picks[0] && typeof picks[0] === "object" && !picks[0].path && picks[0].name) {
+      console.log("Legacy picks detected, returning as-is")
+      return picks
+    }
+
+    // Resolve document references to full data
+    console.log("Resolving document references for picks")
+    const resolvedPicks = await resolveDocumentReferences(picks)
+
+    // Transform the data to match what the UI expects
+    const transformedPicks = resolvedPicks
+      .map((pick) => {
+        if (!pick) return null
+
+        // Extract threshold from the document ID if not present
+        let threshold = pick.threshold
+        if (!threshold && pick.id) {
+          const parts = pick.id.split("_")
+          const thresholdPart = parts.find((part) => !isNaN(Number.parseFloat(part)))
+          if (thresholdPart) {
+            threshold = Number.parseFloat(thresholdPart)
+          }
+        }
+
+        return {
+          id: pick.id,
+          player: pick.name || pick.playerName || "Unknown Player",
+          name: pick.name || pick.playerName || "Unknown Player",
+          playerId: pick.playerId,
+          team: pick.team || "Unknown Team",
+          opponent: pick.opponent || "Unknown Opponent",
+          threshold: threshold || 0,
+          photoUrl: pick.photoUrl || "/placeholder.svg?height=100&width=100",
+          teamLogo: pick.teamLogo || "/placeholder.svg?height=40&width=40",
+          opponentLogo: pick.opponentLogo || "/placeholder.svg?height=40&width=40",
+          gameDate: pick.gameDate
+            ? pick.gameDate.toDate
+              ? pick.gameDate.toDate().toLocaleDateString()
+              : pick.gameDate
+            : "TBD",
+          gameTime: pick.gameTime || "TBD",
+          recommendation: pick.betExplanation?.recommendation || "OVER",
+          position: pick.position,
+          // Include all original data for other components that might need it
+          ...pick,
+        }
+      })
+      .filter(Boolean)
+
+    console.log("Transformed picks:", transformedPicks)
+    return transformedPicks
+  } catch (error) {
+    console.error("Error getting user picks:", error)
     return []
   }
 }
@@ -279,30 +392,6 @@ export const removeUserPick = async (username, pickId) => {
   } catch (error) {
     console.error("Error removing user pick:", error)
     throw error
-  }
-}
-
-// Get user picks and resolve document references
-export const getUserPicks = async (username) => {
-  try {
-    const userRef = doc(db, "users", username)
-    const userSnap = await getDoc(userRef)
-
-    if (!userSnap.exists()) return []
-
-    const picks = userSnap.data().picks || []
-
-    // If picks are already full objects (legacy), return as-is
-    if (picks.length > 0 && picks[0] && typeof picks[0].get !== "function") {
-      console.log("Legacy picks detected, returning as-is")
-      return picks
-    }
-
-    // Resolve document references to full data
-    return await resolveDocumentReferences(picks)
-  } catch (error) {
-    console.error("Error getting user picks:", error)
-    return []
   }
 }
 

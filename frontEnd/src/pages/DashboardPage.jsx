@@ -11,6 +11,7 @@ import EditBetModal from "../components/EditBetModal"
 import ScreenshotUploader from "../components/ScreenshotUploader"
 import PlayerAnalysisDashboard from "../components/PlayerAnalysisDashboard"
 import PlayerAnalysisSearch from "../components/PlayerAnalysisSearch"
+import moment from "moment"
 import {
   getUserProfile,
   getActiveBets,
@@ -23,6 +24,8 @@ import {
   cancelActiveBet,
   updateActiveBet,
   moveCompletedBets,
+  getUserBets,
+  lockInPicks,
 } from "../services/firebaseService"
 
 export default function DashboardPage() {
@@ -36,6 +39,7 @@ export default function DashboardPage() {
   const [betAmount, setBetAmount] = useState("")
   const [potentialWinnings, setPotentialWinnings] = useState("")
   const [selectedPicks, setSelectedPicks] = useState([])
+  const [picksLoading, setPicksLoading] = useState(true)
   const navigate = useNavigate()
 
   const [userProfile, setUserProfile] = useState(null)
@@ -78,11 +82,13 @@ export default function DashboardPage() {
         }
 
         try {
-          // Load legacy picks only
+          setPicksLoading(true)
           const legacyPicks = await getUserPicks(userId)
-          if (legacyPicks?.length) setPicks(legacyPicks)
+          setPicks(legacyPicks || [])
         } catch (picksError) {
           console.error("Error loading picks:", picksError)
+        } finally {
+          setPicksLoading(false)
         }
 
         try {
@@ -379,55 +385,64 @@ export default function DashboardPage() {
       )}
 
       {/* Current Picks */}
-      {picks.length > 0 && (
+      {picksLoading ? (
         <div className="bg-gray-800 p-6 rounded-lg mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Your Picks ({picks.length}/6)</h2>
-            <button
-              onClick={handleLockIn}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md flex items-center"
-              disabled={picks.length < 2}
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              <span>Lock In Picks</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {picks.map((pick) => (
-              <div key={pick.id} className="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
-                <div className="flex items-center">
-                  <img
-                    src={pick.photoUrl || "/placeholder.svg"}
-                    alt={pick.player}
-                    className="w-12 h-12 rounded-full object-cover mr-3"
-                    onError={handleImageError}
-                  />
-                  <div>
-                    <p className="font-bold">{pick.player}</p>
-                    <div className="flex items-center">
-                      {pick.teamLogo && (
-                        <img
-                          src={pick.teamLogo || "/placeholder.svg"}
-                          alt={`${pick.team} logo`}
-                          className="w-4 h-4 mr-1 object-contain"
-                          onError={handleImageError}
-                        />
-                      )}
-                      <p className="text-sm text-gray-400">
-                        {pick.threshold} pts ({pick.recommendation})
-                      </p>
-                    </div>
-                    <p className="text-xs text-gray-500">{pick.gameDate}</p>
-                  </div>
-                </div>
-                <button onClick={() => handleRemovePick(pick.id)} className="p-1 text-gray-400 hover:text-red-500">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <span className="ml-3">Loading your picks...</span>
           </div>
         </div>
+      ) : (
+        picks.length > 0 && (
+          <div className="bg-gray-800 p-6 rounded-lg mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Your Picks ({picks.length}/6)</h2>
+              <button
+                onClick={handleLockIn}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md flex items-center"
+                disabled={picks.length < 2}
+              >
+                <Lock className="w-4 h-4 mr-2" />
+                <span>Lock In Picks</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {picks.map((pick) => (
+                <div key={pick.id} className="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src={pick.photoUrl || "/placeholder.svg"}
+                      alt={pick.player}
+                      className="w-12 h-12 rounded-full object-cover mr-3"
+                      onError={handleImageError}
+                    />
+                    <div>
+                      <p className="font-bold">{pick.player}</p>
+                      <div className="flex items-center">
+                        {pick.teamLogo && (
+                          <img
+                            src={pick.teamLogo || "/placeholder.svg"}
+                            alt={`${pick.team} logo`}
+                            className="w-4 h-4 mr-1 object-contain"
+                            onError={handleImageError}
+                          />
+                        )}
+                        <p className="text-sm text-gray-400">
+                          {pick.threshold} pts ({pick.recommendation})
+                        </p>
+                      </div>
+                      <p className="text-xs text-gray-500">{pick.gameDate}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => handleRemovePick(pick.id)} className="p-1 text-gray-400 hover:text-red-500">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
       )}
 
       {/* Screenshot Uploader */}
