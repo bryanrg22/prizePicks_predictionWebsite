@@ -22,24 +22,24 @@ export default function DailyPicks({ picks }) {
 
         <div className="space-y-4">
           {picks.map((pick, index) => (
-            <div key={index} className="bg-gray-700 p-4 rounded-lg">
+            <div key={pick.id || index} className="bg-gray-700 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <img
                     src={pick.photoUrl || "/placeholder.svg"}
-                    alt={pick.player}
+                    alt={pick.name || pick.player}
                     className="w-16 h-16 rounded-full object-cover mr-4"
                   />
                   <div>
-                    <h3 className="text-xl font-bold">{pick.player}</h3>
+                    <h3 className="text-xl font-bold">{pick.name || pick.player}</h3>
                     <p className="text-gray-400">
                       {pick.team} vs {pick.opponent}
                     </p>
                     <div className="flex items-center mt-1 text-sm text-gray-400">
                       <Calendar className="w-4 h-4 mr-1" />
-                      <span className="mr-3">Today</span>
+                      <span className="mr-3">{pick.gameDate || "Today"}</span>
                       <Clock className="w-4 h-4 mr-1" />
-                      <span>8:30 PM ET</span>
+                      <span>{pick.gameTime || "8:30 PM ET"}</span>
                     </div>
                   </div>
                 </div>
@@ -47,10 +47,12 @@ export default function DailyPicks({ picks }) {
                 <div className="text-center">
                   <div
                     className={`px-3 py-1 rounded-md text-sm font-medium mb-2 ${
-                      pick.recommendation === "OVER" ? "bg-green-900 text-green-300" : "bg-red-900 text-red-300"
+                      (pick.recommendation || pick.betExplanation?.recommendation)?.includes("OVER")
+                        ? "bg-green-900 text-green-300"
+                        : "bg-red-900 text-red-300"
                     }`}
                   >
-                    {pick.threshold} pts {pick.recommendation}
+                    {pick.threshold} pts {pick.recommendation || pick.betExplanation?.recommendation || "OVER"}
                   </div>
                   <div className="flex items-center justify-center text-xs text-gray-400">
                     <CheckCircle className="w-3 h-3 mr-1" />
@@ -67,11 +69,11 @@ export default function DailyPicks({ picks }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-400 text-sm mb-1">Game Time</p>
-              <p className="font-medium">8:30 PM Eastern Time</p>
+              <p className="font-medium">{picks[0]?.gameTime || "8:30 PM Eastern Time"}</p>
             </div>
             <div className="bg-gray-700 p-4 rounded-lg">
               <p className="text-gray-400 text-sm mb-1">Location</p>
-              <p className="font-medium">TD Garden, Boston</p>
+              <p className="font-medium">NBA Arena</p>
             </div>
           </div>
 
@@ -103,4 +105,3 @@ export default function DailyPicks({ picks }) {
     </div>
   )
 }
-

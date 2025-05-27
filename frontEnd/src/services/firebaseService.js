@@ -9,8 +9,93 @@ import {
   serverTimestamp,
   increment,
   deleteDoc,
+  writeBatch,
 } from "firebase/firestore"
 import { db } from "../firebase"
+
+// ===== HELPER FUNCTIONS FOR DOCUMENT REFERENCES =====
+
+/**
+ * Resolve a single document reference to full data
+ */
+const resolveDocumentReference = async (docRef) => {
+  try {
+    if (!docRef || typeof docRef.get !== "function") {
+      console.warn("Invalid document reference:", docRef)
+      return null
+    }
+
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists()) {
+      return {
+        id: docSnap.id,
+        ...docSnap.data(),
+      }
+    } else {
+      console.warn("Document not found:", docRef.path)
+      return null
+    }
+  } catch (error) {
+    console.error("Error resolving document reference:", error)
+    return null
+  }
+}
+
+/**
+ * Resolve multiple document references in batch for efficiency
+ */
+const resolveDocumentReferences = async (docRefs) => {
+  if (!docRefs || !Array.isArray(docRefs) || docRefs.length === 0) {
+    return []
+  }
+
+  try {
+    // Filter out invalid references
+    const validRefs = docRefs.filter((ref) => ref && typeof ref.get === "function")
+
+    // Batch fetch all documents
+    const promises = validRefs.map((ref) => getDoc(ref))
+    const snapshots = await Promise.all(promises)
+
+    // Convert snapshots to data objects
+    const resolvedData = snapshots
+      .map((snap) => {
+        if (snap.exists()) {
+          return {
+            id: snap.id,
+            ...snap.data(),
+          }
+        }
+        return null
+      })
+      .filter(Boolean) // Remove null entries
+
+    return resolvedData
+  } catch (error) {
+    console.error("Error resolving document references:", error)
+    return []
+  }
+}
+
+/**
+ * Create document reference from player data
+ */
+const createPlayerDocumentReference = (playerData, isActive = true) => {
+  const collection = isActive ? "active" : "concluded"
+  const playerId = playerData.id || `${playerData.name?.toLowerCase().replace(/\s+/g, "_")}_${playerData.threshold}`
+
+  return doc(db, "processedPlayers", "players", collection, playerId)
+}
+
+/**
+ * Get document reference path for migration
+ */
+const getDocumentReferencePath = (playerData, isActive = true) => {
+  const collection = isActive ? "active" : "concluded"
+  const playerId = playerData.id || `${playerData.name?.toLowerCase().replace(/\s+/g, "_")}_${playerData.threshold}`
+
+  return `processedPlayers/players/${collection}/${playerId}`
+}
 
 // ===== USER PROFILE FUNCTIONS =====
 
@@ -119,75 +204,235 @@ export const updateUserStats = async (userId, stats) => {
   }
 }
 
-// add or update a pick in users/{username}.picks[]
+// ===== PICKS FUNCTIONS WITH DOCUMENT REFERENCES =====
+
+// Add or update a pick using document references
 export const addUserPick = async (username, pickData) => {
   if (typeof pickData?.id !== "string") {
     throw new Error("Invalid pickData.id — must be a string")
   }
 
-  const userRef = doc(db, "users", username)
-  const userSnap = await getDoc(userRef)
-  if (!userSnap.exists()) return []
+  try {
+    const userRef = doc(db, "users", username)
+    const userSnap = await getDoc(userRef)
+    if (!userSnap.exists()) return []
 
-  // sanitize — drop anything that isn't JSON‐serializable
-  const sanitizedPick = JSON.parse(JSON.stringify(pickData))
+    // Create document reference to the player in processedPlayers/active
+    const playerDocRef = createPlayerDocumentReference(pickData, true)
 
-  // pull the existing array (or start fresh)
-  const existingPicks = Array.isArray(userSnap.data().picks) ? userSnap.data().picks : []
+    // Verify the referenced document exists
+    const playerDocSnap = await getDoc(playerDocRef)
+    if (!playerDocSnap.exists()) {
+      throw new Error(`Player document not found: ${playerDocRef.path}`)
+    }
 
-  // upsert
-  const idx = existingPicks.findIndex((p) => p.id === sanitizedPick.id)
-  if (idx >= 0) existingPicks[idx] = sanitizedPick
-  else existingPicks.push(sanitizedPick)
+    // Get existing picks (array of document references)
+    const existingPicks = Array.isArray(userSnap.data().picks) ? userSnap.data().picks : []
 
-  await updateDoc(userRef, { picks: existingPicks })
-  return existingPicks
-}
+    // Check if this pick already exists (compare document paths)
+    const existingIndex = existingPicks.findIndex((pickRef) => pickRef && pickRef.path === playerDocRef.path)
 
-// remove a pick
-export const removeUserPick = async (username, pickId) => {
-  const userRef = doc(db, "users", username)
-  const userSnap = await getDoc(userRef)
-  if (!userSnap.exists()) return []
+    let updatedPicks
+    if (existingIndex >= 0) {
+      // Update existing pick
+      updatedPicks = [...existingPicks]
+      updatedPicks[existingIndex] = playerDocRef
+    } else {
+      // Add new pick
+      updatedPicks = [...existingPicks, playerDocRef]
+    }
 
-  const updated = (userSnap.data().picks || []).filter((p) => p.id !== pickId)
+    await updateDoc(userRef, { picks: updatedPicks })
 
-  await updateDoc(userRef, { picks: updated })
-  return updated
-}
-
-export const getUserPicks = async (username) => {
-  const userRef = doc(db, "users", username)
-  const userSnap = await getDoc(userRef)
-  return userSnap.exists() ? userSnap.data().picks || [] : []
-}
-
-// Create a new bet
-export const createBet = async (userId, betData) => {
-  const gameDate = betData.gameDate || new Date().toISOString().substring(0, 10)
-  // normalize YYYY-MM-DD...
-  const betsRef = collection(db, "users", userId, "activeBets")
-  const docRef = await addDoc(betsRef, {
-    ...betData,
-    gameDate,
-    createdAt: serverTimestamp(),
-  })
-  return docRef.id
-}
-
-/**
- * Active Bets helper — make sure this is exported
- */
-export const getActiveBets = async (userId) => {
-  // first try the new sub-collection…
-  const snap = await getDocs(collection(db, "users", userId, "activeBets"))
-  if (!snap.empty) {
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    // Return resolved picks for immediate use
+    return await resolveDocumentReferences(updatedPicks)
+  } catch (error) {
+    console.error("Error adding user pick:", error)
+    throw error
   }
-  // …fallback to the old array
-  const userSnap = await getDoc(doc(db, "users", userId))
-  if (!userSnap.exists()) return []
-  return (userSnap.data().bets || []).filter((b) => b.status === "Active")
+}
+
+// Remove a pick by document reference path
+export const removeUserPick = async (username, pickId) => {
+  try {
+    const userRef = doc(db, "users", username)
+    const userSnap = await getDoc(userRef)
+    if (!userSnap.exists()) return []
+
+    const existingPicks = userSnap.data().picks || []
+
+    // Filter out the pick by comparing document paths or IDs
+    const updatedPicks = existingPicks.filter((pickRef) => {
+      if (!pickRef || typeof pickRef.get !== "function") return false
+
+      // Extract ID from document path for comparison
+      const pathParts = pickRef.path.split("/")
+      const docId = pathParts[pathParts.length - 1]
+
+      return docId !== pickId
+    })
+
+    await updateDoc(userRef, { picks: updatedPicks })
+
+    // Return resolved picks
+    return await resolveDocumentReferences(updatedPicks)
+  } catch (error) {
+    console.error("Error removing user pick:", error)
+    throw error
+  }
+}
+
+// Get user picks and resolve document references
+export const getUserPicks = async (username) => {
+  try {
+    const userRef = doc(db, "users", username)
+    const userSnap = await getDoc(userRef)
+
+    if (!userSnap.exists()) return []
+
+    const picks = userSnap.data().picks || []
+
+    // If picks are already full objects (legacy), return as-is
+    if (picks.length > 0 && picks[0] && typeof picks[0].get !== "function") {
+      console.log("Legacy picks detected, returning as-is")
+      return picks
+    }
+
+    // Resolve document references to full data
+    return await resolveDocumentReferences(picks)
+  } catch (error) {
+    console.error("Error getting user picks:", error)
+    return []
+  }
+}
+
+// ===== BET FUNCTIONS WITH DOCUMENT REFERENCES =====
+
+// Create a new bet with document references
+export const createBet = async (userId, betData) => {
+  try {
+    const gameDate = betData.gameDate || new Date().toISOString().substring(0, 10)
+
+    // Convert picks to document references
+    const pickReferences = betData.picks.map((pick) => {
+      // Create reference to active player document
+      return createPlayerDocumentReference(pick, true)
+    })
+
+    // Verify all referenced documents exist
+    const verificationPromises = pickReferences.map((ref) => getDoc(ref))
+    const verificationResults = await Promise.all(verificationPromises)
+
+    const missingDocs = verificationResults
+      .map((snap, index) => ({ snap, ref: pickReferences[index] }))
+      .filter(({ snap }) => !snap.exists())
+      .map(({ ref }) => ref.path)
+
+    if (missingDocs.length > 0) {
+      throw new Error(`Referenced player documents not found: ${missingDocs.join(", ")}`)
+    }
+
+    const betsRef = collection(db, "users", userId, "activeBets")
+    const docRef = await addDoc(betsRef, {
+      ...betData,
+      gameDate,
+      picks: pickReferences, // Store document references instead of full objects
+      createdAt: serverTimestamp(),
+    })
+
+    return docRef.id
+  } catch (error) {
+    console.error("Error creating bet:", error)
+    throw error
+  }
+}
+
+// Get active bets and resolve document references
+export const getActiveBets = async (userId) => {
+  try {
+    // Get from new sub-collection
+    const snap = await getDocs(collection(db, "users", userId, "activeBets"))
+
+    if (!snap.empty) {
+      const bets = await Promise.all(
+        snap.docs.map(async (betDoc) => {
+          const betData = betDoc.data()
+
+          // Resolve pick references to full data
+          const resolvedPicks = await resolveDocumentReferences(betData.picks || [])
+
+          return {
+            id: betDoc.id,
+            ...betData,
+            picks: resolvedPicks,
+          }
+        }),
+      )
+
+      return bets
+    }
+
+    // Fallback to old array structure
+    const userSnap = await getDoc(doc(db, "users", userId))
+    if (!userSnap.exists()) return []
+
+    const legacyBets = (userSnap.data().bets || []).filter((b) => b.status === "Active")
+    return legacyBets
+  } catch (error) {
+    console.error("Error getting active bets:", error)
+    return []
+  }
+}
+
+// Get bet history and resolve document references
+export const getBetHistory = async (userId, year, month) => {
+  try {
+    const histRef = collection(db, "users", userId, "betHistory", year, month)
+    const snap = await getDocs(histRef)
+
+    const bets = await Promise.all(
+      snap.docs.map(async (betDoc) => {
+        const betData = betDoc.data()
+
+        // Resolve pick references to full data (from concluded collection)
+        let resolvedPicks = []
+        if (betData.picks && Array.isArray(betData.picks)) {
+          // Check if picks are references or full objects
+          if (betData.picks.length > 0 && typeof betData.picks[0].get === "function") {
+            // These are document references, resolve them
+            resolvedPicks = await resolveDocumentReferences(betData.picks)
+          } else {
+            // These are already full objects (legacy)
+            resolvedPicks = betData.picks
+          }
+        }
+
+        return {
+          id: betDoc.id,
+          ...betData,
+          picks: resolvedPicks,
+        }
+      }),
+    )
+
+    return bets
+  } catch (error) {
+    console.error("Error getting bet history:", error)
+    return []
+  }
+}
+
+// Get all bet history (simplified for now)
+export const getAllBetHistory = async (userId) => {
+  try {
+    const now = new Date()
+    const y = now.getFullYear().toString()
+    const m = String(now.getMonth() + 1).padStart(2, "0")
+    return await getBetHistory(userId, y, m)
+  } catch (error) {
+    console.error("Error getting all bet history:", error)
+    return []
+  }
 }
 
 /**
@@ -202,149 +447,6 @@ export const moveCompletedBets = async (userId) => {
 // Get user's active bets (legacy)
 export const getUserActiveBets = async (username) => {
   return await getActiveBets(username)
-}
-
-// Get user's bet history for a specific year and month
-export const getBetHistory = async (userId, year, month) => {
-  const histRef = collection(db, "users", userId, "betHistory", year, month)
-  const snap = await getDocs(histRef)
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
-}
-
-// Get all bet history (simplified for now)
-export const getAllBetHistory = async (userId) => {
-  const now = new Date()
-  const y = now.getFullYear().toString()
-  const m = String(now.getMonth() + 1).padStart(2, "0")
-  return await getBetHistory(userId, y, m)
-}
-
-// list all active players
-export const getProcessedPlayers = async () => {
-  const activeRef = collection(db, "processedPlayers", "players", "active")
-  const snaps = await getDocs(activeRef)
-  return snaps.docs.map((docSnap) => ({
-    id: docSnap.id,
-    ...docSnap.data(),
-  }))
-}
-
-// Initialize database with basic structure (run once)
-export const initializeDatabase = async (userId) => {
-  try {
-    // Check if user already exists
-    const userRef = doc(db, "users", userId)
-    const userSnap = await getDoc(userRef)
-
-    if (!userSnap.exists()) {
-      // Initialize user profile
-      await setDoc(userRef, {
-        profile: {
-          username: userId,
-          email: `${userId}@example.com`,
-          displayName: userId,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-          totalEarnings: 0,
-          totalBets: 0,
-          winCount: 0,
-          lossCount: 0,
-          winRate: 0,
-        },
-      })
-
-      // Initialize daily picks
-      const today = new Date().toISOString().split("T")[0]
-      await setDoc(doc(db, "users", userId, "dailyPicks", today), {
-        picks: [],
-      })
-
-      console.log("User initialized successfully")
-    } else {
-      // Check if user has profile object
-      const userData = userSnap.data()
-      if (!userData.profile) {
-        // Migrate user to new structure
-        const profile = {
-          username: userId,
-          password: userData.password || "ramirez22",
-          email: `${userId}@example.com`,
-          displayName: userData.displayName || userId,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-          totalEarnings: userData.totalEarnings || 0,
-          totalBets: userData.totalBets || 0,
-          winCount: userData.winCount || 0,
-          lossCount: userData.totalBets ? userData.totalBets - userData.winCount : 0,
-          winRate: userData.totalBets && userData.winCount ? (userData.winCount / userData.totalBets) * 100 : 0,
-        }
-
-        await updateDoc(userRef, { profile })
-        console.log("User migrated to new structure")
-      }
-    }
-  } catch (error) {
-    console.error("Error initializing user:", error)
-  }
-}
-
-// Initialize user if needed
-export const initializeUser = async (username, password) => {
-  try {
-    const userRef = doc(db, "users", username)
-    const userSnap = await getDoc(userRef)
-
-    if (!userSnap.exists()) {
-      // Create new user with new structure
-      await setDoc(userRef, {
-        profile: {
-          username: username,
-          password: password,
-          email: `${username}@example.com`,
-          displayName: username,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-          totalEarnings: 0,
-          totalBets: 0,
-          winCount: 0,
-          lossCount: 0,
-          winRate: 0,
-        },
-        picks: [],
-        bets: [],
-      })
-
-      // Initialize daily picks
-      const today = new Date().toISOString().split("T")[0]
-      await setDoc(doc(db, "users", username, "dailyPicks", today), {
-        picks: [],
-      })
-    } else {
-      // Check if user has profile object
-      const userData = userSnap.data()
-      if (!userData.profile) {
-        // Migrate user to new structure
-        const profile = {
-          username: username,
-          password: password,
-          email: `${username}@example.com`,
-          displayName: userData.displayName || username,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp(),
-          totalEarnings: userData.totalEarnings || 0,
-          totalBets: userData.totalBets || 0,
-          winCount: userData.winCount || 0,
-          lossCount: userData.totalBets ? userData.totalBets - userData.winCount : 0,
-          winRate: userData.totalBets && userData.winCount ? (userData.winCount / userData.totalBets) * 100 : 0,
-        }
-
-        await updateDoc(userRef, { profile })
-      }
-    }
-  } catch (error) {
-    console.error("Error initializing user:", error)
-    throw error
-  }
 }
 
 // Cancel one or all active bets
@@ -382,6 +484,11 @@ export const updateActiveBet = async (userId, betId, updatedData) => {
   const userRef = doc(db, "users", userId)
 
   try {
+    // If updating picks, convert to document references
+    if (updatedData.picks) {
+      updatedData.picks = updatedData.picks.map((pick) => createPlayerDocumentReference(pick, true))
+    }
+
     // 1) sub‐collection update
     const betRef = doc(db, "users", userId, "activeBets", betId)
     await updateDoc(betRef, updatedData)
@@ -401,20 +508,356 @@ export const updateActiveBet = async (userId, betId, updatedData) => {
   }
 }
 
+// ===== PROCESSED PLAYERS FUNCTIONS =====
+
+// list all active players
+export const getProcessedPlayers = async () => {
+  try {
+    const activeRef = collection(db, "processedPlayers", "players", "active")
+    const snaps = await getDocs(activeRef)
+    return snaps.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }))
+  } catch (error) {
+    console.error("Error getting processed players:", error)
+    return []
+  }
+}
+
 // get one by key ("first_last_threshold")
 export const getProcessedPlayer = async (playerName, threshold) => {
-  const key = playerName.toLowerCase().replace(/\s+/g, "_")
-  const ref = doc(db, "processedPlayers", "players", "active", `${key}_${threshold}`)
-  const snap = await getDoc(ref)
-  return snap.exists() ? snap.data() : null
+  try {
+    const key = playerName.toLowerCase().replace(/\s+/g, "_")
+    const ref = doc(db, "processedPlayers", "players", "active", `${key}_${threshold}`)
+    const snap = await getDoc(ref)
+    return snap.exists() ? snap.data() : null
+  } catch (error) {
+    console.error("Error getting processed player:", error)
+    return null
+  }
 }
 
 // Clear out the old picks[] array on the user doc
 export const clearUserPicks = async (userId) => {
-  const userRef = doc(db, "users", userId)
-  // remove any legacy picks[]
-  await updateDoc(userRef, { picks: [] })
-  return true
+  try {
+    const userRef = doc(db, "users", userId)
+    // remove any legacy picks[]
+    await updateDoc(userRef, { picks: [] })
+    return true
+  } catch (error) {
+    console.error("Error clearing user picks:", error)
+    throw error
+  }
+}
+
+// ===== MIGRATION FUNCTIONS =====
+
+/**
+ * Migrate user picks from full objects to document references
+ */
+export const migrateUserPicksToReferences = async (userId) => {
+  try {
+    const userRef = doc(db, "users", userId)
+    const userSnap = await getDoc(userRef)
+
+    if (!userSnap.exists()) {
+      console.log(`User ${userId} not found`)
+      return { success: false, message: "User not found" }
+    }
+
+    const userData = userSnap.data()
+    const picks = userData.picks || []
+
+    if (picks.length === 0) {
+      console.log(`No picks to migrate for user ${userId}`)
+      return { success: true, message: "No picks to migrate" }
+    }
+
+    // Check if picks are already references
+    if (picks.length > 0 && typeof picks[0].get === "function") {
+      console.log(`Picks already migrated for user ${userId}`)
+      return { success: true, message: "Picks already migrated" }
+    }
+
+    // Convert full objects to document references
+    const pickReferences = picks.map((pick) => {
+      return createPlayerDocumentReference(pick, true)
+    })
+
+    // Update user document with references
+    await updateDoc(userRef, { picks: pickReferences })
+
+    console.log(`Successfully migrated ${picks.length} picks for user ${userId}`)
+    return {
+      success: true,
+      message: `Migrated ${picks.length} picks to document references`,
+    }
+  } catch (error) {
+    console.error(`Error migrating picks for user ${userId}:`, error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
+ * Migrate active bets from full objects to document references
+ */
+export const migrateActiveBetsToReferences = async (userId) => {
+  try {
+    const activeBetsRef = collection(db, "users", userId, "activeBets")
+    const snap = await getDocs(activeBetsRef)
+
+    if (snap.empty) {
+      console.log(`No active bets to migrate for user ${userId}`)
+      return { success: true, message: "No active bets to migrate" }
+    }
+
+    const batch = writeBatch(db)
+    let migratedCount = 0
+
+    for (const betDoc of snap.docs) {
+      const betData = betDoc.data()
+      const picks = betData.picks || []
+
+      if (picks.length === 0) continue
+
+      // Check if picks are already references
+      if (typeof picks[0].get === "function") {
+        console.log(`Bet ${betDoc.id} already migrated`)
+        continue
+      }
+
+      // Convert picks to document references
+      const pickReferences = picks.map((pick) => {
+        return createPlayerDocumentReference(pick, true)
+      })
+
+      // Update bet document
+      batch.update(betDoc.ref, { picks: pickReferences })
+      migratedCount++
+    }
+
+    if (migratedCount > 0) {
+      await batch.commit()
+    }
+
+    console.log(`Successfully migrated ${migratedCount} active bets for user ${userId}`)
+    return {
+      success: true,
+      message: `Migrated ${migratedCount} active bets to document references`,
+    }
+  } catch (error) {
+    console.error(`Error migrating active bets for user ${userId}:`, error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
+ * Migrate bet history from full objects to document references
+ */
+export const migrateBetHistoryToReferences = async (userId) => {
+  try {
+    // For now, just migrate current month's history
+    const now = new Date()
+    const year = now.getFullYear().toString()
+    const month = String(now.getMonth() + 1).padStart(2, "0")
+
+    const historyRef = collection(db, "users", userId, "betHistory", year, month)
+    const snap = await getDocs(historyRef)
+
+    if (snap.empty) {
+      console.log(`No bet history to migrate for user ${userId}`)
+      return { success: true, message: "No bet history to migrate" }
+    }
+
+    const batch = writeBatch(db)
+    let migratedCount = 0
+
+    for (const betDoc of snap.docs) {
+      const betData = betDoc.data()
+      const picks = betData.picks || []
+
+      if (picks.length === 0) continue
+
+      // Check if picks are already references
+      if (typeof picks[0].get === "function") {
+        console.log(`History bet ${betDoc.id} already migrated`)
+        continue
+      }
+
+      // Convert picks to document references (concluded collection)
+      const pickReferences = picks.map((pick) => {
+        return createPlayerDocumentReference(pick, false) // false = concluded
+      })
+
+      // Update bet document
+      batch.update(betDoc.ref, { picks: pickReferences })
+      migratedCount++
+    }
+
+    if (migratedCount > 0) {
+      await batch.commit()
+    }
+
+    console.log(`Successfully migrated ${migratedCount} history bets for user ${userId}`)
+    return {
+      success: true,
+      message: `Migrated ${migratedCount} history bets to document references`,
+    }
+  } catch (error) {
+    console.error(`Error migrating bet history for user ${userId}:`, error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
+ * Migrate all user data to document references
+ */
+export const migrateUserToReferences = async (userId) => {
+  try {
+    console.log(`Starting migration for user ${userId}`)
+
+    const results = {
+      picks: await migrateUserPicksToReferences(userId),
+      activeBets: await migrateActiveBetsToReferences(userId),
+      betHistory: await migrateBetHistoryToReferences(userId),
+    }
+
+    const allSuccessful = Object.values(results).every((result) => result.success)
+
+    return {
+      success: allSuccessful,
+      results,
+    }
+  } catch (error) {
+    console.error(`Error migrating user ${userId}:`, error)
+    return { success: false, message: error.message }
+  }
+}
+
+// Initialize database with basic structure (run once)
+export const initializeDatabase = async (userId) => {
+  try {
+    // Check if user already exists
+    const userRef = doc(db, "users", userId)
+    const userSnap = await getDoc(userRef)
+
+    if (!userSnap.exists()) {
+      // Initialize user profile
+      await setDoc(userRef, {
+        profile: {
+          username: userId,
+          email: `${userId}@example.com`,
+          displayName: userId,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          totalEarnings: 0,
+          totalBets: 0,
+          winCount: 0,
+          lossCount: 0,
+          winRate: 0,
+        },
+        picks: [], // Initialize as empty array for document references
+      })
+
+      // Initialize daily picks
+      const today = new Date().toISOString().split("T")[0]
+      await setDoc(doc(db, "users", userId, "dailyPicks", today), {
+        picks: [],
+      })
+
+      console.log("User initialized successfully")
+    } else {
+      // Check if user has profile object
+      const userData = userSnap.data()
+      if (!userData.profile) {
+        // Migrate user to new structure
+        const profile = {
+          username: userId,
+          password: userData.password || "ramirez22",
+          email: `${userId}@example.com`,
+          displayName: userData.displayName || userId,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          totalEarnings: userData.totalEarnings || 0,
+          totalBets: userData.totalBets || 0,
+          winCount: userData.winCount || 0,
+          lossCount: userData.totalBets ? userData.totalBets - userData.winCount : 0,
+          winRate: userData.totalBets && userData.winCount ? (userData.winCount / userData.totalBets) * 100 : 0,
+        }
+
+        await updateDoc(userRef, { profile })
+        console.log("User migrated to new structure")
+      }
+
+      // Migrate to document references if needed
+      await migrateUserToReferences(userId)
+    }
+  } catch (error) {
+    console.error("Error initializing user:", error)
+  }
+}
+
+// Initialize user if needed
+export const initializeUser = async (username, password) => {
+  try {
+    const userRef = doc(db, "users", username)
+    const userSnap = await getDoc(userRef)
+
+    if (!userSnap.exists()) {
+      // Create new user with new structure
+      await setDoc(userRef, {
+        profile: {
+          username: username,
+          password: password,
+          email: `${username}@example.com`,
+          displayName: username,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          totalEarnings: 0,
+          totalBets: 0,
+          winCount: 0,
+          lossCount: 0,
+          winRate: 0,
+        },
+        picks: [], // Initialize as empty array for document references
+        bets: [],
+      })
+
+      // Initialize daily picks
+      const today = new Date().toISOString().split("T")[0]
+      await setDoc(doc(db, "users", username, "dailyPicks", today), {
+        picks: [],
+      })
+    } else {
+      // Check if user has profile object
+      const userData = userSnap.data()
+      if (!userData.profile) {
+        // Migrate user to new structure
+        const profile = {
+          username: username,
+          password: password,
+          email: `${username}@example.com`,
+          displayName: userData.displayName || username,
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+          totalEarnings: userData.totalEarnings || 0,
+          totalBets: userData.totalBets || 0,
+          winCount: userData.winCount || 0,
+          lossCount: userData.totalBets ? userData.totalBets - userData.winCount : 0,
+          winRate: userData.totalBets && userData.winCount ? (userData.winCount / userData.totalBets) * 100 : 0,
+        }
+
+        await updateDoc(userRef, { profile })
+      }
+
+      // Migrate to document references if needed
+      await migrateUserToReferences(username)
+    }
+  } catch (error) {
+    console.error("Error initializing user:", error)
+    throw error
+  }
 }
 
 // ===== ADMIN FUNCTIONS =====
