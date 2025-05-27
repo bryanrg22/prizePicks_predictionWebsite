@@ -84,9 +84,11 @@ export default function DashboardPage() {
         try {
           setPicksLoading(true)
           const legacyPicks = await getUserPicks(userId)
+          console.log("Loaded picks:", legacyPicks) // Add this log
           setPicks(legacyPicks || [])
         } catch (picksError) {
           console.error("Error loading picks:", picksError)
+          setError("Failed to load your picks. Please try refreshing the page.")
         } finally {
           setPicksLoading(false)
         }

@@ -20,12 +20,12 @@ import { db } from "../firebase"
  */
 const resolveDocumentReference = async (docRef) => {
   try {
-    // Handle both DocumentReference objects and path strings
     let actualRef = docRef
 
     if (typeof docRef === "string") {
-      // If it's a path string, convert to DocumentReference
-      actualRef = doc(db, docRef)
+      // Remove leading slash if present and convert to DocumentReference
+      const cleanPath = docRef.startsWith('/') ? docRef.substring(1) : docRef
+      actualRef = doc(db, cleanPath)
     } else if (!docRef || typeof docRef.get !== "function") {
       console.warn("Invalid document reference:", docRef)
       return null
@@ -132,62 +132,76 @@ export const getUserPicks = async (username) => {
       return []
     }
 
-    // Check if picks are already full objects (legacy)
-    if (picks.length > 0 && picks[0] && typeof picks[0] === "object" && !picks[0].path && picks[0].name) {
+    // Check if picks are document references or full objects
+    const firstPick = picks[0]
+    
+    // If it's a DocumentReference object or a path string
+    if (typeof firstPick === "string" || (firstPick && typeof firstPick.get === "function")) {
+      console.log("Document references detected, resolving...")
+      const resolvedPicks = await resolveDocumentReferences(picks)
+      
+      if (resolvedPicks.length === 0) {
+        console.warn("No picks could be resolved from references")
+        return []
+      }
+      
+      return transformPicksData(resolvedPicks)
+    }
+    
+    // If picks are already full objects (legacy)
+    if (firstPick && typeof firstPick === "object" && firstPick.name) {
       console.log("Legacy picks detected, returning as-is")
-      return picks
+      return transformPicksData(picks)
     }
 
-    // Resolve document references to full data
-    console.log("Resolving document references for picks")
-    const resolvedPicks = await resolveDocumentReferences(picks)
-
-    // Transform the data to match what the UI expects
-    const transformedPicks = resolvedPicks
-      .map((pick) => {
-        if (!pick) return null
-
-        // Extract threshold from the document ID if not present
-        let threshold = pick.threshold
-        if (!threshold && pick.id) {
-          const parts = pick.id.split("_")
-          const thresholdPart = parts.find((part) => !isNaN(Number.parseFloat(part)))
-          if (thresholdPart) {
-            threshold = Number.parseFloat(thresholdPart)
-          }
-        }
-
-        return {
-          id: pick.id,
-          player: pick.name || pick.playerName || "Unknown Player",
-          name: pick.name || pick.playerName || "Unknown Player",
-          playerId: pick.playerId,
-          team: pick.team || "Unknown Team",
-          opponent: pick.opponent || "Unknown Opponent",
-          threshold: threshold || 0,
-          photoUrl: pick.photoUrl || "/placeholder.svg?height=100&width=100",
-          teamLogo: pick.teamLogo || "/placeholder.svg?height=40&width=40",
-          opponentLogo: pick.opponentLogo || "/placeholder.svg?height=40&width=40",
-          gameDate: pick.gameDate
-            ? pick.gameDate.toDate
-              ? pick.gameDate.toDate().toLocaleDateString()
-              : pick.gameDate
-            : "TBD",
-          gameTime: pick.gameTime || "TBD",
-          recommendation: pick.betExplanation?.recommendation || "OVER",
-          position: pick.position,
-          // Include all original data for other components that might need it
-          ...pick,
-        }
-      })
-      .filter(Boolean)
-
-    console.log("Transformed picks:", transformedPicks)
-    return transformedPicks
+    console.warn("Unknown picks format:", picks)
+    return []
   } catch (error) {
     console.error("Error getting user picks:", error)
     return []
   }
+}
+
+// Helper function to transform picks data
+const transformPicksData = (picks) => {
+  return picks
+    .map((pick) => {
+      if (!pick) return null
+
+      // Extract threshold from the document ID if not present
+      let threshold = pick.threshold
+      if (!threshold && pick.id) {
+        const parts = pick.id.split("_")
+        const thresholdPart = parts.find((part) => !isNaN(Number.parseFloat(part)))
+        if (thresholdPart) {
+          threshold = Number.parseFloat(thresholdPart)
+        }
+      }
+
+      return {
+        id: pick.id,
+        player: pick.name || pick.playerName || "Unknown Player",
+        name: pick.name || pick.playerName || "Unknown Player",
+        playerId: pick.playerId,
+        team: pick.team || "Unknown Team",
+        opponent: pick.opponent || "Unknown Opponent",
+        threshold: threshold || 0,
+        photoUrl: pick.photoUrl || "/placeholder.svg?height=100&width=100",
+        teamLogo: pick.teamLogo || "/placeholder.svg?height=40&width=40",
+        opponentLogo: pick.opponentLogo || "/placeholder.svg?height=40&width=40",
+        gameDate: pick.gameDate
+          ? pick.gameDate.toDate
+            ? pick.gameDate.toDate().toLocaleDateString()
+            : pick.gameDate
+          : "TBD",
+        gameTime: pick.gameTime || "TBD",
+        recommendation: pick.betExplanation?.recommendation || "OVER",
+        position: pick.position,
+        // Include all original data for other components that might need it
+        ...pick,
+      }
+    })
+    .filter(Boolean)
 }
 
 /**
