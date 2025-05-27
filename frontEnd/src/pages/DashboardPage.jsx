@@ -477,9 +477,7 @@ export default function DashboardPage() {
       )}
 
       {/* Bet Slip Modal */}
-      {showBetSlip && (
-        <BetSlip picks={selectedPicks} onConfirm={handleConfirmBet} onClose={() => setShowBetSlip(false)} />
-      )}
+      {showBetSlip && <BetSlip picks={picks} onConfirm={handleConfirmBet} onClose={() => setShowBetSlip(false)} />}
 
       {/* Bet Confirmation Modal */}
       {showConfirmation && (
