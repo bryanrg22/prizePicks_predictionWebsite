@@ -229,8 +229,8 @@ firestore/
 │   ├─ activeBets/{YYYYMMDDTHHMMSSZ}
 │   │   └─ { betAmount, potentialWinnings, picks: [ [0] player_Document_References, [i]... ] }
 │   ├─ betHistory/{YYYYMMDDTHHMMSSZ}
-│   │   └─ { betAmount, potentialWinnings, betResult, picks: [ [0] player_Document_References (+ points, minutes added), [i]... ] ] }
-│   ├─ picks: picks: [ [0] player_Document_References, [i]... ]    
+│   │   └─ { betAmount, potentialWinnings, betResult, picks: [ [0] /processedPlayers/players/active/first_last_threshold_YYYYMMDD (reference) (e.g. /processedPlayers/players/active/andrew_nembhard_7.5), [i]... ] }
+│   ├─ picks: [ [0] /processedPlayers/players/active/first_last_threshold_YYYYMMDD (reference) (e.g. /processedPlayers/players/active/andrew_nembhard_7.5), [i]... ]
 │   └─ profileData
 └─ admin/
     ├── profile/ 

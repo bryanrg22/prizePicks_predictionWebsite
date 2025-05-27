@@ -370,12 +370,9 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
                 >
                   <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full overflow-hidden mr-3 lg:mr-4 flex-shrink-0 border-2 border-gray-600">
                     <img
-                      src={player.image || "/placeholder.svg?height=64&width=64&query=basketball player"}
+                      src={player.image || "/placeholder.svg?height=64&width=64&query=basketballplayer"}
                       alt={player.playerName}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = "/basketball-player-action.png"
-                      }}
                     />
                   </div>
                   <div className="flex-1 mr-2 min-w-0">

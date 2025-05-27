@@ -124,6 +124,7 @@ def parse_screenshot_endpoint():
         for entry in players:
             name      = entry.get("player")
             threshold = entry.get("threshold")
+            image = entry.get("image")
             if not name or threshold is None:
                 continue
 
@@ -131,14 +132,14 @@ def parse_screenshot_endpoint():
             try:
                 requests.post(
                     f"{base}/api/player",
-                    json={"playerName": name, "threshold": threshold},
+                    json={"playerName": name, "threshold": threshold, "image": image},
                     timeout=10
                 )
             except Exception:
                 # swallow any network or timeout errors
                 pass
 
-            parsed.append({"playerName": name, "threshold": threshold})
+            parsed.append({"playerName": name, "threshold": threshold, "image": image})
             print(f"[→ POST]/api/player  {name}  @ {threshold}")
 
     return jsonify({"status": "ok", "parsedPlayers": parsed}), 200
