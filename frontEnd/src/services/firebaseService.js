@@ -68,7 +68,7 @@ const resolveDocumentReferences = async (docRefs) => {
       .map((ref) => {
         if (typeof ref === "string") {
           return doc(db, ref)
-        } else if (ref && ref.firestore && ref.type === "document") {
+        } else if (ref && (ref.firestore || typeof ref.get === "function")) {
           // This is a Firestore DocumentReference object
           return ref
         } else {
@@ -137,7 +137,7 @@ export const getUserPicks = async (username) => {
     const firstPick = picks[0]
     
     // If it's a DocumentReference object or a path string
-    if (typeof firstPick === "string" || (firstPick && typeof firstPick.get === "function")) {
+    if (typeof firstPick === "string" || (firstPick && (firstPick.firestore || typeof firstPick.get === "function"))) {
       console.log("Document references detected, resolving...")
       const resolvedPicks = await resolveDocumentReferences(picks)
       
@@ -391,7 +391,7 @@ export const removeUserPick = async (username, pickId) => {
 
     // Filter out the pick by comparing document paths or IDs
     const updatedPicks = existingPicks.filter((pickRef) => {
-      if (!pickRef || typeof pickRef.get !== "function") return false
+      if (!pickRef || (!pickRef.firestore && typeof pickRef.get !== "function")) return false
 
       // Extract ID from document path for comparison
       const pathParts = pickRef.path.split("/")
@@ -502,7 +502,7 @@ export const getBetHistory = async (userId, year, month) => {
         let resolvedPicks = []
         if (betData.picks && Array.isArray(betData.picks)) {
           // Check if picks are references or full objects
-          if (betData.picks.length > 0 && typeof betData.picks[0].get === "function") {
+          if (betData.picks.length > 0 && (betData.picks[0].firestore || typeof betData.picks[0].get === "function")) {
             // These are document references, resolve them
             resolvedPicks = await resolveDocumentReferences(betData.picks)
           } else {
@@ -679,7 +679,7 @@ export const migrateUserPicksToReferences = async (userId) => {
     }
 
     // Check if picks are already references
-    if (picks.length > 0 && typeof picks[0].get === "function") {
+    if (picks.length > 0 && (picks[0].firestore || typeof picks[0].get === "function")) {
       console.log(`Picks already migrated for user ${userId}`)
       return { success: true, message: "Picks already migrated" }
     }
@@ -726,7 +726,7 @@ export const migrateActiveBetsToReferences = async (userId) => {
       if (picks.length === 0) continue
 
       // Check if picks are already references
-      if (typeof picks[0].get === "function") {
+      if (picks[0].firestore || typeof picks[0].get === "function") {
         console.log(`Bet ${betDoc.id} already migrated`)
         continue
       }
@@ -784,7 +784,7 @@ export const migrateBetHistoryToReferences = async (userId) => {
       if (picks.length === 0) continue
 
       // Check if picks are already references
-      if (typeof picks[0].get === "function") {
+      if (picks[0].firestore || typeof picks[0].get === "function") {
         console.log(`History bet ${betDoc.id} already migrated`)
         continue
       }
