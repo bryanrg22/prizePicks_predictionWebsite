@@ -508,12 +508,12 @@ export default function DashboardPage() {
                     {(pick.teamLogo || pick.opponentLogo) && (
                       <div className="flex items-center justify-center mt-3 pt-3 border-t border-gray-600/30">
                         <div className="flex items-center space-x-2">
-                        <span className="text-gray-400 text-xs">${pick.team}</span>
+                        <span className="text-gray-400 text-xs">{pick.team}</span>
                           {pick.teamLogo && (
                             <img
                               src={pick.teamLogo || "/placeholder.svg"}
                               alt={`${pick.team} logo`}
-                              className="w-6 h-6 object-contain"
+                              className="w-10 h-10 object-contain"
                               onError={handleImageError}
                             />
                           )}
@@ -522,11 +522,11 @@ export default function DashboardPage() {
                             <img
                               src={pick.opponentLogo || "/placeholder.svg"}
                               alt={`${pick.opponent} logo`}
-                              className="w-6 h-6 object-contain"
+                              className="w-10 h-10 object-contain"
                               onError={handleImageError}
                             />
                           )}
-                          <span className="text-gray-400 text-xs">${pick.opponent}</span>
+                          <span className="text-gray-400 text-xs">{pick.opponent}</span>
                         </div>
                       </div>
                     )}
