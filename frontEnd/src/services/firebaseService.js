@@ -4,7 +4,6 @@ import {
   setDoc,
   updateDoc,
   collection,
-  addDoc,
   getDocs,
   serverTimestamp,
   increment,
@@ -463,7 +462,16 @@ export const createBet = async (userId, betData) => {
 
     console.log("Validated picks:", validatedPicks)
 
-    // Convert picks to document references
+    // Generate timestamp-based document ID in YYYYMMDDTHHMMSSZ format
+    const now = new Date()
+    const betId = now
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "")
+
+    console.log("Generated bet ID:", betId)
+
+    // Convert picks to document references instead of storing full objects
     const pickReferences = validatedPicks.map((pick) => {
       console.log("Creating reference for pick:", pick)
       return createPlayerDocumentReference(pick, true)
@@ -474,30 +482,19 @@ export const createBet = async (userId, betData) => {
       pickReferences.map((ref) => ref.path),
     )
 
-    // Verify all referenced documents exist
-    const verificationPromises = pickReferences.map((ref) => getDoc(ref))
-    const verificationResults = await Promise.all(verificationPromises)
-
-    const missingDocs = verificationResults
-      .map((snap, index) => ({ snap, ref: pickReferences[index] }))
-      .filter(({ snap }) => !snap.exists())
-      .map(({ ref }) => ref.path)
-
-    if (missingDocs.length > 0) {
-      console.error("Missing documents:", missingDocs)
-      throw new Error(`Referenced player documents not found: ${missingDocs.join(", ")}`)
-    }
-
-    const betsRef = collection(db, "users", userId, "activeBets")
-    const docRef = await addDoc(betsRef, {
-      ...betData,
-      picks: validatedPicks, // Store the validated pick data instead of references for now
-      gameDate,
+    // Create bet document with specific ID and document references
+    const betRef = doc(db, "users", userId, "activeBets", betId)
+    await setDoc(betRef, {
+      betAmount: Number.parseFloat(betData.betAmount),
+      potentialWinnings: Number.parseFloat(betData.potentialWinnings),
+      bettingPlatform: betData.bettingPlatform || "PrizePicks",
+      betType: betData.betType || "Power Play",
+      picks: pickReferences, // Store document references instead of full objects
       createdAt: serverTimestamp(),
     })
 
-    console.log("Successfully created bet with ID:", docRef.id)
-    return docRef.id
+    console.log("Successfully created bet with ID:", betId)
+    return betId
   } catch (error) {
     console.error("Error creating bet:", error)
     throw error
@@ -518,8 +515,27 @@ export const getActiveBets = async (userId) => {
           const betData = betDoc.data()
           console.log("Processing bet:", betDoc.id, "with picks:", betData.picks?.length || 0)
 
-          // Resolve pick references to full data
-          const resolvedPicks = await resolveDocumentReferences(betData.picks || [])
+          // Resolve pick references to full data if they are references
+          let resolvedPicks = []
+          if (betData.picks && Array.isArray(betData.picks)) {
+            // Check if picks are document references
+            if (
+              betData.picks.length > 0 &&
+              (betData.picks[0].firestore || typeof betData.picks[0].get === "function")
+            ) {
+              console.log("Resolving document references for bet", betDoc.id)
+              resolvedPicks = await resolveDocumentReferences(betData.picks)
+            } else if (
+              betData.picks.length > 0 &&
+              typeof betData.picks[0] === "object" &&
+              betData.picks[0].playerName
+            ) {
+              // These are full objects (legacy or current format)
+              console.log("Using full objects for bet", betDoc.id)
+              resolvedPicks = betData.picks
+            }
+          }
+
           console.log("Resolved", resolvedPicks.length, "picks for bet", betDoc.id)
 
           return {
@@ -616,26 +632,31 @@ export const getUserActiveBets = async (username) => {
   return await getActiveBets(username)
 }
 
-// Cancel one or all active bets
+// Cancel one or all active bets - ONLY DELETE, DO NOT CREATE HISTORY
 export const cancelActiveBet = async (userId, betId) => {
-  const userRef = doc(db, "users", userId)
-
   try {
-    // 1) delete from subcollection
+    console.log(`Canceling bet: ${betId} for user: ${userId}`)
+
+    // 1) Delete from subcollection - this is the ONLY action for cancellation
     if (betId) {
       await deleteDoc(doc(db, "users", userId, "activeBets", betId))
+      console.log(`Successfully deleted bet ${betId} from activeBets`)
     } else {
+      // Cancel all active bets
       const activeBets = await getActiveBets(userId)
       await Promise.all(activeBets.map((b) => deleteDoc(doc(db, "users", userId, "activeBets", b.id))))
+      console.log(`Successfully deleted all ${activeBets.length} active bets`)
     }
 
-    // 2) legacy fallback: remove from users/{userId}.bets[]
+    // 2) Legacy fallback: remove from users/{userId}.bets[] array if it exists
+    const userRef = doc(db, "users", userId)
     const userSnap = await getDoc(userRef)
     if (userSnap.exists()) {
       const legacy = userSnap.data().bets || []
       const filtered = legacy.filter((b) => (betId ? b.id !== betId : b.status !== "Active"))
       if (filtered.length !== legacy.length) {
         await updateDoc(userRef, { bets: filtered })
+        console.log("Updated legacy bets array")
       }
     }
 
@@ -1062,7 +1083,6 @@ export const verifyAdminPassword = (adminData, username, password) => {
 // Get system overview data
 export const getSystemOverview = async () => {
   try {
-    // Get total users
     const usersSnap = await getDocs(collection(db, "users"))
     const totalUsers = usersSnap.size
 

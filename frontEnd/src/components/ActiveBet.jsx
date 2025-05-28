@@ -124,10 +124,11 @@ const ActiveBet = ({ bets, onCancel, onPlayerClick, onEdit }) => {
                               {pick.name || pick.playerName || pick.player || "Unknown Player"}
                             </p>
                             <p className="text-xs lg:text-sm text-blue-300">
-                              {pick.threshold || 0} pts ({pick.recommendation || "OVER"})
+                              {pick.threshold || 0} pts (
+                              {pick.recommendation || pick.betExplanation?.recommendation || "OVER"})
                             </p>
                             <p className="text-xs text-blue-400">
-                              {pick.team || "Unknown Team"} vs {pick.opponent || "Unknown Opponent"}
+                              {pick.team || pick.playerTeam || "Unknown Team"} vs {pick.opponent || "Unknown Opponent"}
                             </p>
                           </div>
                           <span
@@ -146,6 +147,7 @@ const ActiveBet = ({ bets, onCancel, onPlayerClick, onEdit }) => {
                     ) : (
                       <div className="bg-blue-800 p-3 rounded-lg text-center">
                         <p className="text-blue-300 text-sm">No picks data available</p>
+                        <p className="text-blue-400 text-xs mt-1">Picks may still be loading...</p>
                       </div>
                     )}
                   </div>
