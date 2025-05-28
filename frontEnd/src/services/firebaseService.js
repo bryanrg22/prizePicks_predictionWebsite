@@ -486,7 +486,7 @@ export const createBet = async (userId, betData) => {
     const betRef = doc(db, "users", userId, "activeBets", betId)
     await setDoc(betRef, {
       betAmount: Number.parseFloat(betData.betAmount),
-      // potentialWinnings: Number.parseFloat(betData.potentialWinnings),
+      betPayOut: Number.parseFloat(betData.betPayOut),
       bettingPlatform: betData.bettingPlatform || "PrizePicks",
       betType: betData.betType || "Power Play",
       picks: pickReferences, // Store document references instead of full objects
