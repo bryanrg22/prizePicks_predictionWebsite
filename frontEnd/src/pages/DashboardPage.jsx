@@ -409,60 +409,142 @@ export default function DashboardPage() {
 
       {/* Current Picks */}
       {picksLoading ? (
-        <div className="bg-gray-800 p-6 rounded-lg mb-8">
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            <span className="ml-3">Loading your picks...</span>
+        <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-6 rounded-xl mb-8 border border-gray-700">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span className="ml-3 text-gray-300">Loading your picks...</span>
           </div>
         </div>
       ) : (
         picks.length > 0 && (
-          <div className="bg-gray-800 p-6 rounded-lg mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Your Picks ({picks.length}/6)</h2>
-              <button
-                onClick={handleLockIn}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md flex items-center"
-                disabled={picks.length < 2}
-              >
-                <Lock className="w-4 h-4 mr-2" />
-                <span>Lock In Picks</span>
-              </button>
+          <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl mb-8 border border-gray-700 shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700 bg-gradient-to-r from-blue-900/20 to-purple-900/20">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                    Your Picks
+                  </h2>
+                  <p className="text-gray-400 mt-1">
+                    {picks.length}/6 picks selected •{" "}
+                    {picks.length >= 2 ? "Ready to lock in" : `Need ${2 - picks.length} more`}
+                  </p>
+                </div>
+                <button
+                  onClick={handleLockIn}
+                  className={`px-6 py-3 font-medium rounded-xl flex items-center transition-all duration-200 touch-manipulation ${
+                    picks.length >= 2
+                      ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-900/20 hover:shadow-green-900/30"
+                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  }`}
+                  disabled={picks.length < 2}
+                >
+                  <Lock className="w-5 h-5 mr-2" />
+                  <span>Lock In Picks</span>
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {picks.map((pick) => (
-                <div key={pick.id} className="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
-                  <div className="flex items-center">
-                    <img
-                      src={pick.photoUrl || "/placeholder.svg"}
-                      alt={pick.player}
-                      className="w-12 h-12 rounded-full object-cover mr-3"
-                      onError={handleImageError}
-                    />
-                    <div>
-                      <p className="font-bold">{pick.player}</p>
-                      <div className="flex items-center">
-                        {pick.teamLogo && (
+            {/* Picks Grid */}
+            <div className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {picks.map((pick, index) => (
+                  <div
+                    key={pick.id}
+                    className="bg-gradient-to-br from-gray-700/80 to-gray-800/80 rounded-xl p-4 border border-gray-600/50 hover:border-gray-500/50 transition-all duration-200 group hover:shadow-lg hover:shadow-blue-900/10"
+                  >
+                    {/* Player Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
                           <img
-                            src={pick.teamLogo || "/placeholder.svg"}
-                            alt={`${pick.team} logo`}
-                            className="w-4 h-4 mr-1 object-contain"
+                            src={pick.photoUrl || "/placeholder.svg"}
+                            alt={pick.player}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-600 group-hover:border-blue-500/50 transition-colors"
                             onError={handleImageError}
                           />
-                        )}
-                        <p className="text-sm text-gray-400">
-                          {pick.threshold} pts ({pick.recommendation})
-                        </p>
+                          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-white truncate text-sm sm:text-base">{pick.player}</p>
+                          <p className="text-xs text-gray-400 truncate">{pick.team || "Team"}</p>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">{pick.gameDate}</p>
+                      <button
+                        onClick={() => handleRemovePick(pick.id)}
+                        className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-all duration-200 touch-manipulation"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
+
+                    {/* Pick Details */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">Threshold</span>
+                        <span className="text-white font-medium">{pick.threshold} pts</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">Pick</span>
+                        <span
+                          className={`px-2 py-1 rounded-md text-xs font-medium ${
+                            pick.recommendation === "OVER"
+                              ? "bg-green-900/30 text-green-400 border border-green-700/30"
+                              : "bg-red-900/30 text-red-400 border border-red-700/30"
+                          }`}
+                        >
+                          {pick.recommendation}
+                        </span>
+                      </div>
+                      {pick.gameDate && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400 text-sm">Game Date</span>
+                          <span className="text-gray-300 text-sm">{pick.gameDate}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Team Logos */}
+                    {(pick.teamLogo || pick.opponentLogo) && (
+                      <div className="flex items-center justify-center mt-3 pt-3 border-t border-gray-600/30">
+                        <div className="flex items-center space-x-2">
+                          {pick.teamLogo && (
+                            <img
+                              src={pick.teamLogo || "/placeholder.svg"}
+                              alt={`${pick.team} logo`}
+                              className="w-6 h-6 object-contain"
+                              onError={handleImageError}
+                            />
+                          )}
+                          <span className="text-gray-400 text-xs">vs</span>
+                          {pick.opponentLogo && (
+                            <img
+                              src={pick.opponentLogo || "/placeholder.svg"}
+                              alt={`${pick.opponent} logo`}
+                              className="w-6 h-6 object-contain"
+                              onError={handleImageError}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <button onClick={() => handleRemovePick(pick.id)} className="p-1 text-gray-400 hover:text-red-500">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                ))}
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-6">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-400">Pick Progress</span>
+                  <span className="text-sm text-gray-400">{picks.length}/6</span>
                 </div>
-              ))}
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(picks.length / 6) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             </div>
           </div>
         )
