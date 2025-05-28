@@ -508,6 +508,7 @@ export default function DashboardPage() {
                     {(pick.teamLogo || pick.opponentLogo) && (
                       <div className="flex items-center justify-center mt-3 pt-3 border-t border-gray-600/30">
                         <div className="flex items-center space-x-2">
+                        <span className="text-gray-400 text-xs">${pick.team}</span>
                           {pick.teamLogo && (
                             <img
                               src={pick.teamLogo || "/placeholder.svg"}
@@ -525,6 +526,7 @@ export default function DashboardPage() {
                               onError={handleImageError}
                             />
                           )}
+                          <span className="text-gray-400 text-xs">${pick.opponent}</span>
                         </div>
                       </div>
                     )}
