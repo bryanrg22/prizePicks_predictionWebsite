@@ -5,7 +5,7 @@ import { X, Check, ChevronRight, DollarSign } from "lucide-react"
 
 const BetSlip = ({ picks, onRemovePick, onConfirm, onClose }) => {
   const [amount, setAmount] = useState(0)
-  const [potentialWinnings, setPotentialWinnings] = useState(0)
+  const [betPayOut, setBetPayOut] = useState(0)
   const [bettingPlatform, setBettingPlatform] = useState("PrizePicks")
   const [betType, setBetType] = useState("Power Play")
   const [customPlatform, setCustomPlatform] = useState("")
@@ -33,7 +33,7 @@ const BetSlip = ({ picks, onRemovePick, onConfirm, onClose }) => {
       return alert("Please enter the betting platform name")
     }
 
-    onConfirm(amount, potentialWinnings, selectedPickIds, finalPlatform, betType)
+    onConfirm(amount, betPayOut, selectedPickIds, finalPlatform, betType)
   }
 
   return (
@@ -85,8 +85,8 @@ const BetSlip = ({ picks, onRemovePick, onConfirm, onClose }) => {
                   id="winnings"
                   className="w-full pl-10 pr-4 py-4 bg-gray-700/50 border border-gray-600 rounded-xl text-white text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all touch-manipulation"
                   placeholder="0"
-                  value={potentialWinnings || ""}
-                  onChange={(e) => setPotentialWinnings(Number.parseFloat(e.target.value) || 0)}
+                  value={betPayOut || ""}
+                  onChange={(e) => setBetPayOut(Number.parseFloat(e.target.value) || 0)}
                 />
               </div>
             </div>

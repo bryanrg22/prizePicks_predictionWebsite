@@ -102,13 +102,13 @@ const ActiveBet = ({ bets, onCancel, onPlayerClick, onEdit }) => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400 text-sm">Potential Winnings</span>
-                        <span className="font-bold text-green-400">${bet.potentialWinnings?.toFixed(2) || '0.00'}</span>
+                        <span className="font-bold text-green-400">${((bet.betPayOut || 0) - (bet.betAmount || 0)).toFixed(2)}</span>
                       </div>
                       <div className="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400 text-sm">Total Payout</span>
                         <span className="font-bold text-green-400 text-lg">
-                          ${((bet.betAmount || 0) + (bet.potentialWinnings || 0)).toFixed(2)}
+                        ${bet.betPayOut?.toFixed(2) || '0.00'}
                         </span>
                       </div>
                       <div className="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>

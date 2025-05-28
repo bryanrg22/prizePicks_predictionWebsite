@@ -84,7 +84,7 @@ const PreviousBets = ({ bets, activeBets }) => {
                                 ${bet.betAmount?.toFixed(2) || '0.00'}
                               </span>
                               <span className="text-green-400 text-sm font-medium">
-                                Potential: ${bet.potentialWinnings?.toFixed(2) || '0.00'}
+                                betPayOut: ${bet.betPayOut?.toFixed(2) || '0.00'}
                               </span>
                             </div>
                           </div>

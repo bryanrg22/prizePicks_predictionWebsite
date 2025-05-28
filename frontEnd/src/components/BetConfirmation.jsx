@@ -2,7 +2,7 @@
 
 import { X, Check, Trophy, DollarSign } from "lucide-react"
 
-const BetConfirmation = ({ picks, betAmount, potentialWinnings, bettingPlatform, betType, onClose }) => {
+const BetConfirmation = ({ picks, betAmount, betPayOut, bettingPlatform, betType, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-300">
       <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col border border-gray-700 overflow-hidden">
@@ -78,13 +78,13 @@ const BetConfirmation = ({ picks, betAmount, potentialWinnings, bettingPlatform,
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Potential Winnings</span>
-                  <span className="font-bold text-green-400 text-lg">${potentialWinnings}</span>
+                  <span className="font-bold text-green-400 text-lg">${(Number.parseFloat(betPayOut) - Number.parseFloat(betAmount)).toFixed(2)}</span>
                 </div>
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Total Payout</span>
                   <span className="font-bold text-green-400 text-xl">
-                    ${(Number.parseFloat(betAmount) + Number.parseFloat(potentialWinnings)).toFixed(2)}
+                    ${betPayOut}
                   </span>
                 </div>
               </div>

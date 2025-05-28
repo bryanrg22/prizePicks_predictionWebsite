@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const [showBetSlip, setShowBetSlip] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [betAmount, setBetAmount] = useState("")
-  const [potentialWinnings, setPotentialWinnings] = useState("")
+  const [betPayOut, setBetPayOut] = useState("")
   const [selectedPicks, setSelectedPicks] = useState([])
   const [picksLoading, setPicksLoading] = useState(true)
   const navigate = useNavigate()
@@ -191,7 +191,7 @@ export default function DashboardPage() {
         })
         .toUpperCase(),
       betAmount: bet.betAmount,
-      potentialWinnings: bet.potentialWinnings,
+      betPayOut: bet.betPayOut,
       status: "Active",
       gameTime: bet.picks[0]?.gameTime || "TBD",
       bettingPlatform: bet.bettingPlatform || "PrizePicks",
@@ -304,7 +304,7 @@ export default function DashboardPage() {
   // Update the handleConfirmBet function to correctly handle the selected picks
   const handleConfirmBet = async (amount, winnings, selectedPickIds, bettingPlatform, betType) => {
     setBetAmount(amount)
-    setPotentialWinnings(winnings)
+    setBetPayOut(winnings)
     const selectedPicksData = picks.filter((p) => selectedPickIds.includes(p.id))
     setSelectedPicks(selectedPicksData)
 
@@ -318,7 +318,7 @@ export default function DashboardPage() {
       // Format the data for new structure with better validation
       const betData = {
         betAmount: Number.parseFloat(amount),
-        potentialWinnings: Number.parseFloat(winnings),
+        betPayOut: Number.parseFloat(winnings),
         gameDate: today,
         bettingPlatform: platform,
         betType: type,
@@ -587,7 +587,7 @@ export default function DashboardPage() {
         <BetConfirmation
           picks={selectedPicks}
           betAmount={betAmount}
-          potentialWinnings={potentialWinnings}
+          betPayOut={betPayOut}
           bettingPlatform={activeBets.length > 0 ? activeBets[activeBets.length - 1].bettingPlatform : "PrizePicks"}
           betType={activeBets.length > 0 ? activeBets[activeBets.length - 1].betType : "Power Play"}
           onClose={handleCloseConfirmation}
