@@ -210,8 +210,24 @@ const transformPicksData = (picks) => {
  */
 const createPlayerDocumentReference = (playerData, isActive = true) => {
   const collection = isActive ? "active" : "concluded"
-  const playerId = playerData.id || `${playerData.name?.toLowerCase().replace(/\s+/g, "_")}_${playerData.threshold}`
 
+  // Better ID generation with multiple fallbacks
+  let playerId = playerData.id || playerData.playerId
+
+  if (!playerId) {
+    // Generate ID from player name and threshold
+    const playerName = playerData.playerName || playerData.name || playerData.player
+    const threshold = playerData.threshold
+
+    if (playerName && threshold !== undefined) {
+      playerId = `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`
+    } else {
+      console.error("Cannot create document reference - missing player name or threshold:", playerData)
+      throw new Error(`Invalid player data for document reference: missing name or threshold`)
+    }
+  }
+
+  console.log("Creating document reference with ID:", playerId, "for collection:", collection)
   return doc(db, "processedPlayers", "players", collection, playerId)
 }
 
@@ -415,13 +431,48 @@ export const removeUserPick = async (username, pickId) => {
 // Create a new bet with document references
 export const createBet = async (userId, betData) => {
   try {
+    console.log("Creating bet with data:", betData)
     const gameDate = betData.gameDate || new Date().toISOString().substring(0, 10)
 
+    // Validate and prepare picks data
+    const validatedPicks = betData.picks.map((pick, index) => {
+      console.log(`Validating pick ${index}:`, pick)
+
+      // Ensure we have required fields
+      const playerName = pick.playerName || pick.name || pick.player
+      const threshold = pick.threshold
+
+      if (!playerName) {
+        throw new Error(`Pick ${index} is missing player name`)
+      }
+
+      if (threshold === undefined || threshold === null) {
+        throw new Error(`Pick ${index} is missing threshold`)
+      }
+
+      // Create a standardized pick object
+      return {
+        ...pick,
+        playerName: playerName,
+        name: playerName,
+        player: playerName,
+        threshold: Number.parseFloat(threshold),
+        id: pick.id || pick.playerId || `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`,
+      }
+    })
+
+    console.log("Validated picks:", validatedPicks)
+
     // Convert picks to document references
-    const pickReferences = betData.picks.map((pick) => {
-      // Create reference to active player document
+    const pickReferences = validatedPicks.map((pick) => {
+      console.log("Creating reference for pick:", pick)
       return createPlayerDocumentReference(pick, true)
     })
+
+    console.log(
+      "Created pick references:",
+      pickReferences.map((ref) => ref.path),
+    )
 
     // Verify all referenced documents exist
     const verificationPromises = pickReferences.map((ref) => getDoc(ref))
@@ -433,17 +484,19 @@ export const createBet = async (userId, betData) => {
       .map(({ ref }) => ref.path)
 
     if (missingDocs.length > 0) {
+      console.error("Missing documents:", missingDocs)
       throw new Error(`Referenced player documents not found: ${missingDocs.join(", ")}`)
     }
 
     const betsRef = collection(db, "users", userId, "activeBets")
     const docRef = await addDoc(betsRef, {
       ...betData,
+      picks: validatedPicks, // Store the validated pick data instead of references for now
       gameDate,
-      picks: pickReferences, // Store document references instead of full objects
       createdAt: serverTimestamp(),
     })
 
+    console.log("Successfully created bet with ID:", docRef.id)
     return docRef.id
   } catch (error) {
     console.error("Error creating bet:", error)

@@ -313,25 +313,42 @@ export default function DashboardPage() {
     const type = betType || "Power Play"
 
     try {
-      // Format the data for new structure
+      console.log("Selected picks data:", selectedPicksData)
+
+      // Format the data for new structure with better validation
       const betData = {
         betAmount: Number.parseFloat(amount),
         potentialWinnings: Number.parseFloat(winnings),
         gameDate: today,
         bettingPlatform: platform,
         betType: type,
-        picks: selectedPicksData.map((pick) => ({
-          playerId: pick.id.toString(),
-          playerName: pick.player || pick.name,
-          playerTeam: pick.team,
-          opponent: pick.opponent,
-          threshold: Number.parseFloat(pick.threshold),
-          recommendation: pick.recommendation,
-          photoUrl: pick.photoUrl,
-          gameTime: pick.gameTime,
-          gameId: pick.gameId,
-        })),
+        picks: selectedPicksData.map((pick, index) => {
+          console.log(`Processing pick ${index}:`, pick)
+
+          // Ensure we have all required fields
+          const playerName = pick.player || pick.name || pick.playerName || `Player ${index + 1}`
+          const threshold = pick.threshold || 0
+          const pickId = pick.id || `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`
+
+          return {
+            id: pickId,
+            playerId: pickId,
+            playerName: playerName,
+            name: playerName,
+            player: playerName,
+            playerTeam: pick.team || "Unknown Team",
+            opponent: pick.opponent || "Unknown Opponent",
+            threshold: Number.parseFloat(threshold),
+            recommendation: pick.recommendation || "OVER",
+            photoUrl: pick.photoUrl || "/placeholder.svg?height=40&width=40",
+            gameTime: pick.gameTime || "TBD",
+            gameDate: pick.gameDate || today,
+            gameId: pick.gameId || `game_${Date.now()}_${index}`,
+          }
+        }),
       }
+
+      console.log("Final bet data:", betData)
 
       // Create bet in Firebase
       const betId = await createBet(currentUser, betData)
@@ -350,7 +367,7 @@ export default function DashboardPage() {
       setShowConfirmation(true)
     } catch (error) {
       console.error("Error creating bet in Firebase:", error)
-      alert("Failed to create bet. Please try again.")
+      alert(`Failed to create bet: ${error.message}`)
     }
   }
 
