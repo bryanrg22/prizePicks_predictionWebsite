@@ -24,9 +24,9 @@ const resolveDocumentReference = async (docRef) => {
 
     if (typeof docRef === "string") {
       // Remove leading slash if present and convert to DocumentReference
-      const cleanPath = docRef.startsWith('/') ? docRef.substring(1) : docRef
+      const cleanPath = docRef.startsWith("/") ? docRef.substring(1) : docRef
       actualRef = doc(db, cleanPath)
-    } else if (!docRef || typeof docRef.get !== "function") {
+    } else if (!docRef || (!docRef.firestore && typeof docRef.get !== "function")) {
       console.warn("Invalid document reference:", docRef)
       return null
     }
@@ -69,7 +69,7 @@ const resolveDocumentReferences = async (docRefs) => {
         if (typeof ref === "string") {
           return doc(db, ref)
         } else if (ref && (ref.firestore || typeof ref.get === "function")) {
-          // This is a Firestore DocumentReference object
+          // Check for Firestore DocumentReference objects
           return ref
         } else {
           console.warn("Invalid reference:", ref)
@@ -135,20 +135,20 @@ export const getUserPicks = async (username) => {
 
     // Check if picks are document references or full objects
     const firstPick = picks[0]
-    
+
     // If it's a DocumentReference object or a path string
     if (typeof firstPick === "string" || (firstPick && (firstPick.firestore || typeof firstPick.get === "function"))) {
       console.log("Document references detected, resolving...")
       const resolvedPicks = await resolveDocumentReferences(picks)
-      
+
       if (resolvedPicks.length === 0) {
         console.warn("No picks could be resolved from references")
         return []
       }
-      
+
       return transformPicksData(resolvedPicks)
     }
-    
+
     // If picks are already full objects (legacy)
     if (firstPick && typeof firstPick === "object" && firstPick.name) {
       console.log("Legacy picks detected, returning as-is")
@@ -454,16 +454,20 @@ export const createBet = async (userId, betData) => {
 // Get active bets and resolve document references
 export const getActiveBets = async (userId) => {
   try {
+    console.log("Getting active bets for user:", userId)
     // Get from new sub-collection
     const snap = await getDocs(collection(db, "users", userId, "activeBets"))
 
     if (!snap.empty) {
+      console.log("Found", snap.docs.length, "active bets")
       const bets = await Promise.all(
         snap.docs.map(async (betDoc) => {
           const betData = betDoc.data()
+          console.log("Processing bet:", betDoc.id, "with picks:", betData.picks?.length || 0)
 
           // Resolve pick references to full data
           const resolvedPicks = await resolveDocumentReferences(betData.picks || [])
+          console.log("Resolved", resolvedPicks.length, "picks for bet", betDoc.id)
 
           return {
             id: betDoc.id,
@@ -473,14 +477,20 @@ export const getActiveBets = async (userId) => {
         }),
       )
 
+      console.log("Returning", bets.length, "formatted active bets")
       return bets
     }
 
+    console.log("No active bets found in sub-collection, checking legacy structure")
     // Fallback to old array structure
     const userSnap = await getDoc(doc(db, "users", userId))
-    if (!userSnap.exists()) return []
+    if (!userSnap.exists()) {
+      console.log("User document not found")
+      return []
+    }
 
     const legacyBets = (userSnap.data().bets || []).filter((b) => b.status === "Active")
+    console.log("Found", legacyBets.length, "legacy active bets")
     return legacyBets
   } catch (error) {
     console.error("Error getting active bets:", error)

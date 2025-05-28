@@ -312,7 +312,6 @@ export default function DashboardPage() {
     const platform = bettingPlatform || "PrizePicks"
     const type = betType || "Power Play"
 
-    // Create bet in Firebase - only use one method to create the bet
     try {
       // Format the data for new structure
       const betData = {
@@ -323,7 +322,7 @@ export default function DashboardPage() {
         betType: type,
         picks: selectedPicksData.map((pick) => ({
           playerId: pick.id.toString(),
-          playerName: pick.player,
+          playerName: pick.player || pick.name,
           playerTeam: pick.team,
           opponent: pick.opponent,
           threshold: Number.parseFloat(pick.threshold),
@@ -334,22 +333,25 @@ export default function DashboardPage() {
         })),
       }
 
-      // Create in new structure only
+      // Create bet in Firebase
       const betId = await createBet(currentUser, betData)
       console.log("Created bet with ID:", betId)
 
-      // 2) only now clear the old picks
+      // Clear picks from Firebase and local state immediately
       await clearUserPicks(currentUser)
+      setPicks([]) // Clear local state immediately
 
-      // 3) refresh active bets
+      // Refresh active bets to show the new bet
       const bets = await getActiveBets(currentUser)
-      setActiveBets(bets)
+      setActiveBets(bets || [])
+
+      // Close bet slip and show confirmation
+      setShowBetSlip(false)
+      setShowConfirmation(true)
     } catch (error) {
       console.error("Error creating bet in Firebase:", error)
+      alert("Failed to create bet. Please try again.")
     }
-
-    setShowBetSlip(false)
-    setShowConfirmation(true)
   }
 
   const handleCloseBetSlip = () => {
@@ -358,8 +360,10 @@ export default function DashboardPage() {
 
   const handleCloseConfirmation = async () => {
     setShowConfirmation(false)
-    // Reset picks after confirmation
-    setPicks([])
+    // Picks should already be cleared, but ensure UI is in sync
+    if (picks.length > 0) {
+      setPicks([])
+    }
   }
 
   // Add this function in the HomePage component

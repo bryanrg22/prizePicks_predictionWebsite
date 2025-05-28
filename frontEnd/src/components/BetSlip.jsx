@@ -38,7 +38,7 @@ const BetSlip = ({ picks, onRemovePick, onConfirm, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-300">
-      <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-gray-700">
+      <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-lg h-[95vh] sm:h-[90vh] flex flex-col border border-gray-700">
         {/* Header */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-700">
           <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
@@ -53,7 +53,7 @@ const BetSlip = ({ picks, onRemovePick, onConfirm, onClose }) => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto flex-1 max-h-[calc(95vh-140px)] sm:max-h-[calc(90vh-140px)]">
+        <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-4 sm:p-6 space-y-6">
             {/* Bet Amount */}
             <div>
@@ -286,7 +286,7 @@ const BetSlip = ({ picks, onRemovePick, onConfirm, onClose }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 sm:p-6 border-t border-gray-700 bg-gray-800/50">
+        <div className="flex-shrink-0 p-4 sm:p-6 border-t border-gray-700 bg-gray-800/50">
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={onClose}

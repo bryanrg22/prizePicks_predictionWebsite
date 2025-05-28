@@ -92,49 +92,62 @@ const ActiveBet = ({ bets, onCancel, onPlayerClick, onEdit }) => {
                 <div>
                   <h3 className="text-base lg:text-lg font-semibold mb-2 text-white">Picks</h3>
                   <div className="space-y-2 lg:space-y-3">
-                    {bet.picks.map((pick, index) => (
-                      <div
-                        key={index}
-                        className="bg-blue-800 p-2 lg:p-3 rounded-lg flex items-center cursor-pointer hover:bg-blue-700 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onPlayerClick && onPlayerClick(pick)
-                        }}
-                      >
-                        {pick.photoUrl ? (
-                          <img
-                            src={pick.photoUrl || "/placeholder.svg"}
-                            alt={pick.player}
-                            className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover mr-2 lg:mr-3"
-                            onError={(e) => {
-                              e.target.onerror = null
-                              e.target.src = "/placeholder.svg?height=40&width=40"
-                            }}
-                          />
-                        ) : (
-                          <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-gray-600 mr-2 lg:mr-3 flex items-center justify-center">
-                            <span className="text-xs text-white">{pick.player.substring(0, 2)}</span>
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-white text-sm lg:text-base truncate">{pick.player}</p>
-                          <p className="text-xs lg:text-sm text-blue-300">
-                            {pick.threshold} pts ({pick.recommendation})
-                          </p>
-                        </div>
-                        <span
-                          className={`ml-auto text-xs ${
-                            pick.status === "Final"
-                              ? "text-green-400"
-                              : pick.status === "Live"
-                                ? "text-yellow-400"
-                                : "text-gray-400"
-                          }`}
+                    {bet.picks && bet.picks.length > 0 ? (
+                      bet.picks.map((pick, index) => (
+                        <div
+                          key={pick.id || index}
+                          className="bg-blue-800 p-2 lg:p-3 rounded-lg flex items-center cursor-pointer hover:bg-blue-700 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onPlayerClick && onPlayerClick(pick)
+                          }}
                         >
-                          {pick.status}
-                        </span>
+                          {pick.photoUrl ? (
+                            <img
+                              src={pick.photoUrl || "/placeholder.svg"}
+                              alt={pick.name || pick.playerName || pick.player || "Player"}
+                              className="w-8 h-8 lg:w-10 lg:h-10 rounded-full object-cover mr-2 lg:mr-3"
+                              onError={(e) => {
+                                e.target.onerror = null
+                                e.target.src = "/placeholder.svg?height=40&width=40"
+                              }}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-gray-600 mr-2 lg:mr-3 flex items-center justify-center">
+                              <span className="text-xs text-white">
+                                {(pick.name || pick.playerName || pick.player || "??").substring(0, 2).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-sm lg:text-base truncate">
+                              {pick.name || pick.playerName || pick.player || "Unknown Player"}
+                            </p>
+                            <p className="text-xs lg:text-sm text-blue-300">
+                              {pick.threshold || 0} pts ({pick.recommendation || "OVER"})
+                            </p>
+                            <p className="text-xs text-blue-400">
+                              {pick.team || "Unknown Team"} vs {pick.opponent || "Unknown Opponent"}
+                            </p>
+                          </div>
+                          <span
+                            className={`ml-auto text-xs ${
+                              pick.gameStatus === "Final" || pick.status === "Final"
+                                ? "text-green-400"
+                                : pick.gameStatus === "Live" || pick.status === "Live"
+                                  ? "text-yellow-400"
+                                  : "text-gray-400"
+                            }`}
+                          >
+                            {pick.gameStatus || pick.status || "Scheduled"}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="bg-blue-800 p-3 rounded-lg text-center">
+                        <p className="text-blue-300 text-sm">No picks data available</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
