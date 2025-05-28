@@ -524,7 +524,24 @@ export const getActiveBets = async (userId) => {
               (betData.picks[0].firestore || typeof betData.picks[0].get === "function")
             ) {
               console.log("Resolving document references for bet", betDoc.id)
-              resolvedPicks = await resolveDocumentReferences(betData.picks)
+              const rawResolvedPicks = await resolveDocumentReferences(betData.picks)
+
+              // Transform the resolved picks to ensure proper field mapping
+              resolvedPicks = rawResolvedPicks.map((pick) => ({
+                id: pick.id,
+                name: pick.name || pick.playerName || "Unknown Player",
+                playerName: pick.name || pick.playerName || "Unknown Player",
+                player: pick.name || pick.playerName || "Unknown Player",
+                team: pick.team || pick.playerTeam || "Unknown Team",
+                opponent: pick.opponent || "Unknown Opponent",
+                threshold: pick.threshold || 0,
+                recommendation: pick.betExplanation?.recommendation || pick.recommendation || "OVER",
+                photoUrl: pick.photoUrl || "/placeholder.svg?height=40&width=40",
+                gameStatus: pick.gameStatus || "Scheduled",
+                status: pick.gameStatus || pick.status || "Scheduled",
+                // Include all original data
+                ...pick,
+              }))
             } else if (
               betData.picks.length > 0 &&
               typeof betData.picks[0] === "object" &&
@@ -532,11 +549,26 @@ export const getActiveBets = async (userId) => {
             ) {
               // These are full objects (legacy or current format)
               console.log("Using full objects for bet", betDoc.id)
-              resolvedPicks = betData.picks
+              resolvedPicks = betData.picks.map((pick) => ({
+                id: pick.id,
+                name: pick.name || pick.playerName || pick.player || "Unknown Player",
+                playerName: pick.name || pick.playerName || pick.player || "Unknown Player",
+                player: pick.name || pick.playerName || pick.player || "Unknown Player",
+                team: pick.team || pick.playerTeam || "Unknown Team",
+                opponent: pick.opponent || "Unknown Opponent",
+                threshold: pick.threshold || 0,
+                recommendation: pick.betExplanation?.recommendation || pick.recommendation || "OVER",
+                photoUrl: pick.photoUrl || "/placeholder.svg?height=40&width=40",
+                gameStatus: pick.gameStatus || "Scheduled",
+                status: pick.gameStatus || pick.status || "Scheduled",
+                // Include all original data
+                ...pick,
+              }))
             }
           }
 
           console.log("Resolved", resolvedPicks.length, "picks for bet", betDoc.id)
+          console.log("Sample resolved pick:", resolvedPicks[0])
 
           return {
             id: betDoc.id,
@@ -635,17 +667,27 @@ export const getUserActiveBets = async (username) => {
 // Cancel one or all active bets - ONLY DELETE, DO NOT CREATE HISTORY
 export const cancelActiveBet = async (userId, betId) => {
   try {
-    console.log(`Canceling bet: ${betId} for user: ${userId}`)
+    console.log(`🚫 CANCELING BET: ${betId} for user: ${userId}`)
+    console.log("⚠️  This should ONLY delete from activeBets, NO betHistory creation")
 
     // 1) Delete from subcollection - this is the ONLY action for cancellation
     if (betId) {
-      await deleteDoc(doc(db, "users", userId, "activeBets", betId))
-      console.log(`Successfully deleted bet ${betId} from activeBets`)
+      const betRef = doc(db, "users", userId, "activeBets", betId)
+      console.log(`Deleting bet document: ${betRef.path}`)
+      await deleteDoc(betRef)
+      console.log(`✅ Successfully deleted bet ${betId} from activeBets`)
     } else {
       // Cancel all active bets
       const activeBets = await getActiveBets(userId)
-      await Promise.all(activeBets.map((b) => deleteDoc(doc(db, "users", userId, "activeBets", b.id))))
-      console.log(`Successfully deleted all ${activeBets.length} active bets`)
+      console.log(`Deleting ${activeBets.length} active bets`)
+      await Promise.all(
+        activeBets.map((b) => {
+          const betRef = doc(db, "users", userId, "activeBets", b.id)
+          console.log(`Deleting bet document: ${betRef.path}`)
+          return deleteDoc(betRef)
+        }),
+      )
+      console.log(`✅ Successfully deleted all ${activeBets.length} active bets`)
     }
 
     // 2) Legacy fallback: remove from users/{userId}.bets[] array if it exists
@@ -656,13 +698,14 @@ export const cancelActiveBet = async (userId, betId) => {
       const filtered = legacy.filter((b) => (betId ? b.id !== betId : b.status !== "Active"))
       if (filtered.length !== legacy.length) {
         await updateDoc(userRef, { bets: filtered })
-        console.log("Updated legacy bets array")
+        console.log("✅ Updated legacy bets array")
       }
     }
 
+    console.log("🎉 Bet cancellation completed - NO betHistory should be created")
     return true
   } catch (err) {
-    console.error("cancelActiveBet failed:", err)
+    console.error("❌ cancelActiveBet failed:", err)
     throw err
   }
 }
