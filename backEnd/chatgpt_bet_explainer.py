@@ -4,42 +4,42 @@ import os, json, textwrap
 from openai import OpenAI, OpenAIError
 
 # ---------- TEAM‑LEVEL one‑off context (hard‑coded for now) ----------
-_TEAM_CTX = {
-    "Timberwolves": {
-        "seed"      : 3,
-        "arena"     : "Away @ OKC – Paycom Center",
-        "narrative" : (
-            "Coming off a historic comeback to upset Denver in 7. "
-            "Anthony Edwards emerging as a top‑5 playoff scorer; team leads all "
-            "remaining clubs in defensive rating (101.4) this post‑season."
-        ),
-    },
-    "Thunder": {
-        "seed"      : 1,
-        "arena"     : "Home – Paycom Center (LOUD crowd advantage)",
-        "narrative" : (
-            "Youngest 1‑seed ever; Shai Gilgeous‑Alexander averaging 32.2 PPG "
-            "and shooting 63 TS% vs DAL. Chet Holmgren protecting rim (3.2 blk)."
-        ),
-    },
-    "Knicks": {
-        "seed"      : 3,
-        "arena"     : "Home – Madison Square Garden (NYC spotlight)",
-        "narrative" : (
-            "First ECF trip since 2000. City starving for a title – crowd and "
-            "media pressure cranked to 11. Jalen Brunson averaging 26.2 PPG "
-            "despite constant traps."
-        ),
-    },
-    "Pacers": {
-        "seed"      : 4,
-        "arena"     : "Away @ MSG",
-        "narrative" : (
-            "Blew out #1 Cleveland in 5 with NBA‑best 121.1 offensive rating. "
-            "Tyrese Haliburton fresh after short series."
-        ),
-    },
-}
+#_TEAM_CTX = {
+#    "Timberwolves": {
+#        "seed"      : 3,
+#        "arena"     : "Away @ OKC – Paycom Center",
+#        "narrative" : (
+#            "Coming off a historic comeback to upset Denver in 7. "
+#            "Anthony Edwards emerging as a top‑5 playoff scorer; team leads all "
+#            "remaining clubs in defensive rating (101.4) this post‑season."
+#        ),
+#    },
+#    "Thunder": {
+#        "seed"      : 1,
+#        "arena"     : "Home – Paycom Center (LOUD crowd advantage)",
+#        "narrative" : (
+#            "Youngest 1‑seed ever; Shai Gilgeous‑Alexander averaging 32.2 PPG "
+#            "and shooting 63 TS% vs DAL. Chet Holmgren protecting rim (3.2 blk)."
+#        ),
+#    },
+#    "Knicks": {
+#        "seed"      : 3,
+#        "arena"     : "Home – Madison Square Garden (NYC spotlight)",
+#        "narrative" : (
+#            "First ECF trip since 2000. City starving for a title – crowd and "
+#            "media pressure cranked to 11. Jalen Brunson averaging 26.2 PPG "
+#            "despite constant traps."
+#        ),
+#    },
+#    "Pacers": {
+#        "seed"      : 4,
+#        "arena"     : "Away @ MSG",
+#        "narrative" : (
+#            "Blew out #1 Cleveland in 5 with NBA‑best 121.1 offensive rating. "
+#            "Tyrese Haliburton fresh after short series."
+#        ),
+#    },
+#}
 
 def _fmt(label, val, decimals=2):
     """Return 'label : 12.34' or '' if val falsy/zero/None."""
@@ -61,8 +61,8 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
     # ------------------------------------------------------------------
     # 2) Team / arena context (hard‑coded for this round)
     # ------------------------------------------------------------------
-    team_ctx     = _TEAM_CTX.get(team, {})
-    opponent_ctx = _TEAM_CTX.get(opponent, {})
+    #team_ctx     = _TEAM_CTX.get(team, {})
+    #opponent_ctx = _TEAM_CTX.get(opponent, {})
 
     # ------------------------------------------------------------------
     # 3) Compose human‑readable summary lines
@@ -91,12 +91,6 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
 
         Player: {name}
         Over/Under threshold: {threshold:.1f} points
-
-        ───────── CONTEXT ─────────
-        • Team seed & venue : {team_ctx.get('seed')}‑seed, {team_ctx.get('arena')}
-        • Opponent seed     : {opponent_ctx.get('seed')}
-        • Team narrative    : {team_ctx.get('narrative')}
-        • Opp narrative     : {opponent_ctx.get('narrative')}
 
         ───────── METRICS ─────────
     {summary_block or '  • (no point‑probability metrics available)'}
@@ -149,3 +143,10 @@ def get_bet_explanation_from_chatgpt(player_data: dict):
             "confidenceRange": "N/A",
             "explanation": resp.choices[0].message.content.strip(),
         }
+    
+# line 94: 
+'''  ───────── CONTEXT ─────────
+        • Team seed & venue : {team_ctx.get('seed')}‑seed, {team_ctx.get('arena')}
+        • Opponent seed     : {opponent_ctx.get('seed')}
+        • Team narrative    : {team_ctx.get('narrative')}
+        • Opp narrative     : {opponent_ctx.get('narrative')} '''

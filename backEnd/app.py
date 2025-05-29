@@ -55,14 +55,26 @@ def analyze_player_endpoint():
     name      = body.get("playerName")
     threshold = float(body.get("threshold", 0))
     key       = name.lower().replace(" ", "_")
-    ref = db.collection("processedPlayers") \
-            .document("players") \
-            .collection("active") \
-            .document(f"{key}_{threshold}")
+    coll_ref = (
+        db.collection("processedPlayers")
+          .document("players")
+          .collection("active")
+    )
+    
+    doc_ref = None
+    for doc in coll_ref.stream():
+        if doc.id.startswith(f"{key}_{threshold}"):
+            doc_ref = doc.reference
+            break
 
-    snap = ref.get()
-    if snap.exists:
-        return jsonify(snap.to_dict()), 200
+    # 2) If found, return it
+    if doc_ref:
+        snap = doc_ref.get()
+        if snap.exists:
+            return jsonify(snap.to_dict()), 200
+
+
+    # 3) If not found, continue with analysis
 
     # 1) run your pipeline
     first, last = name.split(maxsplit=1)
@@ -74,7 +86,6 @@ def analyze_player_endpoint():
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
     pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or 0.0  
     pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
-    pdata["pick_id"]      = f"{pkey(name)}_{threshold}"
 
     # — GARCH vol forecast —
     series = fetch_point_series(pdata, n_games=50)
@@ -85,7 +96,13 @@ def analyze_player_endpoint():
         pdata["volatilityPlayOffsForecast"] = forecast_playoff_volatility(pdata)
 
 
+    pdata["pick_id"]      = f"{pkey(name)}_{threshold}_{pdata['gameDate']}"
+
     # 2) persist it (writes to processedPlayers/players/active/{player_threshold})
+    ref = db.collection("processedPlayers") \
+            .document("players") \
+            .collection("active") \
+            .document(f"{key}_{threshold}_{pdata['gameDate']}")
     ref.set(pdata)
 
     # 3) return it
