@@ -346,7 +346,8 @@ const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
         onClick={(e) => {
           e.stopPropagation()
           const [first, last] = name.split(" ")
-          const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
+          const dateStr = (playerData.gameDate || "").toString().slice(0,10).replace(/[-/]/g,"")
+          const pick_id = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}_${dateStr}`
           onAddToPicks({
             ...playerData,
             id: pick_id, // must be a string

@@ -13,6 +13,16 @@ import {
 import { db } from "../firebase"
 
 // ===== HELPER FUNCTIONS FOR DOCUMENT REFERENCES =====
+// Convert any flavour of gameDate into YYYYMMDD for IDs
+const getDateSuffix = (pd) => {
+  const raw = pd?.gameDate
+  let d
+  if (!raw) return null
+  if (typeof raw?.toDate === "function")       d = raw.toDate()        // Firestore Timestamp
+  else if (raw instanceof Date)                d = raw
+  else                                          d = new Date(raw)       // 'YYYY‑MM‑DD' | 'MM/DD/YYYY'
+  return isNaN(d) ? null : d.toISOString().slice(0, 10).replace(/-/g, "")
+}
 
 /**
  * Resolve a single document reference to full data
@@ -204,6 +214,7 @@ const transformPicksData = (picks) => {
     .filter(Boolean)
 }
 
+
 /**
  * Create document reference from player data
  */
@@ -219,7 +230,10 @@ const createPlayerDocumentReference = (playerData, isActive = true) => {
     const threshold = playerData.threshold
 
     if (playerName && threshold !== undefined) {
-      playerId = `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`
+      const datePart = getDateSuffix(playerData)
+      playerId =
+        `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` +
+        (datePart ? `_${datePart}` : "")
     } else {
       console.error("Cannot create document reference - missing player name or threshold:", playerData)
       throw new Error(`Invalid player data for document reference: missing name or threshold`)
@@ -235,7 +249,10 @@ const createPlayerDocumentReference = (playerData, isActive = true) => {
  */
 const getDocumentReferencePath = (playerData, isActive = true) => {
   const collection = isActive ? "active" : "concluded"
-  const playerId = playerData.id || `${playerData.name?.toLowerCase().replace(/\s+/g, "_")}_${playerData.threshold}`
+  const playerName = playerData.playerName || playerData.name || playerData.player
+  const threshold = playerData.threshold
+  const datePart = getDateSuffix(playerData)
+  const playerId = `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}${datePart ? "_" + datePart : ""}`
 
   return `processedPlayers/players/${collection}/${playerId}`
 }
@@ -449,14 +466,24 @@ export const createBet = async (userId, betData) => {
         throw new Error(`Pick ${index} is missing threshold`)
       }
 
+      const datePart = getDateSuffix(pick)
+      // (optional) only keep this if you need playerId later in this scope
+      // const playerId =
+      //   `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` +
+      //   (datePart ? `_${datePart}` : "")
+
       // Create a standardized pick object
       return {
         ...pick,
         playerName: playerName,
-        name: playerName,
-        player: playerName,
-        threshold: Number.parseFloat(threshold),
-        id: pick.id || pick.playerId || `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`,
+        name:       playerName,
+        player:     playerName,
+        threshold:  Number.parseFloat(threshold),
+        id:
+          pick.id ||
+          pick.playerId ||
+          `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` +
+            (datePart ? `_${datePart}` : ""),
       }
     })
 
@@ -757,10 +784,29 @@ export const getProcessedPlayers = async () => {
 }
 
 // get one by key ("first_last_threshold")
-export const getProcessedPlayer = async (playerName, threshold) => {
+export const getProcessedPlayer = async (playerName, threshold, gameDate = null) => {
   try {
     const key = playerName.toLowerCase().replace(/\s+/g, "_")
-    const ref = doc(db, "processedPlayers", "players", "active", `${key}_${threshold}`)
+    
+    // If gameDate is provided, use it; otherwise try to get current date
+    let datePart = null
+    if (gameDate) {
+      datePart = getDateSuffix({ gameDate })
+    } else {
+      // Try without date first (legacy support)
+      const legacyRef = doc(db, "processedPlayers", "players", "active", `${key}_${threshold}`)
+      const legacySnap = await getDoc(legacyRef)
+      if (legacySnap.exists()) {
+        return legacySnap.data()
+      }
+      
+      // If legacy doesn't exist, try with today's date
+      const today = new Date()
+      datePart = getDateSuffix({ gameDate: today })
+    }
+    
+    const playerId = `${key}_${threshold}${datePart ? "_" + datePart : ""}`
+    const ref = doc(db, "processedPlayers", "players", "active", playerId)
     const snap = await getDoc(ref)
     return snap.exists() ? snap.data() : null
   } catch (error) {

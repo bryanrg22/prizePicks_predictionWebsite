@@ -353,7 +353,8 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             onClick={(e) => {
               e.stopPropagation()
               const [first, last] = name.split(" ")
-              const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
+              const dateStr = (playerData.gameDate || "").toString().slice(0,10).replace(/[-/]/g,"")
+              const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}_${dateStr}`
               onAddToPicks({
                 ...playerData,
                 id: pickId,
