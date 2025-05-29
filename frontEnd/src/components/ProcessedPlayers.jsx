@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, TrendingUp, TrendingDown, Plus, Check, Activity, BarChart2 } from "lucide-react"
+import { Search, TrendingUp, TrendingDown, Plus, Check, Activity, BarChart2 } from 'lucide-react'
 import { getProcessedPlayers } from "../services/firebaseService"
 import PlayerAnalysisModal from "./PlayerAnalysisModal"
 import ImageWithFallback from "./ImageWithFallback"
@@ -374,12 +374,13 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        const [first, last] = player.name.split(" ")
-                        const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}`
                         handleAddToPicks({
                           ...player,
-                          id: pickId,
+                          id: player.id, // Use the original document ID
                           threshold,
+                          playerName: player.name,
+                          name: player.name,
+                          gameDate: player.gameDate, // Pass the gameDate for proper document reference
                         })
                       }}
                       className={`w-full py-4 rounded-lg flex items-center justify-center transition-all duration-200 min-h-[52px] font-medium text-base ${
