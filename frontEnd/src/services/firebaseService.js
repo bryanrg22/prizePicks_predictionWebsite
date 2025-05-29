@@ -377,13 +377,65 @@ export const addUserPick = async (username, pickData) => {
     const userSnap = await getDoc(userRef)
     if (!userSnap.exists()) return []
 
-    // Create document reference to the player in processedPlayers/active
-    const playerDocRef = createPlayerDocumentReference(pickData, true)
-
-    // Verify the referenced document exists
-    const playerDocSnap = await getDoc(playerDocRef)
-    if (!playerDocSnap.exists()) {
-      throw new Error(`Player document not found: ${playerDocRef.path}`)
+    // Enhanced: If pickData doesn't have gameDate, try to find the document with today's date
+    let playerDocRef
+    
+    if (!pickData.gameDate) {
+      console.log("No gameDate provided, trying to find document with current date...")
+      
+      // Try with today's date first
+      const today = new Date()
+      const enhancedPickData = {
+        ...pickData,
+        gameDate: today
+      }
+      
+      playerDocRef = createPlayerDocumentReference(enhancedPickData, true)
+      
+      // Check if document exists with today's date
+      let playerDocSnap = await getDoc(playerDocRef)
+      
+      if (!playerDocSnap.exists()) {
+        console.log("Document not found with today's date, trying without date suffix...")
+        
+        // Fallback: try without date suffix (legacy support)
+        const playerName = pickData.playerName || pickData.name || pickData.player
+        const threshold = pickData.threshold
+        const legacyId = `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`
+        
+        playerDocRef = doc(db, "processedPlayers", "players", "active", legacyId)
+        playerDocSnap = await getDoc(playerDocRef)
+        
+        if (!playerDocSnap.exists()) {
+          // Try to find any document that matches the player and threshold pattern
+          console.log("Searching for any matching document...")
+          const activeRef = collection(db, "processedPlayers", "players", "active")
+          const snapshot = await getDocs(activeRef)
+          
+          let foundDoc = null
+          snapshot.forEach((doc) => {
+            const docId = doc.id
+            if (docId.startsWith(`${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`)) {
+              foundDoc = doc
+              playerDocRef = doc.ref
+              console.log("Found matching document:", docId)
+            }
+          })
+          
+          if (!foundDoc) {
+            throw new Error(`Player document not found for: ${playerName} ${threshold}. Available documents may use different naming convention.`)
+          }
+        }
+      }
+    } else {
+      // Normal flow when gameDate is provided
+      playerDocRef = createPlayerDocumentReference(pickData, true)
+      
+      // Verify the referenced document exists
+      const playerDocSnap = await getDoc(playerDocRef)
+      if (!playerDocSnap.exists()) {
+        throw new Error(`Player document not found: ${playerDocRef.path}`)
+      }
     }
 
     // Get existing picks (array of document references)
