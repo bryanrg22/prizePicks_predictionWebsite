@@ -96,13 +96,17 @@ def analyze_player_endpoint():
         pdata["volatilityPlayOffsForecast"] = forecast_playoff_volatility(pdata)
 
 
-    pdata["pick_id"]      = f"{pkey(name)}_{threshold}_{pdata['gameDate']}"
+    game_date_obj = datetime.datetime.strptime(pdata["gameDate"], "%m/%d/%Y")
+    # …and re-format to YYYYMMDD
+    doc_date = game_date_obj.strftime("%Y%m%d")
+    pdata["pick_id"]      = f"{pkey(name)}_{threshold}_{doc_date}"
 
-    # 2) persist it (writes to processedPlayers/players/active/{player_threshold})
+
+    # 2) persist it (writes to processedPlayers/players/active/{player_threshold_date})
     ref = db.collection("processedPlayers") \
             .document("players") \
             .collection("active") \
-            .document(f"{key}_{threshold}_{pdata['gameDate']}")
+            .document(f"{key}_{threshold}_{doc_date}")
     ref.set(pdata)
 
     # 3) return it
