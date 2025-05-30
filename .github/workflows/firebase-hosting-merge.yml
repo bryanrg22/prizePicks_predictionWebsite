@@ -37,6 +37,14 @@ jobs:
           firebaseServiceAccount: "${{ secrets.GCP_SA_KEY }}"
           channelId: live
 
+      # In .github/workflows/firebase-hosting-merge.yml
+      - name: Allow Firebase Hosting to invoke Cloud Run
+        run: |
+          gcloud run services add-iam-policy-binding prizepicks-backend \
+            --region=us-west2 \
+            --member="allUsers" \
+            --role="roles/run.invoker"
+
       # 3) Authenticate to GCP _and_ configure gcloud + Docker
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v1
@@ -64,5 +72,9 @@ jobs:
             --image gcr.io/${{ secrets.FIREBASE_PROJECT_ID }}/prizepicks-backend:$GITHUB_SHA \
             --region us-west2 \
             --platform managed \
+            --allow-unauthenticated \
             --set-env-vars "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" \
+            --port 8080 \
+            --memory 2Gi \
+            --timeout 300 \
             --quiet

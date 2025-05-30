@@ -169,14 +169,23 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
         formData.append("images", file)
       })
 
+      // In handleUpload function, replace the response parsing:
       const response = await fetch("/api/parse_screenshot", {
         method: "POST",
         body: formData,
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `API Error: ${response.status}`)
+        let errorMessage = `API Error: ${response.status}`
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (parseError) {
+          // Handle non-JSON error responses
+          const textError = await response.text()
+          errorMessage = textError || errorMessage
+        }
+        throw new Error(errorMessage)
       }
 
       const result = await response.json()

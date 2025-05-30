@@ -363,7 +363,9 @@ firestore/
         └── player_analytics/
 
 
+
 migration-flow.mermaid:
+
 graph TD;
     A["Cloud Scheduler (5-min)"] --> B["check_games_handler()"]
     B --> C["check_active_players()"]
@@ -382,8 +384,98 @@ graph TD;
 
 
 
-More information on every File:
+Commands on Bash Terminal
 
+
+bryanramirez-gonzalez@mac functions % firebase functions:list       
+Function
+	Version
+	Trigger
+	Location
+	Memory
+	Runtime
+	update_injury_report
+	v2
+	google.cloud.pubsub.topic.v1.messagePublished
+	us-west2
+	244.140625
+	python311
+	migrateToDocumentReferences
+	v1
+	https
+	us-west2
+	256
+	nodejs20
+	 onActiveBetWrite
+	v1
+	providers/cloud.firestore/eventTypes/document.write
+	us-west2
+	256
+	nodejs20
+	onPlayerStatusChange
+	v1
+	providers/cloud.firestore/eventTypes/document.update
+	us-west2
+	256
+	nodejs20
+	onUserPicksUpdate
+	v1
+	providers/cloud.firestore/eventTypes/document.update
+	us-west2
+	256
+	nodejs20
+	
+
+
+
+bryanramirez-gonzalez@mac functions % gcloud scheduler jobs list --location us-west2 --project prizepicksproject-15337
+ID                    LOCATION  SCHEDULE (TZ)                      TARGET_TYPE  STATE
+check-games-job       us-west2  */5 * * * * (America/Los_Angeles)  HTTP         ENABLED
+injury-report-hourly  us-west2  0 * * * * (America/Los_Angeles)    Pub/Sub      ENABLED
+
+
+
+
+bryanramirez-gonzalez@mac functions % gcloud scheduler jobs describe check-games-job \
+  --location us-west2 --project prizepicksproject-15337 \
+  --format="value(httpTarget.uri)"
+https://prizepicks-backend-bhhu5cowtq-wl.a.run.app/check_games
+
+
+
+
+bryanramirez-gonzalez@mac functions % gcloud run services list --region us-west2 --project prizepicksproject-15337
+   SERVICE               REGION    URL                                                         LAST DEPLOYED BY                                                         LAST DEPLOYED AT
+✔  prizepicks-backend    us-west2  https://prizepicks-backend-788584934715.us-west2.run.app    firebase-adminsdk-fbsvc@prizepicksproject-15337.iam.gserviceaccount.com  2025-05-29T21:37:41.790306Z
+✔  update-injury-report  us-west2  https://update-injury-report-788584934715.us-west2.run.app  service-788584934715@gcf-admin-robot.iam.gserviceaccount.com             2025-05-20T14:55:47.616265Z
+
+
+
+
+Commands to deploy Functions:
+
+# Run ESLint with the fix flag
+npx eslint index.js --fix
+
+# Deploy Functions only
+firebase deploy --only functions
+
+
+# Deploy Backend only  
+gcloud run deploy prizepicks-backend \
+  --source backEnd \
+  --region us-west2 \
+  --platform managed
+
+
+# Deploy everything
+git push origin main  # Triggers full CI/CD
+
+
+
+
+
+More information on every File:
 
 backEnd/
 
