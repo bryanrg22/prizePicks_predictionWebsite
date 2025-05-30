@@ -37,6 +37,12 @@ jobs:
           firebaseServiceAccount: "${{ secrets.GCP_SA_KEY }}"
           channelId: live
 
+      # 3) Authenticate to GCP _and_ configure gcloud + Docker
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
       # In .github/workflows/firebase-hosting-merge.yml
       - name: Allow Firebase Hosting to invoke Cloud Run
         run: |
@@ -45,12 +51,6 @@ jobs:
             --member="allUsers" \
             --role="roles/run.invoker" \
             --project=prizepicksproject-15337
-
-      # 3) Authenticate to GCP _and_ configure gcloud + Docker
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       # 4) Hook Docker into those creds
       - name: Configure Docker for GCR & Artifact Registry
