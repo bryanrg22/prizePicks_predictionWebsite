@@ -43,7 +43,8 @@ jobs:
           gcloud run services add-iam-policy-binding prizepicks-backend \
             --region=us-west2 \
             --member="allUsers" \
-            --role="roles/run.invoker"
+            --role="roles/run.invoker" \
+            --project=prizepicksproject-15337
 
       # 3) Authenticate to GCP _and_ configure gcloud + Docker
       - name: Authenticate to GCP
