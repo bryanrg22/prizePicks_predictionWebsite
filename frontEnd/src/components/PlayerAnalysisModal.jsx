@@ -351,16 +351,25 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
           {/* Add to Picks Button - Mobile optimized */}
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              const [first, last] = name.split(" ")
-              const dateStr = (playerData.gameDate || "").toString().slice(0,10).replace(/[-/]/g,"")
-              const pickId = `${first.toLowerCase()}_${last.toLowerCase()}_${threshold}_${dateStr}`
+              e.stopPropagation();
+              // Use backend-compatible date format (YYYYMMDD)
+              const gameDate = playerData.gameDate;
+              let dateStr = '';
+              
+              if (gameDate) {
+                // Convert "MM/DD/YYYY" to "YYYYMMDD"
+                const [month, day, year] = gameDate.split('/');
+                dateStr = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+              }
+            
+              const pickId = `${playerData.name.toLowerCase().replace(/\s+/g, '-')}_${threshold}_${dateStr}`;
+              
               onAddToPicks({
                 ...playerData,
                 id: pickId,
                 threshold,
-              })
-              onClose()
+              });
+              onClose();
             }}
             className="w-full py-4 lg:py-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium rounded-lg flex items-center justify-center transition-all duration-200 min-h-[56px] text-base lg:text-lg shadow-lg"
           >
