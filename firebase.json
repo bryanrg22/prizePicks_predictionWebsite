@@ -1,9 +1,10 @@
 {
   "functions": [
     {
-      "source": "functions",
+      "source": "injury_report_fn",
       "codebase": "default",
       "region": "us-west2",
+      "runtime": "python311",
       "ignore": [
         "node_modules",
         ".git",
@@ -11,9 +12,7 @@
         "firebase-debug.*.log",
         "*.local"
       ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
+      "entryPoint": "update_injury_report"
     }
   ],
   "hosting": {

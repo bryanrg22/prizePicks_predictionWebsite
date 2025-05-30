@@ -183,7 +183,6 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 │   ├── backtester.py
 │   ├── chatgpt_bet_explainer.py
 │   ├── injury_report.py
-│   ├── main.py
 │   ├── monte_carlo.py
 │   ├── player_analyzer.py
 │   ├── prediction_analyzer.py
@@ -260,11 +259,9 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 │   │   ├── firebase.js
 │   │   ├── index.css
 │   │   └── main.jsx
-├── functions/
-│   ├── index.js
 ├── injury_report_fn/
-│   ├── index.css
-│   └── main.jsx
+│   ├── full_injury_report.py
+│   └── main.py
 ├── .firebaserc
 ├── .github/workflows
 │   └── firebase-hosting-merge.yml
@@ -364,23 +361,27 @@ firestore/
 
 
 
+
 migration-flow.mermaid:
 
-graph TD;
-    A["Cloud Scheduler (5-min)"] --> B["check_games_handler()"]
-    B --> C["check_active_players()"]
-    C --> D["fetch_game_status()"]
-    D --> E["Game Concluded?"]
-    E -- "Yes" --> F["update_doc() with gameStatus:Concluded"]
-    F --> G["move_player_to_concluded()"]
-    G --> H["Firestore Trigger: onPlayerStatusChange"]
-    H --> I["Copy to concluded/ + Delete from active/"]
-    I --> J["update_bet_pick_references()"]
-    J --> K["check_active_bets()"]
-    K --> L["All picks concluded?"]
-    L -- "Yes" --> M["Set bet status to Won/Lost"]
-    M --> N["Firestore Trigger: onActiveBetWrite"]
-    N --> O["Archive bet to betHistory/"]
+graph TD
+    A[Cloud Scheduler<br>Every 5 min] -->|POST /check_games| B[Cloud Run Service<br>app.py]
+    B --> C[check_active_players]
+    C --> D[fetch_game_status]
+    D --> E{Game Concluded?}
+    E -- Yes --> F[update_doc + move_player_to_concluded]
+    F --> G[update_bet_pick_references]
+    G --> H[check_user_picks]
+    H --> I[check_active_bets]
+    I --> J[Set bet status]
+    
+    K[Cloud Scheduler<br>Hourly] -->|Pub/Sub| L[update_injury_report]
+    L --> M[Scrape NBA Injury Reports]
+    M --> N[Update Firestore]
+
+  
+
+
 
 
 
@@ -388,6 +389,7 @@ Commands on Bash Terminal
 
 
 bryanramirez-gonzalez@mac functions % firebase functions:list       
+
 Function
 	Version
 	Trigger
@@ -400,30 +402,6 @@ Function
 	us-west2
 	244.140625
 	python311
-	migrateToDocumentReferences
-	v1
-	https
-	us-west2
-	256
-	nodejs20
-	 onActiveBetWrite
-	v1
-	providers/cloud.firestore/eventTypes/document.write
-	us-west2
-	256
-	nodejs20
-	onPlayerStatusChange
-	v1
-	providers/cloud.firestore/eventTypes/document.update
-	us-west2
-	256
-	nodejs20
-	onUserPicksUpdate
-	v1
-	providers/cloud.firestore/eventTypes/document.update
-	us-west2
-	256
-	nodejs20
 	
 
 
@@ -439,23 +417,21 @@ injury-report-hourly  us-west2  0 * * * * (America/Los_Angeles)    Pub/Sub      
 bryanramirez-gonzalez@mac functions % gcloud scheduler jobs describe check-games-job \
   --location us-west2 --project prizepicksproject-15337 \
   --format="value(httpTarget.uri)"
-https://prizepicks-backend-bhhu5cowtq-wl.a.run.app/check_games
+https://prizepicks-backend-788584934715.us-west2.run.app/check_games
 
 
 
 
-bryanramirez-gonzalez@mac functions % gcloud run services list --region us-west2 --project prizepicksproject-15337
-   SERVICE               REGION    URL                                                         LAST DEPLOYED BY                                                         LAST DEPLOYED AT
-✔  prizepicks-backend    us-west2  https://prizepicks-backend-788584934715.us-west2.run.app    firebase-adminsdk-fbsvc@prizepicksproject-15337.iam.gserviceaccount.com  2025-05-29T21:37:41.790306Z
-✔  update-injury-report  us-west2  https://update-injury-report-788584934715.us-west2.run.app  service-788584934715@gcf-admin-robot.iam.gserviceaccount.com             2025-05-20T14:55:47.616265Z
-
-
-
+bryanramirez-gonzalez@mac prizePicks_predictionWebsite % gcloud run services list --region us-west2 --project prizepicksproject-15337
+   SERVICE               REGION    URL                                                         LAST DEPLOYED BY                                              LAST DEPLOYED AT
+✔  prizepicks-backend    us-west2  https://prizepicks-backend-788584934715.us-west2.run.app    bryanram2024@gmail.com                                        2025-05-30T08:24:04.584911Z
+✔  update-injury-report  us-west2  https://update-injury-report-788584934715.us-west2.run.app  service-788584934715@gcf-admin-robot.iam.gserviceaccount.com  2025-05-20T14:55:47.616265Z
 
 Commands to deploy Functions:
 
 # Run ESLint with the fix flag
 npx eslint index.js --fix
+
 
 # Deploy Functions only
 firebase deploy --only functions
@@ -470,6 +446,9 @@ gcloud run deploy prizepicks-backend \
 
 # Deploy everything
 git push origin main  # Triggers full CI/CD
+
+# Deployment command for the injury report function remains:
+firebase deploy --only functions:update_injury_report
 
 
 
@@ -786,25 +765,6 @@ File
 • Safety & migration helpers everywhere – extensive console logging, try/catch guards, and ID fallbacks mean bad data can’t crash the UI, while batch writes (writeBatch) keep large migrations atomic.
 
 
-	functions/index.js – Firebase Cloud Functions triggers
-
-
-Export
-	Fires when…
-	What it does
-	onPlayerStatusChange
-	A document under processedPlayers/players/active/{docId} is updated
-	• Still moves a player doc from players/active → players/concluded when gameStatus flips to “Concluded”, but now also rewires every document‑reference that pointed to the old path.• Internal helper updatePlayerReferences() walks every user → every activeBets doc and swaps refs like …/active/{id} → …/concluded/{id} so live bets don’t break.
-	onActiveBetWrite
-	A user’s bet is written at users/{userId}/activeBets/{betId} (create / update / delete)
-	• “Critical fix” – archives a bet only if its status becomes a terminal state or a deleted doc already had a terminal status (Concluded/Completed/Won/Lost).• When archiving, it converts each pick reference from the active collection to the matching doc in concluded before writing to betHistory and then deletes the active copy.• Logs and skips manual cancellations (deletes with non‑terminal status).
-	onUserPicksUpdate
-	The top‑level user doc users/{userId} is updated
-	• Cleans a user’s picks[] array, but now understands both legacy full objects and DocumentReferences:  – For refs, it fetches the doc and keeps it only if gameStatus !== "Concluded".  – For legacy objects it performs the same check locally.• Runs only when the picks array actually changes, then writes the filtered list back.
-	migrateToDocumentReferences
-	
-
-	HTTPS endpoint that bulk‑migrates existing data to the new reference model:1. Converts each user’s legacy picks array to DocumentReferences into players/active.2. Converts any legacy full‑object pick arrays inside activeBets the same way.3. Streams progress to logs and returns a JSON summary (Successfully migrated N users).
 	injury_report_fn/
 
 
