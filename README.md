@@ -167,8 +167,6 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 │   │   ├── firebase.js
 │   │   ├── index.css
 │   │   └── main.jsx
-├── functions/
-│   ├── index.js
 ├── injury_report_fn/
 │   ├── full_injury_report.py
 ├── .firebaserc
