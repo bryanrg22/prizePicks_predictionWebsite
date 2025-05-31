@@ -116,7 +116,7 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
                 </div>
               </div>
 
-              <h1 className="text-2xl font-bold text-white mb-4">PRIZEPICKS PREDICTION WEBSITE - TERMS OF SERVICE</h1>
+              <h1 className="text-2xl font-bold text-white mb-4">LAMBDA RIM - TERMS OF SERVICE</h1>
 
               <p className="text-gray-400 mb-6 text-sm">
                 <strong>Last Updated:</strong> {new Date().toLocaleDateString()}
@@ -203,7 +203,7 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
 
               <section className="mb-6">
                 <h2 className="text-lg font-semibold text-white mb-3">6. Limitation of Liability</h2>
-                <p className="mb-3 text-sm">Under no circumstances shall [Your Company/Name] be liable for:</p>
+                <p className="mb-3 text-sm">Under no circumstances shall Lambda Rim be liable for:</p>
                 <div className="space-y-3 ml-4 text-sm">
                   <p>
                     <strong>a)</strong> Direct/indirect gambling losses
