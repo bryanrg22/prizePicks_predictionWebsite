@@ -234,28 +234,36 @@ const OptimizedPlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => 
               </div>
             </div>
 
-            {/* AI Recommendation Bar - Compact */}
-            <div className="mt-3 bg-gray-800/30 rounded-lg p-2 lg:p-3 border border-gray-700">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Activity className="text-blue-400 w-4 h-4 mr-2" />
-                  <span className="text-xs lg:text-sm font-medium">AI Analysis</span>
+            {/* AI Recommendation Bar */}
+            <div className="mt-6 bg-gray-700 rounded-lg p-4">
+                  <h4 className="text-lg font-semibold text-gray-300 mb-3">AI Recommendation</h4>
+                  <div className="flex items-center space-x-3 mb-3">
+                    {betExplanation?.isRecommended ? (
+                      <>
+                        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" size="lg" />
+                        <span className="text-white font-medium">Recommended</span>
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" size="lg" />
+                        <span className="text-white font-medium">Not Recommended</span>
+                      </>
+                    )}
+                  </div>
+                  <div>
+                    <p
+                      className={`text-gray-300 text-xs lg:text-sm leading-relaxed ${isAiExplanationExpanded ? "" : "line-clamp-2 lg:line-clamp-none"}`}
+                    >
+                      {betExplanation.explanation}
+                    </p>
+                    <button
+                      onClick={() => setIsAiExplanationExpanded(!isAiExplanationExpanded)}
+                      className="text-blue-400 text-xs mt-1 lg:hidden"
+                    >
+                      {isAiExplanationExpanded ? "Show Less" : "Read More"}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex space-x-2 lg:space-x-4 text-xs">
-                  <span className="text-gray-400">
-                    Poisson:{" "}
-                    <span className={getProbabilityColor(poissonProbability)}>{poissonProbabilityFormatted}</span>
-                  </span>
-                  <span className="text-gray-400">
-                    Monte Carlo:{" "}
-                    <span className={getProbabilityColor(monteCarloProbability)}>{monteCarloFormatted}</span>
-                  </span>
-                </div>
-              </div>
-              <p className="text-gray-300 text-xs lg:text-sm leading-relaxed line-clamp-2 lg:line-clamp-none">
-                {betExplanation.explanation}
-              </p>
-            </div>
           </div>
         </div>
 
