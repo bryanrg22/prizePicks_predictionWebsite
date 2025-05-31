@@ -368,7 +368,7 @@ firestore/
 
 
 
-# PRICEPICKS PREDICTION WEBSITE - TERMS OF SERVICE
+# LAMBDA RIM - TERMS OF SERVICE
 
 
 **Last Updated:** 05/30/2025
@@ -404,7 +404,7 @@ c) Endorsement of any third-party gambling platforms
 
 
 ## 6. Limitation of Liability
-Under no circumstances shall [Your Company/Name] be liable for:
+Under no circumstances shall Lambda Rim be liable for:
 a) Direct/indirect gambling losses  
 b) Decisions made based on Service outputs  
 c) Technical errors or data inaccuracies  
@@ -550,20 +550,27 @@ File
 	Key responsibilities / notes
 	app.py
 	Central Flask API gateway + admin analytics hub
-	• Boots Flask, enables CORS for localhost + Firebase‑hosted domains, and auto‑auths with the Cloud Run service account → initializes Firestore.• Utility helpers pkey() + thr_doc_ref() standardise document IDs for “player + threshold” records.• /api/player (POST) – cache‑or‑compute pipeline:
-– Checks processedPlayers/players/active/{player_threshold}; returns doc if it exists.
-– Otherwise runs full analysis stack:
-▪️ player_analyzer season + L5 stats
-▪️ real‑time injury status (injury_report)
-▪️ Poisson & Monte Carlo win odds
-▪️ GARCH volatility (reg‑season and playoffs if ≥5 PO games)
-▪️ ChatGPT natural‑language bet explanation
-– Persists the result back to Firestore (pick_id field added).• /api/parse_screenshot (POST) – accepts one or more images, OCRs each with screenshot_parser, POSTs every detected player + threshold pair to /api/player, and returns a flat list of what it parsed.• /api/player/<id>/more_games (GET) – lazy‑loads all extra regular‑season games for infinite‑scroll tables.• Admin analytics suite now pulls live counts instead of pure mocks:
-– /api/admin/overview totals users, active bets, processed players, winnings, plus a placeholder apiRequests counter.
-– /api/admin/users returns per‑user engagement stats (earnings, win‑rate, last login, etc.).
-– /api/admin/bets aggregates bet volume/performance (still mostly sample data).
-– /api/admin/players builds league‑wide hit‑rate & “most‑analyzed” tables on the fly.
-– /api/admin/system surfaces health metrics (CPU, memory, latency, uptime).• check_games cron endpoint wired in via main.check_games_handler for scheduled status sweeps.• Runs app.run() in local debug; Cloud Run uses Gunicorn (app:app).
+	• Sets up the Flask app, configures CORS (allowing localhost, your Firebase domains, and the new admin dashboard domain), and initializes Firebase Admin (Firestore client) using the service-account credentials.
+• Health check endpoint (GET "/") returns JSON { "status": "API is running", "timestamp": ... } for liveness probes.
+• User-facing endpoints (unchanged):
+– POST /api/parse_screenshot – OCRs one or more images using screenshot_parser, mapping each to { player, threshold }, then internally POSTs to /api/player. Returns a flat list of parsed names/thresholds.
+– POST /api/player – Checks Firestore under processedPlayers/players/active/{pickId}; if cached, returns that document. Otherwise runs the full pipeline:
+• Fetches season + last 5 stats via player_analyzer.py
+• Retrieves injury status (now using the updated injury_report.get_player_status() PDF lookup)
+• Calculates Poisson & Monte Carlo probabilities
+• Runs GARCH volatility forecasts (regular & playoffs if ≥ 5 PO games)
+• Calls ChatGPT to generate a natural-language “Why this bet?” explanation
+• Persists the combined result (with a computed pick_id) back to Firestore before returning to the client.
+– GET /api/player/<pickId>/more_games – Lazy-loads remaining regular-season games for infinite-scroll tables, using the new player_analyzer.fetch_additional_games() helper (which handles pagination & error states).
+• Admin analytics suite (enhanced):
+– GET /api/admin/overview – Live counts for total users, active bets, processed players, total user winnings, and a real API requests counter (no longer a placeholder).
+– GET /api/admin/users – Aggregates per-user engagement stats from Firestore: earnings, win_rate, last_login, total_bets, and favorite_players_count.
+– GET /api/admin/bets – Returns bet volume, win / loss distribution, ROI, and a 30-day performance trend, computed directly from the users/{userId}/betHistory collections.
+– GET /api/admin/players – Builds league-wide hit rate tables and “most-analyzed” player rankings by scanning processedPlayers/players/concluded for the past 90 days.
+– GET /api/admin/system – Surfaces real-time operational metrics: Firestore read/write latencies, GC % (via Stackdriver), CPU % & memory (via Cloud Run metadata), and custom uptime checks.
+• Error handling: All admin endpoints wrap Firestore/CPU calls in try/except; return { "status": "error", "message": ... } with HTTP 4xx/5xx codes on failure.
+• Cron integration: Exposes check_games_handler(request) (wrapped by main.check_games_handler) for Cloud Scheduler to poll game statuses and settle picks.
+• When run as a script (python app.py), enables app.run(debug=True, port=5000); production runs under Gunicorn (app:app).
 	backtester.py
 	Historical profit‑and‑loss simulator
 	• Scans prior processedPlayers/* docs, applies a simple bet‑settlement rule, and builds a P&L Series.• Useful for validating the model or generating performance charts in notebooks.
@@ -572,7 +579,12 @@ File
 	• Crafts a prompt with player stats + probabilities, calls the OpenAI ChatGPT API, and returns a concise explanation.• Cached in Firestore so each pick is explained only once.
 	injury_report.py
 	Live injury‑status scraper
-	• Pulls the NBA’s official daily injury feed (or a mirrored JSON).• Normalizes status (Out, Q, P) and injury details, returning a clean dict keyed by NBA player ID.• Consumed by player_analyzer.py to adjust probabilities.
+	• Now supports both the original JSON/RSS feed and the NBA’s official PDF injury report via get_full_injury_report(), using pdfplumber to parse tables into clean JSON.
+• Introduces two helper functions:
+– get_full_injury_report() – downloads the latest PDF (accounts for Eastern-Time release windows), extracts columns (team, player, status, reason), normalizes “Lastname, Firstname” → “Firstname Lastname,” and returns an array of { gameDate, gameTime, team, player, status, reason } entries.
+– get_player_status(name) – quick lookup that scans the latest PDF data, returning { status, reason } or "NOT YET SUBMITTED" if no entry exists.
+• Preserves the original JSON/RSS fallback for speed but now prioritizes the PDF parser for complete, authoritative reports.
+• Returns a mapping keyed by NBA player ID so player_analyzer.py can apply up-to-the-minute injury status to adjust probabilistic forecasts.
 	main.py
 	Cloud‑Run entry‑point + cron helpers
 	• Exposes app for Gunicorn and contains scheduled logic that:  – polls recent box scores;  – moves finished picks from active → concluded;  – updates user bet history.
@@ -581,7 +593,21 @@ File
 	• Fetches ≤ 60 recent games → computes μ, σ → runs 100 000 sims.• Prefers the ultra‑fast shared lib libmontecarlo.so (see below) but can fall back to NumPy.
 	player_analyzer.py
 	Master data wrangler & feature builder
-	• Queries nba_api for season stats, last‑5 logs, playoff data, opponent strength, etc.• Calls injury_report, volatility.forecast_volatility, prediction_analyzer.poisson_over_prob, and monte_carlo.monte_carlo_probability.• Bundles everything into a dict that the front‑end cards expect.
+	• Data ingestion updates:
+– Now retrieves Play-by-Play injury annotations by calling the enhanced injury_report.get_player_status() (PDF lookup) in addition to the JSON feed fallback.
+– Adds a new helper fetch_additional_games(player_id, count) that paginates through the NBA API in slices of 25 games to support infinite scrolling.
+• Feature expansion:
+– Fetches advanced metrics (effective_fg_pct, 3P_share, FT_rate) for each player via the nba_api and surfaces them in an advancedMetrics sub-map.
+– Computes season vs. opponent splits, home/away splits, playoff-specific statistics, and stores all of the above under clearly named keys (seasonSplit, homeAwaySplit, playoffStats).
+• Probability pipeline:
+– Calls prediction_analyzer.poisson_over_prob(...) as before but now passes the currentInjuryStatus from injury_report.get_player_status(player_name) to slightly adjust the lambda estimate downward (via an “injury adjustment factor”) before computing Poisson P (≥ threshold).
+– For Monte Carlo, still attempts the OCaml stub first; now caches μ / σ in-memory for each session to avoid re-computing if the same player is analyzed multiple times within 5 minutes.
+• Volatility forecasting:
+– Uses volatility.forecast_volatility() for the last 50 regular-season games and volatility.forecast_offer_volatility() for playoffs; merges results under volatility.regular and volatility.playoffs.
+• ChatGPT explanation:
+– Bundles all collected stats into a single analysisPayload and passes to chatgpt_bet_explainer.generate_explanation(analysisPayload), which now returns both "short_explanation" (for card snippets) and "long_explanation" (for deep dives).
+• Designed so that any missing sub-field (e.g., no playoff data yet) gracefully defaults to an empty array or null so the front-end doesn’t break.
+• Emits debug logs when run locally (DEBUG=true), but silences verbose NBA API chatter in production.
 	prediction_analyzer.py
 	Math helpers (Poisson & misc.)
 	• Implements closed‑form Poisson “≥ threshold” calculation.• Provides thin wrappers invoked by player_analyzer and feeds into chatgpt_bet_explainer.

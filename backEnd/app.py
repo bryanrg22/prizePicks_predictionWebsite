@@ -503,7 +503,8 @@ def analyze_player_endpoint():
     # make sure both fields exist even if analyzer couldn’t find a game
     pdata.setdefault("gameId", None)
     pdata.setdefault("gameStatus", "Scheduled")
-    pdata["injuryReport"]        = injury_report.get_player_injury_status(name)
+    player_team = pdata.get("team", "Unknown Team")
+    pdata["injuryReport"] = injury_report.get_player_injury_status(name, player_team)
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
     pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or 0.0  
     pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)

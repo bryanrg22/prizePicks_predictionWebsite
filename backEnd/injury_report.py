@@ -1,127 +1,309 @@
-import requests
-import pdfplumber
-import tempfile
-import re
-import warnings
-import logging
-from datetime import datetime, timedelta
+import firebase_admin
+from firebase_admin import firestore
+from datetime import datetime
 import pytz
+import logging
 
-warnings.filterwarnings("ignore", message="CropBox missing")
-logging.getLogger("pdfminer").setLevel(logging.ERROR)
-logging.getLogger("pdfplumber").setLevel(logging.ERROR)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_current_est_time_string():
+    """Get current EST time as formatted string"""
     eastern = pytz.timezone("America/New_York")
     now_est = datetime.now(eastern)
     return now_est.strftime("%Y-%m-%d %I:%M %p EST")
 
-def get_injury_report_url():
-    eastern = pytz.timezone("America/New_York")
-    now = datetime.now(eastern)
-
-    hour_24 = now.hour
-    minute = now.minute
-
-    # If minute < 30, use previous hour
-    if minute < 30:
-        hour_24 -= 1
-        if hour_24 < 0:
-            hour_24 += 24
-            now = now - timedelta(days=1)
-
-    if hour_24 == 0:
-        hour_12 = 12
-        am_pm = "AM"
-    elif 1 <= hour_24 < 12:
-        hour_12 = hour_24
-        am_pm = "AM"
-    elif hour_24 == 12:
-        hour_12 = 12
-        am_pm = "PM"
-    else:
-        hour_12 = hour_24 - 12
-        am_pm = "PM"
-
-    date_str = now.strftime("%Y-%m-%d")
-    hour_str = f"{hour_12:02d}{am_pm}"
-    return f"https://ak-static.cms.nba.com/referee/injury/Injury-Report_{date_str}_{hour_str}.pdf"
-
-def get_player_injury_status(player_name):
+def normalize_team_name(team_name):
     """
-    Get the injury status for a specific player
-    Returns a dictionary with status and reason if found, or None if not found
+    Convert team full name to the normalized format used in Firestore
+    e.g., "Los Angeles Lakers" -> "los_angeles_lakers"
+    """
+    if not team_name:
+        return None
+    
+    # Handle common team name variations
+    team_mappings = {
+        "Atlanta Hawks": "atlanta_hawks",
+        "Boston Celtics": "boston_celtics",
+        "Brooklyn Nets": "brooklyn_nets",
+        "Charlotte Hornets": "charlotte_hornets",
+        "Chicago Bulls": "chicago_bulls",
+        "Cleveland Cavaliers": "cleveland_cavaliers",
+        "Dallas Mavericks": "dallas_mavericks",
+        "Denver Nuggets": "denver_nuggets",
+        "Detroit Pistons": "detroit_pistons",
+        "Golden State Warriors": "golden_state_warriors",
+        "Houston Rockets": "houston_rockets",
+        "Indiana Pacers": "indiana_pacers",
+        "LA Clippers": "los_angeles_clippers",
+        "LA Lakers": "los_angeles_lakers",
+        "Memphis Grizzlies": "memphis_grizzlies",
+        "Miami Heat": "miami_heat",
+        "Milwaukee Bucks": "milwaukee_bucks",
+        "Minnesota Timberwolves": "minnesota_timberwolves",
+        "New Orleans Pelicans": "new_orleans_pelicans",
+        "New York Knicks": "new_york_knicks",
+        "Oklahoma City Thunder": "oklahoma_city_thunder",
+        "Orlando Magic": "orlando_magic",
+        "Philadelphia 76ers": "philadelphia_76ers",
+        "Phoenix Suns": "phoenix_suns",
+        "Portland Trail Blazers": "portland_trail_blazers",
+        "Sacramento Kings": "sacramento_kings",
+        "San Antonio Spurs": "san_antonio_spurs",
+        "Toronto Raptors": "toronto_raptors",
+        "Utah Jazz": "utah_jazz",
+        "Washington Wizards": "washington_wizards"
+    }
+
+    
+    if team_name in team_mappings:
+        return team_mappings[team_name]
+    
+    # Default normalization: lowercase and replace spaces with underscores
+    return team_name.lower().replace(" ", "_").replace(".", "")
+
+def get_player_injury_status(player_name, player_team=None):
+    """
+    Get the injury status for a specific player from Firestore database.
+    Also returns all injured players on the team.
+    
+    Args:
+        player_name (str): Name of the player to check
+        player_team (str, optional): Team name to help with lookup
+    
+    Returns:
+        dict: Contains individual player status and team injury report
     """
     if not player_name:
         return {"error": "No player name provided"}
-
-    pdf_url = get_injury_report_url()
-
+    
     try:
-        resp = requests.get(pdf_url)
-        resp.raise_for_status()
-    except Exception as e:
-        print(f"Error downloading the PDF: {e}")
-        return {"error": f"Error downloading injury report: {str(e)}"}
-
-    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_pdf:
-        tmp_pdf.write(resp.content)
-        tmp_pdf.flush()
-
-        try:
-            with pdfplumber.open(tmp_pdf.name) as pdf:
-                # These x-coordinates are just an example; replace with your measured values.
-                x_positions = [23, 119, 199, 260, 420, 575, 660, 820]
-
-                table_settings = {
-                    "vertical_strategy": "explicit",
-                    "horizontal_strategy": "lines",
-                    "explicit_vertical_lines": x_positions,
-                    "snap_tolerance": 3,
-                    "join_tolerance": 3,
-                    "text_x_tolerance": 3,
-                    "text_y_tolerance": 3,
-                }
-
-                all_rows = []
-                for page_index, page in enumerate(pdf.pages, start=1):
-                    table = page.extract_table(table_settings) or []
-                    for row in table:
-                        all_rows.append(row)
-
-        except Exception as parse_err:
-            print(f"Error parsing PDF with pdfplumber: {parse_err}")
-            return {"error": f"Error parsing injury report: {str(parse_err)}"}
-
-    # Now we have all_rows from all pages
-    # Search for the player's name
-    found = False
-    for row in all_rows:
-        if len(row) < 7:
-            continue
-        game_date, game_time, matchup, team, player, status, reason = row[:7]
-
-        # Quick check if player's name is in `player` column
-        if player:
-            row_player_lower = player.lower().replace(",", "")
-            name_parts = player_name.lower().split()
-            if all(part in row_player_lower for part in name_parts):
-                found = True
-                # Clean up the reason field - remove newlines and extra spaces
-                clean_reason = reason.replace("\n", " ").strip() if reason else ""
+        # Initialize Firestore client
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app()
+        db = firestore.client()
+        
+        # If team is provided, check that team's injury report first
+        if player_team:
+            team_normalized = normalize_team_name(player_team)
+            if team_normalized:
+                team_injury_data = get_team_injury_report(team_normalized, db)
+                
+                # Check if player is in this team's injury report
+                if team_injury_data.get("found") and team_injury_data.get("players"):
+                    for injured_player in team_injury_data["players"]:
+                        player_in_report = injured_player.get("name", "")
+                        if player_name.lower() in player_in_report.lower() or player_in_report.lower() in player_name.lower():
+                            return {
+                                "found": True,
+                                "player": {
+                                    "name": player_in_report,
+                                    "status": injured_player.get("status"),
+                                    "reason": injured_player.get("reason"),
+                                    "gameDate": injured_player.get("gameDate"),
+                                    "gameTime": injured_player.get("gameTime")
+                                },
+                                "team": team_injury_data.get("team"),
+                                "teamInjuries": team_injury_data.get("players", []),
+                                "lastUpdated": team_injury_data.get("lastUpdated"),
+                                "source": "database"
+                            }
+                
+                # Player not found in team's injury report, but team exists
                 return {
-                    "found": True,
-                    "gameDate": game_date,
-                    "gameTime": game_time,
-                    "matchup": matchup,
-                    "team": team,
-                    "player": player,
-                    "status": status,
-                    "reason": clean_reason
+                    "found": False,
+                    "message": f"No injury information found for {player_name}",
+                    "player": None,
+                    "team": player_team,
+                    "teamInjuries": team_injury_data.get("players", []),
+                    "lastUpdated": team_injury_data.get("lastUpdated"),
+                    "source": "database"
                 }
-
-    if not found:
+        
+        # If no team provided or team lookup failed, search all teams
+        injury_collection = db.collection("processedPlayers").document("injury_report")
+        
+        # Get all team injury reports
+        team_docs = injury_collection.collections()
+        
+        for team_collection in team_docs:
+            for team_doc in team_collection.stream():
+                team_data = team_doc.to_dict()
+                players = team_data.get("players", [])
+                
+                # Check if our player is in this team's injury report
+                for injured_player in players:
+                    player_in_report = injured_player.get("name", "")
+                    if player_name.lower() in player_in_report.lower() or player_in_report.lower() in player_name.lower():
+                        return {
+                            "found": True,
+                            "player": {
+                                "name": player_in_report,
+                                "status": injured_player.get("status"),
+                                "reason": injured_player.get("reason"),
+                                "gameDate": injured_player.get("gameDate"),
+                                "gameTime": injured_player.get("gameTime")
+                            },
+                            "team": team_data.get("team"),
+                            "teamInjuries": players,
+                            "lastUpdated": team_data.get("lastUpdated"),
+                            "source": "database"
+                        }
+        
+        # Player not found in any injury report
         return {
             "found": False,
-            "message": f"No injury information found for {player_name}"
+            "message": f"No injury information found for {player_name}",
+            "player": None,
+            "team": player_team,
+            "teamInjuries": [],
+            "lastUpdated": None,
+            "source": "database"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error querying injury database: {e}")
+        return {
+            "error": f"Error querying injury database: {str(e)}",
+            "found": False,
+            "player": None,
+            "teamInjuries": [],
+            "source": "database"
+        }
+
+def get_team_injury_report(team_name_normalized, db=None):
+    """
+    Get all injured players for a specific team
+    
+    Args:
+        team_name_normalized (str): Normalized team name (e.g., "los_angeles_lakers")
+        db: Firestore client (optional)
+    
+    Returns:
+        dict: Team injury report with all injured players
+    """
+    try:
+        if db is None:
+            if not firebase_admin._apps:
+                firebase_admin.initialize_app()
+            db = firestore.client()
+        
+        # Query the specific team's injury document
+        team_doc_ref = (
+            db.collection("processedPlayers")
+            .document("injury_report")
+            .collection(team_name_normalized)
+            .limit(1)  # Should only be one document per team
+        )
+        
+        team_docs = list(team_doc_ref.stream())
+        
+        if not team_docs:
+            # No injury document exists for this team = no injuries
+            return {
+                "found": False,
+                "team": team_name_normalized,
+                "players": [],
+                "lastUpdated": None,
+                "message": "No injury report found for team (team is healthy)"
+            }
+        
+        # Get the team's injury data
+        team_data = team_docs[0].to_dict()
+        
+        return {
+            "found": True,
+            "team": team_data.get("team", team_name_normalized),
+            "players": team_data.get("players", []),
+            "lastUpdated": team_data.get("lastUpdated"),
+            "message": f"Found {len(team_data.get('players', []))} injured players"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting team injury report for {team_name_normalized}: {e}")
+        return {
+            "found": False,
+            "team": team_name_normalized,
+            "players": [],
+            "lastUpdated": None,
+            "error": str(e)
+        }
+
+def get_all_team_injuries():
+    """
+    Get injury reports for all teams
+    
+    Returns:
+        dict: All team injury reports
+    """
+    try:
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app()
+        db = firestore.client()
+        
+        injury_collection = db.collection("processedPlayers").document("injury_report")
+        all_injuries = {}
+        
+        # Get all team collections under injury_report
+        team_collections = injury_collection.collections()
+        
+        for team_collection in team_collections:
+            team_name = team_collection.id
+            team_docs = list(team_collection.stream())
+            
+            if team_docs:
+                team_data = team_docs[0].to_dict()
+                all_injuries[team_name] = {
+                    "team": team_data.get("team", team_name),
+                    "players": team_data.get("players", []),
+                    "lastUpdated": team_data.get("lastUpdated"),
+                    "injuredCount": len(team_data.get("players", []))
+                }
+            else:
+                all_injuries[team_name] = {
+                    "team": team_name,
+                    "players": [],
+                    "lastUpdated": None,
+                    "injuredCount": 0
+                }
+        
+        return {
+            "success": True,
+            "teams": all_injuries,
+            "totalTeams": len(all_injuries),
+            "totalInjuredPlayers": sum(team["injuredCount"] for team in all_injuries.values())
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting all team injuries: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "teams": {}
+        }
+
+# Legacy function name for backward compatibility
+def get_player_injury_status_legacy(player_name):
+    """
+    Legacy function that maintains the old return format
+    for backward compatibility with existing code
+    """
+    result = get_player_injury_status(player_name)
+    
+    if result.get("found"):
+        player_data = result.get("player", {})
+        return {
+            "found": True,
+            "gameDate": player_data.get("gameDate"),
+            "gameTime": player_data.get("gameTime"),
+            "team": result.get("team"),
+            "player": player_data.get("name"),
+            "status": player_data.get("status"),
+            "reason": player_data.get("reason")
+        }
+    else:
+        return {
+            "found": False,
+            "message": result.get("message", f"No injury information found for {player_name}")
         }
