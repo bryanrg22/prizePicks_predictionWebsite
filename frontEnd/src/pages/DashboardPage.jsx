@@ -413,6 +413,15 @@ export default function DashboardPage() {
       const bets = await getActiveBets(currentUser)
       setActiveBets(bets || [])
 
+      if (Number.parseFloat(amount) > 50) {
+        const proceed = window.confirm(
+          "Reminder: Only bet what you can afford to lose. If you need help with gambling, call 1-800-GAMBLER.\n\nDo you want to proceed with this bet?",
+        )
+        if (!proceed) {
+          return
+        }
+      }
+
       // Close bet slip and show confirmation
       setShowBetSlip(false)
       setShowConfirmation(true)

@@ -246,3 +246,53 @@ export default function AppLayout({ children }) {
     </div>
   )
 }
+
+const AppLayout = ({ children }) => {
+  return (
+    <div className="container mx-auto p-4">
+      {/* Earnings Banner */}
+      <div
+        className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 lg:mb-8"
+        role="alert"
+      >
+        <strong className="font-bold">Earnings Disclaimer!</strong>
+        <span className="block sm:inline"> Earnings depend on your effort and skill.</span>
+      </div>
+
+      {/* Responsible Gambling Footer */}
+      <div className="bg-gray-800/80 border border-gray-600/50 p-4 rounded-lg mb-4 lg:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">!</span>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white">Gamble Responsibly</h3>
+              <p className="text-xs text-gray-400">
+                If you or someone you know has a gambling problem, help is available.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs">
+            <a href="tel:1-800-522-4700" className="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+              📞 1-800-GAMBLER
+            </a>
+            <a
+              href="https://www.ncpgambling.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors font-medium"
+            >
+              🌐 ncpgambling.org
+            </a>
+            <span className="text-gray-400">💬 Text "GAMBLER" to 233-000</span>
+          </div>
+        </div>
+      </div>
+
+      {children}
+    </div>
+  )
+}
