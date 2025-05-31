@@ -236,34 +236,34 @@ const OptimizedPlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => 
 
             {/* AI Recommendation Bar */}
             <div className="mt-6 bg-gray-700 rounded-lg p-4">
-                  <h4 className="text-lg font-semibold text-gray-300 mb-3">AI Recommendation</h4>
-                  <div className="flex items-center space-x-3 mb-3">
-                    {betExplanation?.isRecommended ? (
-                      <>
-                        <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" size="lg" />
-                        <span className="text-white font-medium">Recommended</span>
-                      </>
-                    ) : (
-                      <>
-                        <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" size="lg" />
-                        <span className="text-white font-medium">Not Recommended</span>
-                      </>
-                    )}
-                  </div>
-                  <div>
-                    <p
-                      className={`text-gray-300 text-xs lg:text-sm leading-relaxed ${isAiExplanationExpanded ? "" : "line-clamp-2 lg:line-clamp-none"}`}
-                    >
-                      {betExplanation.explanation}
-                    </p>
-                    <button
-                      onClick={() => setIsAiExplanationExpanded(!isAiExplanationExpanded)}
-                      className="text-blue-400 text-xs mt-1 lg:hidden"
-                    >
-                      {isAiExplanationExpanded ? "Show Less" : "Read More"}
-                    </button>
-                  </div>
-                </div>
+              <h4 className="text-lg font-semibold text-gray-300 mb-3">AI Recommendation</h4>
+              <div className="flex items-center space-x-3 mb-3">
+                {betExplanation?.isRecommended ? (
+                  <>
+                    <FontAwesomeIcon icon={faCheckCircle} className="text-green-500" size="lg" />
+                    <span className="text-white font-medium">Recommended</span>
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" size="lg" />
+                    <span className="text-white font-medium">Not Recommended</span>
+                  </>
+                )}
+              </div>
+              <div>
+                <p
+                  className={`text-gray-300 text-xs lg:text-sm leading-relaxed ${isAiExplanationExpanded ? "" : "line-clamp-2 lg:line-clamp-none"}`}
+                >
+                  {betExplanation.explanation}
+                </p>
+                <button
+                  onClick={() => setIsAiExplanationExpanded(!isAiExplanationExpanded)}
+                  className="text-blue-400 text-xs mt-1 lg:hidden"
+                >
+                  {isAiExplanationExpanded ? "Show Less" : "Read More"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
