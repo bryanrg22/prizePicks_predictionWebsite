@@ -86,7 +86,7 @@ export default function AppLayout({ children }) {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <img
-              src="/logo.png"
+              src="/lambdaRimLogo.png"
               alt="PrizePicks Logo"
               className="w-8 h-8"
               style={{
@@ -94,7 +94,7 @@ export default function AppLayout({ children }) {
                 objectFit: "contain",
               }}
             />
-            <span className="text-lg font-semibold">PrizePicks</span>
+            <span className="text-lg font-semibold">Lambda Rim</span>
           </div>
 
           <div className="flex items-center space-x-3">
@@ -126,7 +126,7 @@ export default function AppLayout({ children }) {
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <img
-              src="/logo.png"
+              src="/lambdaRimLogo.png"
               alt="PrizePicks Logo"
               className="w-8 h-8"
               style={{

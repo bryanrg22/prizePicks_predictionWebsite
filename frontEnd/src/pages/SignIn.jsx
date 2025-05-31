@@ -75,7 +75,7 @@ export default function SignIn() {
       <main className="flex-grow flex flex-col items-center justify-center px-4 py-12">
         <div className="text-center text-white mb-12">
           <img
-            src="/logo.png"
+            src="/lambdaRimLogo.png"
             alt="PrizePicks Logo"
             className="w-28 h-28 mx-auto mb-4"
             style={{
