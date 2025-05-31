@@ -48,7 +48,7 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
 
       <div className="relative w-full max-w-4xl mx-4 bg-gradient-to-b from-gray-800/95 to-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-600/50 max-h-[85vh] md:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-600/50 bg-gradient-to-r from-red-900/30 to-orange-900/30 rounded-t-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-600/50 bg-gradient-to-r from-red-900/30 to-orange-900/30 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-red-900/40 rounded-lg backdrop-blur-sm">
               <FileText className="w-5 h-5 text-red-400" />
@@ -64,12 +64,15 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
           </div>
         </div>
 
-        {/* Scrollable Content with improved scroll indicator */}
-        <div className="flex-1 relative overflow-hidden">
+        {/* Scrollable Content - FIXED SCROLLING */}
+        <div className="flex-1 relative min-h-0">
           <div
-            id="terms-content"
-            className="h-full overflow-y-auto p-4 space-y-4 text-gray-300 leading-relaxed"
+            className="absolute inset-0 overflow-y-scroll p-4 space-y-4 text-gray-300 leading-relaxed"
             onScroll={handleScroll}
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "#4B5563 #1F2937",
+            }}
           >
             <div className="prose prose-invert max-w-none">
               <div className="bg-yellow-900/30 border border-yellow-600/40 rounded-lg p-3 mb-4 backdrop-blur-sm">
@@ -239,7 +242,7 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
               </div>
 
               {/* Extra padding at bottom to ensure full scroll */}
-              <div className="h-16"></div>
+              <div className="h-20"></div>
             </div>
           </div>
 
@@ -255,7 +258,7 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-gray-600/50 bg-gray-800/50 backdrop-blur-sm rounded-b-2xl">
+        <div className="p-4 border-t border-gray-600/50 bg-gray-800/50 backdrop-blur-sm rounded-b-2xl flex-shrink-0">
           <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
             <button
               onClick={onDecline}
