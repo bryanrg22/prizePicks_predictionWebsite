@@ -227,6 +227,7 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 │   │   │   ├── RecommendationCard.jsx
 │   │   │   ├── ScreenshotUploader.jsx
 │   │   │   ├── StatsCard.jsx
+│   │   │   ├── TermsOfServiceModal.jsx
 │   │   │   ├── thinking-animation.css
 │   │   │   ├── ThinkingAnimation.jsx
 │   │   │   ├── TrendingPicks.jsx
@@ -343,6 +344,7 @@ firestore/
 │       ├─ totalBets: number
 │       ├─ totalEarnings: number
 │       ├─ username: string
+│       ├─ tosAccepted: timestamp
 │       └─ winCount: number
 └─ admin/
     ├── profile/ 
@@ -358,6 +360,80 @@ firestore/
     └── reports/
         ├── bet_performance/
         └── player_analytics/
+
+
+
+
+
+
+# PRICEPICKS PREDICTION WEBSITE - TERMS OF SERVICE
+
+
+**Last Updated:** 05/30/2025
+## 1. Acceptance of Terms
+By accessing or using this service ("Service"), you agree to be bound by these Terms. If you do not agree, immediately discontinue use.
+
+
+## 2. Nature of Service
+a) The Service provides statistical predictions and AI-generated analysis for informational purposes ONLY  
+b) All outputs are computer-generated probabilities, NOT gambling advice or financial recommendations  
+c) We do NOT guarantee accuracy, completeness, or profitability of predictions  
+
+
+## 3. User Acknowledgements
+You expressly agree that:
+a) You are of legal gambling age in your jurisdiction (18+ or 21+ where applicable)  
+b) You understand sports betting involves significant risk of financial loss  
+c) You will NOT treat our predictions as guaranteed outcomes  
+d) You solely assume all liability for betting decisions made using this Service  
+
+
+## 4. Legal Compliance
+a) Users are solely responsible for complying with local gambling laws  
+b) The Service does not constitute an offer to gamble  
+c) We prohibit use in jurisdictions where sports betting is illegal  
+
+
+## 5. Disclaimers
+**THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE EXPRESSLY DISCLAIM:**
+a) Warranties of accuracy, reliability, or fitness for any purpose  
+b) Responsibility for gambling losses or damages  
+c) Endorsement of any third-party gambling platforms  
+
+
+## 6. Limitation of Liability
+Under no circumstances shall [Your Company/Name] be liable for:
+a) Direct/indirect gambling losses  
+b) Decisions made based on Service outputs  
+c) Technical errors or data inaccuracies  
+
+
+## 7. Data Usage
+By using the Service, you consent to:
+a) Collection of betting patterns and usage data for model improvement  
+b) Secure storage of personal data per our Privacy Policy  
+c) Anonymized aggregation of prediction outcomes  
+
+
+## 8. Account Termination
+We reserve the right to suspend accounts:
+a) Suspected of fraudulent activity  
+b) Violating these Terms  
+c) From prohibited jurisdictions  
+
+
+## 9. Amendments
+We may update these Terms at any time. Continued use constitutes acceptance.
+
+
+---
+
+
+**BY USING THIS SERVICE, YOU CERTIFY THAT:**
+1. You have read and understood these Terms  
+2. You acknowledge sports betting involves risk of financial loss  
+3. You assume full responsibility for your gambling decisions 
+
 
 
 
@@ -379,8 +455,20 @@ graph TD
     L --> M[Scrape NBA Injury Reports]
     M --> N[Update Firestore]
 
-  
 
+First-Time Access Flow
+
+sequenceDiagram
+    User->>App: Signs in
+    App->>Firebase: Check userDoc.tosAccepted
+    alt First access
+        App->>User: Show full-screen ToS modal
+        User->>App: Clicks "I Accept"
+        App->>Firebase: Update userDoc: { tosAccepted: timestamp }
+        App->>User: Grants betting access
+    else Already accepted
+        App->>User: Direct access
+    end
 
 
 
@@ -428,10 +516,6 @@ bryanramirez-gonzalez@mac prizePicks_predictionWebsite % gcloud run services lis
 ✔  update-injury-report  us-west2  https://update-injury-report-788584934715.us-west2.run.app  service-788584934715@gcf-admin-robot.iam.gserviceaccount.com  2025-05-20T14:55:47.616265Z
 
 Commands to deploy Functions:
-
-# Run ESLint with the fix flag
-npx eslint index.js --fix
-
 
 # Deploy Functions only
 firebase deploy --only functions
