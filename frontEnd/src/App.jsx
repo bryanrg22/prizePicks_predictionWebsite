@@ -15,7 +15,6 @@ const App = () => (
       <Route path="/processed-players" element={<ProcessedPlayersPage />} />
       <Route path="/previous-bets" element={<PreviousBetsPage />} />
       <Route path="/alerts" element={<AlertsPage />} />
-      {/* Legacy route redirect */}
       <Route path="/HomePage" element={<DashboardPage />} />
       <Route path="/admin" element={<AdminLogin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />

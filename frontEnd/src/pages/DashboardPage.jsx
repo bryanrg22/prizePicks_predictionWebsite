@@ -11,7 +11,7 @@ import EditBetModal from "../components/EditBetModal"
 import ScreenshotUploader from "../components/ScreenshotUploader"
 import PlayerAnalysisDashboard from "../components/PlayerAnalysisDashboard"
 import PlayerAnalysisSearch from "../components/PlayerAnalysisSearch"
-import moment from "moment"
+import TermsOfServiceModal from "../components/TermsOfServiceModal"
 import {
   getUserProfile,
   getActiveBets,
@@ -24,8 +24,8 @@ import {
   cancelActiveBet,
   updateActiveBet,
   moveCompletedBets,
-  getUserBets,
-  lockInPicks,
+  checkTosAcceptance,
+  acceptTermsOfService,
 } from "../services/firebaseService"
 
 export default function DashboardPage() {
@@ -50,6 +50,11 @@ export default function DashboardPage() {
   const [editingBet, setEditingBet] = useState(null)
   const [error, setError] = useState(null)
   const [mockPlayerData, setMockPlayerData] = useState(null)
+
+  // Terms of Service state
+  const [showTosModal, setShowTosModal] = useState(false)
+  const [tosLoading, setTosLoading] = useState(false)
+  const [tosAccepted, setTosAccepted] = useState(false)
 
   // Get today's date in YYYY-MM-DD format
   const today = new Date().toISOString().split("T")[0]
@@ -77,6 +82,15 @@ export default function DashboardPage() {
             return
           }
           setUserProfile(profile)
+
+          // Check ToS acceptance
+          const hasAcceptedTos = await checkTosAcceptance(userId)
+          setTosAccepted(hasAcceptedTos)
+
+          if (!hasAcceptedTos) {
+            setShowTosModal(true)
+            return // Don't load other data until ToS is accepted
+          }
         } catch (profileError) {
           console.error("Error loading user profile:", profileError)
         }
@@ -84,7 +98,7 @@ export default function DashboardPage() {
         try {
           setPicksLoading(true)
           const legacyPicks = await getUserPicks(userId)
-          console.log("Loaded picks:", legacyPicks) // Add this log
+          console.log("Loaded picks:", legacyPicks)
           setPicks(legacyPicks || [])
         } catch (picksError) {
           console.error("Error loading picks:", picksError)
@@ -134,6 +148,43 @@ export default function DashboardPage() {
 
     loadUserData()
   }, [navigate, today])
+
+  // Handle ToS acceptance
+  const handleTosAccept = async () => {
+    setTosLoading(true)
+    try {
+      await acceptTermsOfService(currentUser)
+      setTosAccepted(true)
+      setShowTosModal(false)
+
+      // Now load the rest of the user data
+      window.location.reload() // Simple way to reload all data after ToS acceptance
+    } catch (error) {
+      console.error("Error accepting ToS:", error)
+      alert("Failed to accept Terms of Service. Please try again.")
+    } finally {
+      setTosLoading(false)
+    }
+  }
+
+  // Handle ToS decline
+  const handleTosDecline = () => {
+    // Sign out user and redirect to login
+    sessionStorage.removeItem("currentUser")
+    navigate("/")
+  }
+
+  // If ToS not accepted, only show the modal
+  if (!tosAccepted && showTosModal) {
+    return (
+      <TermsOfServiceModal
+        isOpen={showTosModal}
+        onAccept={handleTosAccept}
+        onDecline={handleTosDecline}
+        loading={tosLoading}
+      />
+    )
+  }
 
   // Add this function to handle editing a bet
   const handleEditBet = (bet) => {
@@ -508,7 +559,7 @@ export default function DashboardPage() {
                     {(pick.teamLogo || pick.opponentLogo) && (
                       <div className="flex items-center justify-center mt-3 pt-3 border-t border-gray-600/30">
                         <div className="flex items-center space-x-2">
-                        <span className="text-gray-400 text-xs">{pick.team}</span>
+                          <span className="text-gray-400 text-xs">{pick.team}</span>
                           {pick.teamLogo && (
                             <img
                               src={pick.teamLogo || "/placeholder.svg"}
@@ -601,6 +652,14 @@ export default function DashboardPage() {
 
       {/* Edit Bet Modal */}
       {editingBet && <EditBetModal bet={editingBet} onSave={handleSaveBet} onClose={() => setEditingBet(null)} />}
+
+      {/* Terms of Service Modal */}
+      <TermsOfServiceModal
+        isOpen={showTosModal}
+        onAccept={handleTosAccept}
+        onDecline={handleTosDecline}
+        loading={tosLoading}
+      />
     </AppLayout>
   )
 }

@@ -18,9 +18,10 @@ const getDateSuffix = (pd) => {
   const raw = pd?.gameDate
   let d
   if (!raw) return null
-  if (typeof raw?.toDate === "function")       d = raw.toDate()        // Firestore Timestamp
-  else if (raw instanceof Date)                d = raw
-  else                                          d = new Date(raw)       // 'YYYY‑MM‑DD' | 'MM/DD/YYYY'
+  if (typeof raw?.toDate === "function")
+    d = raw.toDate() // Firestore Timestamp
+  else if (raw instanceof Date) d = raw
+  else d = new Date(raw) // 'YYYY‑MM‑DD' | 'MM/DD/YYYY'
   return isNaN(d) ? null : d.toISOString().slice(0, 10).replace(/-/g, "")
 }
 
@@ -214,7 +215,6 @@ const transformPicksData = (picks) => {
     .filter(Boolean)
 }
 
-
 /**
  * Create document reference from player data
  */
@@ -231,9 +231,7 @@ const createPlayerDocumentReference = (playerData, isActive = true) => {
 
     if (playerName && threshold !== undefined) {
       const datePart = getDateSuffix(playerData)
-      playerId =
-        `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` +
-        (datePart ? `_${datePart}` : "")
+      playerId = `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` + (datePart ? `_${datePart}` : "")
     } else {
       console.error("Cannot create document reference - missing player name or threshold:", playerData)
       throw new Error(`Invalid player data for document reference: missing name or threshold`)
@@ -283,6 +281,57 @@ export const getUserByUsername = async (username) => {
 export const verifyUserPassword = (userData, password) => {
   // Check if the password is in the profile object or at the root level
   return (userData.profile && userData.profile.password === password) || userData.password === password
+}
+
+// Check if user has accepted Terms of Service
+export const checkTosAcceptance = async (userId) => {
+  try {
+    const userRef = doc(db, "users", userId)
+    const userSnap = await getDoc(userRef)
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data()
+      const profile = userData.profile || userData
+      return !!profile.tosAccepted
+    }
+    return false
+  } catch (error) {
+    console.error("Error checking ToS acceptance:", error)
+    return false
+  }
+}
+
+// Accept Terms of Service
+export const acceptTermsOfService = async (userId) => {
+  try {
+    const userRef = doc(db, "users", userId)
+    const userSnap = await getDoc(userRef)
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data()
+
+      if (userData.profile) {
+        // New structure - update profile object
+        await updateDoc(userRef, {
+          "profile.tosAccepted": serverTimestamp(),
+          "profile.lastLogin": serverTimestamp(),
+        })
+      } else {
+        // Old structure - update fields directly
+        await updateDoc(userRef, {
+          tosAccepted: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+        })
+      }
+
+      console.log("Terms of Service accepted for user:", userId)
+      return true
+    }
+    return false
+  } catch (error) {
+    console.error("Error accepting ToS:", error)
+    throw error
+  }
 }
 
 // Get user profile
@@ -378,28 +427,28 @@ export const addUserPick = async (username, pickData) => {
     if (!userSnap.exists()) return []
 
     let playerDocRef
-    
+
     // First, try to use the exact document ID that was passed
     if (pickData.id) {
       playerDocRef = doc(db, "processedPlayers", "players", "active", pickData.id)
-      
+
       // Check if document exists with the provided ID
-      let playerDocSnap = await getDoc(playerDocRef)
-      
+      const playerDocSnap = await getDoc(playerDocRef)
+
       if (playerDocSnap.exists()) {
         console.log("Found document with provided ID:", pickData.id)
       } else {
         console.log("Document not found with provided ID, searching for alternatives...")
-        
+
         // Search for any document that matches the player and threshold pattern
         const activeRef = collection(db, "processedPlayers", "players", "active")
         const snapshot = await getDocs(activeRef)
-        
+
         let foundDoc = null
         const playerName = pickData.playerName || pickData.name || pickData.player
         const threshold = pickData.threshold
         const searchPattern = `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}`
-        
+
         snapshot.forEach((doc) => {
           const docId = doc.id
           if (docId.startsWith(searchPattern)) {
@@ -408,9 +457,11 @@ export const addUserPick = async (username, pickData) => {
             console.log("Found matching document:", docId)
           }
         })
-        
+
         if (!foundDoc) {
-          throw new Error(`Player document not found for: ${playerName} ${threshold}. Available documents may use different naming convention.`)
+          throw new Error(
+            `Player document not found for: ${playerName} ${threshold}. Available documents may use different naming convention.`,
+          )
         }
       }
     } else {
@@ -507,14 +558,13 @@ export const createBet = async (userId, betData) => {
       return {
         ...pick,
         playerName: playerName,
-        name:       playerName,
-        player:     playerName,
-        threshold:  Number.parseFloat(threshold),
+        name: playerName,
+        player: playerName,
+        threshold: Number.parseFloat(threshold),
         id:
           pick.id ||
           pick.playerId ||
-          `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` +
-            (datePart ? `_${datePart}` : ""),
+          `${playerName.toLowerCase().replace(/\s+/g, "_")}_${threshold}` + (datePart ? `_${datePart}` : ""),
       }
     })
 
@@ -818,7 +868,7 @@ export const getProcessedPlayers = async () => {
 export const getProcessedPlayer = async (playerName, threshold, gameDate = null) => {
   try {
     const key = playerName.toLowerCase().replace(/\s+/g, "_")
-    
+
     // If gameDate is provided, use it; otherwise try to get current date
     let datePart = null
     if (gameDate) {
@@ -830,12 +880,12 @@ export const getProcessedPlayer = async (playerName, threshold, gameDate = null)
       if (legacySnap.exists()) {
         return legacySnap.data()
       }
-      
+
       // If legacy doesn't exist, try with today's date
       const today = new Date()
       datePart = getDateSuffix({ gameDate: today })
     }
-    
+
     const playerId = `${key}_${threshold}${datePart ? "_" + datePart : ""}`
     const ref = doc(db, "processedPlayers", "players", "active", playerId)
     const snap = await getDoc(ref)
@@ -1064,6 +1114,7 @@ export const initializeDatabase = async (userId) => {
           winCount: 0,
           lossCount: 0,
           winRate: 0,
+          tosAccepted: null, // Add ToS acceptance field
         },
         picks: [], // Initialize as empty array for document references
       })
@@ -1092,10 +1143,17 @@ export const initializeDatabase = async (userId) => {
           winCount: userData.winCount || 0,
           lossCount: userData.totalBets ? userData.totalBets - userData.winCount : 0,
           winRate: userData.totalBets && userData.winCount ? (userData.winCount / userData.totalBets) * 100 : 0,
+          tosAccepted: userData.tosAccepted || null, // Migrate existing ToS acceptance
         }
 
         await updateDoc(userRef, { profile })
         console.log("User migrated to new structure")
+      } else if (!userData.profile.hasOwnProperty("tosAccepted")) {
+        // Add ToS field to existing profile
+        await updateDoc(userRef, {
+          "profile.tosAccepted": null,
+        })
+        console.log("Added ToS field to existing user profile")
       }
 
       // Migrate to document references if needed
@@ -1127,6 +1185,7 @@ export const initializeUser = async (username, password) => {
           winCount: 0,
           lossCount: 0,
           winRate: 0,
+          tosAccepted: null, // Add ToS acceptance field
         },
         picks: [], // Initialize as empty array for document references
         bets: [],
@@ -1154,9 +1213,16 @@ export const initializeUser = async (username, password) => {
           winCount: userData.winCount || 0,
           lossCount: userData.totalBets ? userData.totalBets - userData.winCount : 0,
           winRate: userData.totalBets && userData.winCount ? (userData.winCount / userData.totalBets) * 100 : 0,
+          tosAccepted: userData.tosAccepted || null, // Migrate existing ToS acceptance
         }
 
         await updateDoc(userRef, { profile })
+      } else if (!userData.profile.hasOwnProperty("tosAccepted")) {
+        // Add ToS field to existing profile
+        await updateDoc(userRef, {
+          "profile.tosAccepted": null,
+        })
+        console.log("Added ToS field to existing user profile")
       }
 
       // Migrate to document references if needed
