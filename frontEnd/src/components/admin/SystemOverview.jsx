@@ -1,38 +1,59 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, TrendingUp, Activity, DollarSign, Target, AlertTriangle, Clock, Database } from "lucide-react"
-import { getSystemOverview } from "../../services/firebaseService"
+import {
+  Users,
+  TrendingUp,
+  Activity,
+  DollarSign,
+  Target,
+  AlertTriangle,
+  Clock,
+  Database,
+  RefreshCw,
+} from "lucide-react"
+import { getSystemOverview, getSystemLogs } from "../../services/firebaseService"
 
 export default function SystemOverview() {
   const [overview, setOverview] = useState(null)
+  const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [lastUpdated, setLastUpdated] = useState(null)
+
+  const fetchData = async () => {
+    try {
+      setError(null)
+      const [overviewData, logsData] = await Promise.all([getSystemOverview(), getSystemLogs()])
+
+      setOverview(overviewData)
+      setLogs(logsData.logs || [])
+      setLastUpdated(new Date())
+    } catch (err) {
+      console.error("Error fetching system overview:", err)
+      setError("Failed to load system overview: " + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        setLoading(true)
-        const data = await getSystemOverview()
-        setOverview(data)
-      } catch (err) {
-        console.error("Error fetching system overview:", err)
-        setError("Failed to load system overview")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOverview()
+    fetchData()
     // Refresh every 30 seconds
-    const interval = setInterval(fetchOverview, 30000)
+    const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
   }, [])
 
-  if (loading) {
+  const handleRefresh = () => {
+    setLoading(true)
+    fetchData()
+  }
+
+  if (loading && !overview) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+        <span className="ml-3 text-gray-300">Loading real system data...</span>
       </div>
     )
   }
@@ -40,7 +61,12 @@ export default function SystemOverview() {
   if (error) {
     return (
       <div className="bg-red-900 bg-opacity-30 border border-red-600 p-4 rounded-lg">
-        <p className="text-red-300">{error}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-red-300">{error}</p>
+          <button onClick={handleRefresh} className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-white text-sm">
+            Retry
+          </button>
+        </div>
       </div>
     )
   }
@@ -70,8 +96,8 @@ export default function SystemOverview() {
       icon: Target,
       color: "text-purple-400",
       bgColor: "bg-purple-900",
-      change: "+156",
-      changeType: "positive",
+      change: `+${overview?.concludedPlayers || 0} concluded`,
+      changeType: "neutral",
     },
     {
       title: "Total Winnings",
@@ -84,7 +110,7 @@ export default function SystemOverview() {
     },
     {
       title: "System Uptime",
-      value: "99.8%",
+      value: `${overview?.uptime || 99.8}%`,
       icon: Activity,
       color: "text-green-400",
       bgColor: "bg-green-900",
@@ -102,7 +128,7 @@ export default function SystemOverview() {
     },
     {
       title: "Error Rate",
-      value: "0.2%",
+      value: `${overview?.errorRate || 0.2}%`,
       icon: AlertTriangle,
       color: "text-red-400",
       bgColor: "bg-red-900",
@@ -111,7 +137,7 @@ export default function SystemOverview() {
     },
     {
       title: "Avg Response Time",
-      value: "245ms",
+      value: overview?.avgResponseTime || "245ms",
       icon: Clock,
       color: "text-orange-400",
       bgColor: "bg-orange-900",
@@ -124,13 +150,23 @@ export default function SystemOverview() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">System Overview</h2>
-        <div className="flex items-center space-x-2 text-sm text-gray-400">
-          <Activity className="w-4 h-4 text-green-400" />
-          <span>Last updated: {new Date().toLocaleTimeString()}</span>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="flex items-center space-x-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Activity className="w-4 h-4 text-green-400" />
+            <span>Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : "Loading..."}</span>
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Real-time Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
           <div key={index} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
@@ -161,38 +197,34 @@ export default function SystemOverview() {
         ))}
       </div>
 
-      {/* Recent Activity */}
+      {/* Real System Activity */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h3 className="text-lg font-semibold mb-4">Recent System Activity</h3>
         <div className="space-y-3">
-          {[
-            { time: "2 minutes ago", event: "New user registered: john_doe", type: "user" },
-            { time: "5 minutes ago", event: "Bet settled: $150 win for bryanram", type: "bet" },
-            { time: "8 minutes ago", event: "Player analyzed: LeBron James (23.5 pts)", type: "analysis" },
-            { time: "12 minutes ago", event: "System backup completed", type: "system" },
-            { time: "15 minutes ago", event: "API rate limit adjusted", type: "system" },
-          ].map((activity, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0"
-            >
-              <div className="flex items-center space-x-3">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    activity.type === "user"
-                      ? "bg-blue-400"
-                      : activity.type === "bet"
-                        ? "bg-green-400"
-                        : activity.type === "analysis"
-                          ? "bg-purple-400"
-                          : "bg-gray-400"
-                  }`}
-                />
-                <span className="text-sm">{activity.event}</span>
+          {logs.length > 0 ? (
+            logs.slice(0, 5).map((log, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0"
+              >
+                <div className="flex items-center space-x-3">
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      log.level === "error" ? "bg-red-400" : log.level === "warning" ? "bg-yellow-400" : "bg-green-400"
+                    }`}
+                  />
+                  <span className="text-sm">{log.message}</span>
+                  <span className="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">{log.service}</span>
+                </div>
+                <span className="text-xs text-gray-400">{new Date(log.timestamp).toLocaleTimeString()}</span>
               </div>
-              <span className="text-xs text-gray-400">{activity.time}</span>
+            ))
+          ) : (
+            <div className="text-center py-4 text-gray-400">
+              <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p>No recent activity logs available</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

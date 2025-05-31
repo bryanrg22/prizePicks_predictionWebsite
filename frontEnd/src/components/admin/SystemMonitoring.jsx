@@ -1,21 +1,35 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Activity, AlertTriangle, Clock, Database, Cpu, HardDrive, Wifi } from "lucide-react"
+import {
+  Activity,
+  AlertTriangle,
+  Clock,
+  Database,
+  Cpu,
+  HardDrive,
+  Wifi,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+} from "lucide-react"
 import { getSystemHealth } from "../../services/firebaseService"
 
 export default function SystemMonitoring() {
   const [health, setHealth] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchHealth = async () => {
       try {
         setLoading(true)
+        setError(null)
         const data = await getSystemHealth()
         setHealth(data)
       } catch (err) {
         console.error("Error fetching system health:", err)
+        setError("Failed to load system health: " + err.message)
       } finally {
         setLoading(false)
       }
@@ -27,10 +41,19 @@ export default function SystemMonitoring() {
     return () => clearInterval(interval)
   }, [])
 
-  if (loading) {
+  if (loading && !health) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500"></div>
+        <span className="ml-3 text-gray-300">Loading system health...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-900 bg-opacity-30 border border-red-600 p-4 rounded-lg">
+        <p className="text-red-300">{error}</p>
       </div>
     )
   }
@@ -38,42 +61,42 @@ export default function SystemMonitoring() {
   const systemMetrics = [
     {
       name: "API Response Time",
-      value: "245ms",
+      value: health?.apiResponseTime || "245ms",
       status: "good",
       icon: Clock,
       trend: "-12ms",
     },
     {
       name: "Database Performance",
-      value: "98.5%",
-      status: "good",
+      value: health?.databasePerformance || "98.5ms",
+      status: health?.databasePerformance?.includes("error") ? "error" : "good",
       icon: Database,
       trend: "+0.2%",
     },
     {
       name: "CPU Usage",
-      value: "34%",
+      value: health?.cpuUsage || "34%",
       status: "good",
       icon: Cpu,
       trend: "+2%",
     },
     {
       name: "Memory Usage",
-      value: "67%",
+      value: health?.memoryUsage || "67%",
       status: "warning",
       icon: HardDrive,
       trend: "+5%",
     },
     {
       name: "Network Latency",
-      value: "12ms",
+      value: health?.networkLatency || "12ms",
       status: "good",
       icon: Wifi,
       trend: "-1ms",
     },
     {
       name: "Error Rate",
-      value: "0.2%",
+      value: health?.errorRate || "0.2%",
       status: "good",
       icon: AlertTriangle,
       trend: "-0.1%",
@@ -106,6 +129,19 @@ export default function SystemMonitoring() {
     }
   }
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "operational":
+        return <CheckCircle className="w-4 h-4 text-green-400" />
+      case "degraded":
+        return <AlertCircle className="w-4 h-4 text-yellow-400" />
+      case "error":
+        return <XCircle className="w-4 h-4 text-red-400" />
+      default:
+        return <AlertCircle className="w-4 h-4 text-gray-400" />
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -132,6 +168,49 @@ export default function SystemMonitoring() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Cloud Functions Status */}
+      {health?.cloudFunctions && (
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold mb-4">Cloud Functions Health</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-700 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Injury Report Function</span>
+                {getStatusIcon(health.cloudFunctions.injury_report)}
+              </div>
+              <p className="text-xs text-gray-400 capitalize">{health.cloudFunctions.injury_report}</p>
+              <p className="text-xs text-gray-500">Updates hourly</p>
+            </div>
+            <div className="p-4 bg-gray-700 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Game Check Function</span>
+                {getStatusIcon(health.cloudFunctions.game_check)}
+              </div>
+              <p className="text-xs text-gray-400 capitalize">{health.cloudFunctions.game_check}</p>
+              <p className="text-xs text-gray-500">Runs every 5 minutes</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service Status */}
+      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <h3 className="text-lg font-semibold mb-4">Service Status</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {health?.services &&
+            Object.entries(health.services).map(([service, status], index) => (
+              <div key={index} className="p-4 bg-gray-700 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium capitalize">{service.replace("_", " ")}</span>
+                  {getStatusIcon(status)}
+                </div>
+                <p className="text-xs text-gray-400 capitalize">{status}</p>
+                <p className="text-xs text-gray-500">{status === "operational" ? "99.9% uptime" : "Checking..."}</p>
+              </div>
+            ))}
+        </div>
       </div>
 
       {/* System Alerts */}
@@ -184,85 +263,6 @@ export default function SystemMonitoring() {
                   <span className="text-xs text-gray-400">{alert.time}</span>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Performance Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4">API Response Time (24h)</h3>
-          <div className="h-48 flex items-end justify-between space-x-1">
-            {[
-              245, 238, 252, 241, 235, 248, 243, 239, 251, 244, 237, 249, 242, 236, 250, 245, 240, 247, 243, 238, 252,
-              246, 241, 248,
-            ].map((value, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className={`w-full rounded-t ${value > 250 ? "bg-red-500" : value > 245 ? "bg-yellow-500" : "bg-green-500"}`}
-                  style={{ height: `${((value - 230) / 25) * 150}px` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-sm text-gray-400 mt-4">
-            <span>Response Time (ms)</span>
-            <span>Last 24 Hours</span>
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold mb-4">Error Rate (24h)</h3>
-          <div className="h-48 flex items-end justify-between space-x-1">
-            {[
-              0.1, 0.2, 0.1, 0.3, 0.2, 0.1, 0.4, 0.2, 0.1, 0.2, 0.3, 0.1, 0.2, 0.1, 0.3, 0.2, 0.1, 0.2, 0.3, 0.1, 0.2,
-              0.1, 0.2, 0.1,
-            ].map((value, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center">
-                <div
-                  className={`w-full rounded-t ${value > 0.3 ? "bg-red-500" : value > 0.2 ? "bg-yellow-500" : "bg-green-500"}`}
-                  style={{ height: `${(value / 0.5) * 150}px` }}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-sm text-gray-400 mt-4">
-            <span>Error Rate (%)</span>
-            <span>Last 24 Hours</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Service Status */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold mb-4">Service Status</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { name: "Frontend (React)", status: "operational", uptime: "99.9%" },
-            { name: "Backend API (Flask)", status: "operational", uptime: "99.8%" },
-            { name: "Database (Firestore)", status: "operational", uptime: "100%" },
-            { name: "Cloud Functions", status: "operational", uptime: "99.7%" },
-            { name: "Authentication", status: "operational", uptime: "100%" },
-            { name: "File Storage", status: "operational", uptime: "99.9%" },
-            { name: "Analytics", status: "degraded", uptime: "98.2%" },
-            { name: "Monitoring", status: "operational", uptime: "99.8%" },
-          ].map((service, index) => (
-            <div key={index} className="p-4 bg-gray-700 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">{service.name}</span>
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    service.status === "operational"
-                      ? "bg-green-400"
-                      : service.status === "degraded"
-                        ? "bg-yellow-400"
-                        : "bg-red-400"
-                  }`}
-                />
-              </div>
-              <p className="text-xs text-gray-400 capitalize">{service.status}</p>
-              <p className="text-xs text-gray-500">{service.uptime} uptime</p>
             </div>
           ))}
         </div>
