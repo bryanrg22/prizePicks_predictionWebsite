@@ -27,6 +27,7 @@ import {
   checkTosAcceptance,
   acceptTermsOfService,
 } from "../services/firebaseService"
+import html2canvas from "html2canvas"
 
 export default function DashboardPage() {
   const [playerName, setPlayerName] = useState("")
@@ -148,6 +149,49 @@ export default function DashboardPage() {
 
     loadUserData()
   }, [navigate, today])
+
+  // Add this function inside the DashboardPage component
+  useEffect(() => {
+    // Create a blurred screenshot of the homepage for the ToS background
+    const createBlurredBackground = () => {
+      // Only create if it doesn't exist yet
+      if (!document.getElementById("homepage-blur-bg")) {
+        html2canvas(document.body, {
+          allowTaint: true,
+          useCORS: true,
+          backgroundColor: null,
+          scale: 0.3, // Lower resolution for performance
+        }).then((canvas) => {
+          // Apply blur filter to canvas
+          const ctx = canvas.getContext("2d")
+          ctx.filter = "blur(8px) brightness(0.7)"
+          ctx.drawImage(canvas, 0, 0)
+
+          // Convert to data URL
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.5)
+
+          // Create an image element
+          const img = new Image()
+          img.id = "homepage-blur-bg"
+          img.src = dataUrl
+          img.style.display = "none"
+
+          // Add to document
+          document.body.appendChild(img)
+
+          // Store in localStorage to avoid recreating
+          try {
+            localStorage.setItem("homepage-blur-bg", dataUrl)
+          } catch (e) {
+            console.log("Could not save background to localStorage")
+          }
+        })
+      }
+    }
+
+    // Call the function when component mounts
+    createBlurredBackground()
+  }, [])
 
   // Handle ToS acceptance
   const handleTosAccept = async () => {
