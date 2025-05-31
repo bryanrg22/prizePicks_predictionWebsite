@@ -32,7 +32,7 @@ export default function MobileLayout({ children }) {
       <div className="md:hidden bg-gray-800 p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-blue-500 rounded-md mr-3"></div>
-          <h1 className="text-lg font-bold">PrizePicks Analyzer</h1>
+          <h1 className="text-lg font-bold">Lambda Rim</h1>
         </div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-md bg-gray-700 hover:bg-gray-600">
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -44,7 +44,7 @@ export default function MobileLayout({ children }) {
         <div className="hidden md:block w-64 bg-gray-800 min-h-screen p-4">
           <div className="flex items-center mb-6">
             <div className="w-10 h-10 bg-blue-500 rounded-md mr-3"></div>
-            <h1 className="text-xl font-bold">PrizePicks Analyzer</h1>
+            <h1 className="text-xl font-bold">Lambda Rim</h1>
           </div>
 
           <nav className="space-y-2">

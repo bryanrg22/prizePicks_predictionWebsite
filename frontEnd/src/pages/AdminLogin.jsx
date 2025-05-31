@@ -139,7 +139,7 @@ export default function AdminLogin() {
       </main>
 
       <footer className="py-4 text-center text-gray-400">
-        <p>&copy; 2024 PrizePicks Analyzer - Admin Portal</p>
+        <p>&copy; 2025 Lambda Rim - Admin Portal</p>
       </footer>
     </div>
   )

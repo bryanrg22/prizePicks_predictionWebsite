@@ -83,8 +83,8 @@ export default function SignIn() {
               objectFit: "contain",
             }}
           />
-          <h1 className="text-3xl font-bold">PrizePicks Analyzer</h1>
-          <p className="text-xl text-gray-300 mt-2">Make smarter bets</p>
+          <h1 className="text-3xl font-bold">Lambda Rim</h1>
+          <p className="text-xl text-gray-300 mt-2">Because 99% ain’t a free throw</p>
         </div>
         <div className="w-full max-w-sm bg-gray-800 rounded-lg shadow-xl overflow-hidden">
           <div className="px-8 py-10">
@@ -148,7 +148,7 @@ export default function SignIn() {
         </div>
       </main>
       <footer className="py-4 text-center text-gray-400">
-        <p>&copy; 2024 PrizePicks Analyzer. All rights reserved.</p>
+        <p>&copy; 2025 Lamba Rim. All rights reserved.</p>
       </footer>
     </div>
   )

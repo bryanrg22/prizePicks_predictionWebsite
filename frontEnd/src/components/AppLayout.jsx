@@ -134,7 +134,7 @@ export default function AppLayout({ children }) {
                 objectFit: "contain",
               }}
             />
-            <span className="text-xl font-semibold">PrizePicks Analyzer</span>
+            <span className="text-xl font-semibold">Lambda Rim</span>
           </div>
           <nav className="flex space-x-4">
             <NavItem path="/dashboard" icon={Home} label="Home" />

@@ -125,7 +125,7 @@ export default function AdminLayout({ children }) {
           <div className="bg-red-900 bg-opacity-30 border border-red-600 p-4 lg:p-6 rounded-lg mb-4 lg:mb-8">
             <h2 className="text-lg lg:text-xl font-bold mb-2 text-red-400">ADMIN ACCESS - RESTRICTED AREA</h2>
             <p className="text-red-300 text-sm lg:text-base">
-              You have administrative access to the PrizePicks Analyzer system. Handle all data with care and maintain
+              You have administrative access to the Lambda Rim system. Handle all data with care and maintain
               user privacy.
             </p>
           </div>

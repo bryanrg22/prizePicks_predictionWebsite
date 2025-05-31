@@ -1,4 +1,5 @@
-# PrizePicks Prediction Website
+# Lambda Rim 
+## Because 99% ain’t a free throw
 
 **Lead Developer | Feb 2025 – Present**  
 A full-stack, AI-powered platform that automatically analyzes NBA “Over/Under” picks on PrizePicks. From OCR’ing screenshots to running Poisson, Monte Carlo & GARCH volatility forecasts (including playoff games), and generating natural-language bet explanations via ChatGPT, this site manages the entire pipeline end-to-end—hosted on Firebase Hosting + Cloud Run with CI/CD.
