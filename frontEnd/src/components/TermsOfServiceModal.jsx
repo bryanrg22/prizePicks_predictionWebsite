@@ -33,17 +33,18 @@ export default function TermsOfServiceModal({ isOpen, onAccept, onDecline, loadi
   if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{
-        backgroundImage: "url('/homepage-blur-bg.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Overlay with blur effect */}
-      <div className="absolute inset-0 backdrop-blur-md bg-gray-900/70"></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Background with blur effect - using CSS backdrop-filter */}
+      <div
+        className="absolute inset-0 backdrop-blur-md bg-gray-900/70"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(120, 219, 226, 0.3) 0%, transparent 50%)
+          `,
+        }}
+      ></div>
 
       <div className="relative w-full max-w-4xl mx-4 bg-gradient-to-b from-gray-800/95 to-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-600/50 max-h-[85vh] md:max-h-[90vh] flex flex-col">
         {/* Header */}
