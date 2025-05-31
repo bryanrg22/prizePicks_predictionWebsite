@@ -177,14 +177,24 @@ const ScreenshotUploader = ({ onUploadComplete }) => {
 
       if (!response.ok) {
         let errorMessage = `API Error: ${response.status}`
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorMessage
-        } catch (parseError) {
-          // Handle non-JSON error responses
-          const textError = await response.text()
-          errorMessage = textError || errorMessage
+        const contentType = response.headers.get("content-type")
+        
+        if (contentType && contentType.includes("application/json")) {
+          try {
+            const errorData = await response.json()
+            errorMessage = errorData.error || errorMessage
+          } catch (parseError) {
+            console.error("Failed to parse error response as JSON:", parseError)
+          }
+        } else {
+          try {
+            const textError = await response.text()
+            if (textError) errorMessage = textError
+          } catch (textError) {
+            console.error("Failed to read error response as text:", textError)
+          }
         }
+        
         throw new Error(errorMessage)
       }
 

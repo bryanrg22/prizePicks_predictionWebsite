@@ -16,11 +16,13 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:5000',
+        // In development, proxy to local Flask server
+        target: process.env.NODE_ENV === 'production' 
+          ? 'https://prizepicks-backend-788584934715.us-west2.run.app'
+          : 'http://127.0.0.1:5000',
         changeOrigin: true,
         secure: false,
       },
     },
   },
 })
-

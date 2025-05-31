@@ -1,4 +1,5 @@
 // API service for interacting with the Python backend
+const API_BASE_URL='https://prizepicks-backend-788584934715.us-west2.run.app'
 
 // Analyze player
 export const analyzePlayer = async (playerName, threshold) => {
@@ -8,7 +9,7 @@ export const analyzePlayer = async (playerName, threshold) => {
 
     console.log("Sending to API:", { playerName, threshold: numericThreshold })
 
-    const response = await fetch(`/api/player`, {
+    const response = await fetch(`${API_BASE_URL}/api/player`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -20,8 +21,19 @@ export const analyzePlayer = async (playerName, threshold) => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.error || `API Error: ${response.status}`)
+      let errorMessage = `API Error: ${response.status}`
+      const contentType = response.headers.get("content-type")
+      
+      if (contentType && contentType.includes("application/json")) {
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (parseError) {
+          console.error("Failed to parse error response as JSON:", parseError)
+        }
+      }
+      
+      throw new Error(errorMessage)
     }
 
     const playerData = await response.json()
