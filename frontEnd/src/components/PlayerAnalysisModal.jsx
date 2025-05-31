@@ -1,11 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { X, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Activity, Plus } from "lucide-react"
+import {
+  X,
+  ChevronDown,
+  ChevronUp,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Plus,
+  Calendar,
+  Trophy,
+  BarChart3,
+  Target,
+  MapPin,
+  Heart,
+  Clock,
+} from "lucide-react"
 import ImageWithFallback from "./ImageWithFallback"
 
-const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
-  const [expandedSection, setExpandedSection] = useState("main")
+const OptimizedPlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
+  const [expandedSection, setExpandedSection] = useState(null)
   const [moreGames, setMoreGames] = useState([])
   const [showMoreGames, setShowMoreGames] = useState(false)
   const [loadingMoreGames, setLoadingMoreGames] = useState(false)
@@ -13,10 +28,10 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
 
   if (!playerData) return null
 
-  // Format numbers to 2 decimal places
+  // Format numbers to 1 decimal place for better mobile display
   const formatNumber = (num) => {
     if (num === undefined || num === null) return "N/A"
-    return typeof num === "number" ? num.toFixed(2) : num
+    return typeof num === "number" ? num.toFixed(1) : num
   }
 
   // Format percentages
@@ -29,64 +44,74 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const getRecommendationColor = (recommendation) => {
     if (!recommendation) return "text-gray-400"
     const rec = recommendation.toLowerCase()
-    if (rec.includes("over") || rec.includes("yes")) return "text-green-500"
-    if (rec.includes("under") || rec.includes("no")) return "text-red-500"
-    return "text-yellow-500"
+    if (rec.includes("over") || rec.includes("yes")) return "text-green-400"
+    if (rec.includes("under") || rec.includes("no")) return "text-red-400"
+    return "text-yellow-400"
   }
 
   // Get probability color
   const getProbabilityColor = (probability) => {
     if (probability === undefined || probability === null) return "text-gray-400"
     const prob = typeof probability === "string" ? Number.parseFloat(probability) : probability
-    if (prob >= 0.7) return "text-green-500"
-    if (prob >= 0.5) return "text-yellow-500"
-    return "text-red-500"
+    if (prob >= 0.7) return "text-green-400"
+    if (prob >= 0.5) return "text-yellow-400"
+    return "text-red-400"
   }
 
   // Get threshold comparison color
   const getComparisonColor = (value, threshold) => {
     if (value === undefined || value === null) return "text-gray-400"
-    return value > threshold ? "text-green-500" : "text-red-500"
+    return value > threshold ? "text-green-400" : "text-red-400"
   }
 
-  // Extract data
-  const name = playerData.name
-  const playerId = playerData.playerId
-  const team = playerData.team
-  const position = playerData.position
-  const opponent = playerData.opponent
-  const photoUrl = playerData.photoUrl
-  const teamLogo = playerData.teamLogo
-  const opponentLogo = playerData.opponentLogo
-  const gameDate = playerData.gameDate
-  const gameTime = playerData.gameTime
-  const gametype = playerData.gameType
-  const teamRank = playerData.teamPlayoffRank
-  const opponentRank = playerData.opponentPlayoffRank
-  const seasonAvg = playerData.seasonAvgPoints
-  const last5RegAvg = playerData.last5RegularGamesAvg
-  const vsOpponentAvg = playerData.seasonAvgVsOpponent
-  const homeAwayAvg = playerData.homeAwgAvg
-  const last5RegularGames = playerData.last5RegularGames || []
-  const advancedMetrics = playerData.advancedPerformance || {}
-  const careerStats = playerData.careerSeasonStats || []
-  const injuryReport = playerData.injuryReport || {}
-  const betExplanation = playerData.betExplanation || {}
-  const poissonProbability = playerData.poissonProbability
-  const monteCarloProbability = playerData.monteCarloProbability
-  const volatility_regular = playerData.volatilityForecast
-  const season_games_agst_opp = playerData.season_games_agst_opp
-  const threshold = playerData.threshold
+  // Get injury status color
+  const getInjuryStatusColor = (status) => {
+    if (!status || status === "NOT YET SUBMITTED") return "text-gray-400"
+    const statusLower = status.toLowerCase()
+    if (statusLower.includes("out")) return "text-red-400"
+    if (statusLower.includes("questionable") || statusLower.includes("doubtful")) return "text-yellow-400"
+    if (statusLower.includes("probable") || statusLower.includes("available")) return "text-green-400"
+    return "text-gray-400"
+  }
 
-  // Playoff Data
-  const num_playoff_games = playerData.num_playoff_games
-  const playoffAvg = playerData.playoffAvg
-  const playoff_games = playerData.playoff_games
-  const volatility_PlayOffs = playerData.volatilityPlayOffsForecast
+  // Extract ALL available data from Firestore schema
+  const {
+    name,
+    playerId,
+    team,
+    position,
+    opponent,
+    photoUrl,
+    teamLogo,
+    opponentLogo,
+    gameDate,
+    gameTime,
+    gameType,
+    teamPlayoffRank,
+    opponentPlayoffRank,
+    seasonAvgPoints,
+    last5RegularGamesAvg,
+    seasonAvgVsOpponent,
+    homeAwayAvg,
+    last5RegularGames = [],
+    advancedPerformance = {},
+    careerSeasonStats = [],
+    injuryReport = {},
+    betExplanation = {},
+    poissonProbability,
+    monteCarloProbability,
+    volatilityForecast,
+    season_games_agst_opp = [],
+    threshold,
+    num_playoff_games = 0,
+    playoffAvg,
+    playoff_games = [],
+    volatilityPlayOffsForecast,
+  } = playerData
 
   // Format probabilities for display
-  const poissonProbabilityFormatted = poissonProbability ? `${(poissonProbability * 100).toFixed(2)}%` : "N/A"
-  const monteCarloFormatted = monteCarloProbability ? `${(monteCarloProbability * 100).toFixed(2)}%` : "N/A"
+  const poissonProbabilityFormatted = poissonProbability ? `${(poissonProbability * 100).toFixed(1)}%` : "N/A"
+  const monteCarloFormatted = monteCarloProbability ? `${(monteCarloProbability * 100).toFixed(1)}%` : "N/A"
 
   // Determine recommendation
   const recommendation = betExplanation.recommendation || "N/A"
@@ -94,10 +119,10 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
 
   // Toggle section expansion
   const toggleSection = (section) => {
-    setExpandedSection(expandedSection === section ? "main" : section)
+    setExpandedSection(expandedSection === section ? null : section)
   }
 
-  // Toggle between fetching & hiding
+  // Handle more games loading using your existing API endpoint
   const handleToggleMoreGames = async () => {
     if (showMoreGames) {
       return setShowMoreGames(false)
@@ -119,261 +144,538 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 overflow-y-auto">
-      {/* Mobile: Full screen, Desktop: Centered modal */}
-      <div className="bg-gray-900 w-full h-full lg:rounded-xl lg:max-w-4xl lg:w-full lg:max-h-[90vh] lg:h-auto overflow-y-auto relative">
-        {/* Close button - Mobile optimized */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-3 bg-gray-800 hover:bg-gray-700 rounded-full text-gray-400 hover:text-white transition-colors z-10 min-h-[48px] min-w-[48px] flex items-center justify-center"
-        >
-          <X className="w-6 h-6" />
-        </button>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 lg:p-4">
+      {/* Responsive modal container */}
+      <div className="bg-gray-900 w-full h-full lg:rounded-2xl lg:max-w-6xl lg:max-h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-gray-800">
+        {/* Header - Fixed */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700">
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 lg:top-4 lg:right-4 p-2 lg:p-3 bg-gray-800/80 hover:bg-gray-700 rounded-full text-gray-400 hover:text-white transition-all z-10 backdrop-blur-sm"
+          >
+            <X className="w-5 h-5 lg:w-6 lg:h-6" />
+          </button>
 
-        <div className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-          {/* Hero Section - Mobile optimized */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl overflow-hidden shadow-xl">
-            <div className="p-4 lg:p-6">
-              <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-                {/* Player Info - Mobile optimized */}
-                <div className="flex items-center space-x-4">
-                  <div className="relative flex-shrink-0">
-                    <ImageWithFallback
-                      src={photoUrl || "/placeholder.svg"}
-                      alt={name}
-                      className="w-20 h-20 lg:w-24 lg:h-24 rounded-full object-cover border-2 border-blue-500"
-                      fallbackSrc="/placeholder.svg?height=96&width=96"
-                    />
-                    <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-1 border border-gray-700">
-                      <ImageWithFallback
-                        src={teamLogo || "/placeholder.svg"}
-                        alt={team}
-                        className="w-6 h-6 lg:w-8 lg:h-8"
-                        fallbackSrc="/placeholder.svg?height=32&width=32"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h1 className="text-2xl lg:text-3xl font-bold text-white truncate">{name}</h1>
-                    <div className="flex items-center text-gray-400 text-sm lg:text-base">
-                      <span className="truncate">{team}</span>
-                      <span className="mx-2">•</span>
-                      <span>{position}</span>
-                    </div>
-                    <div className="flex items-center mt-1 text-xs lg:text-sm text-gray-400">
-                      <span>vs</span>
-                      <ImageWithFallback
-                        src={opponentLogo || "/placeholder.svg"}
-                        alt={opponent}
-                        className="w-4 h-4 mx-1"
-                        fallbackSrc="/placeholder.svg?height=16&width=16"
-                      />
-                      <span className="truncate">{opponent}</span>
-                      <span className="mx-2">•</span>
-                      <span className="truncate">{gameDate}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Main Recommendation - Mobile optimized */}
-                <div className="bg-gray-800 p-4 rounded-lg border border-gray-700 w-full lg:w-auto">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Threshold</span>
-                    <span className="text-xl lg:text-2xl font-bold text-white">{threshold} pts</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400 text-sm">Recommendation</span>
-                    <span className={`text-lg lg:text-2xl font-bold ${recommendationColor} flex items-center`}>
-                      {recommendation.toLowerCase().includes("over") ? (
-                        <TrendingUp className="mr-1 w-5 h-5" />
-                      ) : (
-                        <TrendingDown className="mr-1 w-5 h-5" />
-                      )}
-                      <span className="truncate">{recommendation}</span>
-                    </span>
-                  </div>
+          {/* Player Hero Section - Compact */}
+          <div className="p-3 lg:p-6">
+            <div className="flex items-start space-x-3 lg:space-x-4">
+              {/* Player Image with Team Badge */}
+              <div className="relative flex-shrink-0">
+                <ImageWithFallback
+                  src={photoUrl || "/placeholder.svg"}
+                  alt={name}
+                  className="w-14 h-14 lg:w-20 lg:h-20 rounded-xl object-cover border-2 border-blue-500/50"
+                  fallbackSrc="/placeholder.svg?height=80&width=80"
+                />
+                <div className="absolute -bottom-1 -right-1 bg-gray-800 rounded-full p-1 border border-gray-600">
+                  <ImageWithFallback
+                    src={teamLogo || "/placeholder.svg"}
+                    alt={team}
+                    className="w-4 h-4 lg:w-6 lg:h-6"
+                    fallbackSrc="/placeholder.svg?height=24&width=24"
+                  />
                 </div>
               </div>
 
-              {/* AI Betting Recommendation - Mobile optimized */}
-              <div className="mt-4 lg:mt-6 bg-gray-800 bg-opacity-50 rounded-lg p-4 border border-gray-700">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-2 space-y-2 lg:space-y-0">
-                  <div className="flex items-center">
-                    <Activity className="text-blue-400 w-5 h-5 mr-2" />
-                    <h2 className="text-lg lg:text-xl font-semibold">AI Betting Recommendation</h2>
-                  </div>
-                  <div className="flex flex-col lg:flex-row lg:space-x-4 text-sm space-y-1 lg:space-y-0">
-                    <div>
-                      <span className="text-gray-400">Poisson: </span>
-                      <span className={getProbabilityColor(poissonProbability)}>{poissonProbabilityFormatted}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Monte Carlo: </span>
-                      <span className={getProbabilityColor(monteCarloProbability)}>{monteCarloFormatted}</span>
-                    </div>
-                  </div>
+              {/* Player Info */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg lg:text-2xl font-bold text-white truncate">{name}</h1>
+                <div className="flex items-center text-gray-400 text-xs lg:text-sm">
+                  <span className="truncate">{team}</span>
+                  <span className="mx-1 lg:mx-2">•</span>
+                  <span>{position}</span>
+                  <span className="mx-1 lg:mx-2">•</span>
+                  <span>#{teamPlayoffRank}</span>
                 </div>
-                <p className="text-gray-300 text-sm lg:text-base leading-relaxed">{betExplanation.explanation}</p>
+                <div className="flex items-center mt-1 text-xs text-gray-500">
+                  <span>vs</span>
+                  <ImageWithFallback
+                    src={opponentLogo || "/placeholder.svg"}
+                    alt={opponent}
+                    className="w-3 h-3 mx-1"
+                    fallbackSrc="/placeholder.svg?height=12&width=12"
+                  />
+                  <span className="truncate">
+                    {opponent} (#{opponentPlayoffRank})
+                  </span>
+                  <span className="mx-1">•</span>
+                  <span>{gameDate}</span>
+                </div>
+                {/* Game Type & Time */}
+                <div className="flex items-center mt-1 text-xs text-gray-500">
+                  <Clock className="w-3 h-3 mr-1" />
+                  <span>{gameTime}</span>
+                  <span className="mx-1">•</span>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs ${
+                      gameType === "Playoffs" ? "bg-yellow-500/20 text-yellow-400" : "bg-blue-500/20 text-blue-400"
+                    }`}
+                  >
+                    {gameType}
+                  </span>
+                </div>
+              </div>
+
+              {/* Threshold & Recommendation - Compact */}
+              <div className="bg-gray-800/50 p-2 lg:p-3 rounded-lg border border-gray-700 text-right">
+                <div className="text-xs text-gray-400">Threshold</div>
+                <div className="text-base lg:text-xl font-bold text-white">{threshold} pts</div>
+                <div
+                  className={`text-xs lg:text-sm font-semibold ${recommendationColor} flex items-center justify-end mt-1`}
+                >
+                  {recommendation.toLowerCase().includes("over") ? (
+                    <TrendingUp className="mr-1 w-3 h-3" />
+                  ) : (
+                    <TrendingDown className="mr-1 w-3 h-3" />
+                  )}
+                  {recommendation}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Key Stats Section - Mobile optimized */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-5">
-            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-              <p className="text-gray-400 text-xs lg:text-sm mb-1">Season Average</p>
-              <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(seasonAvg, threshold)}`}>
-                {formatNumber(seasonAvg)} pts
-              </p>
-            </div>
-            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-              <p className="text-gray-400 text-xs lg:text-sm mb-1">Last 5 Games</p>
-              <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(last5RegAvg, threshold)}`}>
-                {formatNumber(last5RegAvg)} pts
-              </p>
-            </div>
-            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg col-span-2 lg:col-span-1">
-              <p className="text-gray-400 text-xs lg:text-sm mb-1">Vs. {opponent}</p>
-              <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(vsOpponentAvg, threshold)}`}>
-                {formatNumber(vsOpponentAvg)} pts
-              </p>
-            </div>
-            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-              <p className="text-gray-400 text-xs lg:text-sm mb-1">@ Home</p>
-              <p
-                className={`text-lg lg:text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_home"], threshold)}`}
-              >
-                {formatNumber(advancedMetrics["avg_points_home"])} pts
-              </p>
-            </div>
-            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-              <p className="text-gray-400 text-xs lg:text-sm mb-1">@ Away</p>
-              <p
-                className={`text-lg lg:text-2xl font-bold ${getComparisonColor(advancedMetrics["avg_points_away"], threshold)}`}
-              >
-                {formatNumber(advancedMetrics["avg_points_away"])} pts
+            {/* AI Recommendation Bar - Compact */}
+            <div className="mt-3 bg-gray-800/30 rounded-lg p-2 lg:p-3 border border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <Activity className="text-blue-400 w-4 h-4 mr-2" />
+                  <span className="text-xs lg:text-sm font-medium">AI Analysis</span>
+                </div>
+                <div className="flex space-x-2 lg:space-x-4 text-xs">
+                  <span className="text-gray-400">
+                    Poisson:{" "}
+                    <span className={getProbabilityColor(poissonProbability)}>{poissonProbabilityFormatted}</span>
+                  </span>
+                  <span className="text-gray-400">
+                    Monte Carlo:{" "}
+                    <span className={getProbabilityColor(monteCarloProbability)}>{monteCarloFormatted}</span>
+                  </span>
+                </div>
+              </div>
+              <p className="text-gray-300 text-xs lg:text-sm leading-relaxed line-clamp-2 lg:line-clamp-none">
+                {betExplanation.explanation}
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Volatility Stats - Mobile optimized */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-              <p className="text-gray-400 text-xs lg:text-sm mb-1">Regular Season Volatility</p>
-              <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(volatility_regular, threshold)}`}>
-                {formatNumber(volatility_regular)} pts
-              </p>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
+            {/* Quick Stats Grid - Utilizing ALL your data */}
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Season</div>
+                <div className={`text-sm font-bold ${getComparisonColor(seasonAvgPoints, threshold)}`}>
+                  {formatNumber(seasonAvgPoints)}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Last 5</div>
+                <div className={`text-sm font-bold ${getComparisonColor(last5RegularGamesAvg, threshold)}`}>
+                  {formatNumber(last5RegularGamesAvg)}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">vs {opponent?.slice(0, 3)}</div>
+                <div className={`text-sm font-bold ${getComparisonColor(seasonAvgVsOpponent, threshold)}`}>
+                  {formatNumber(seasonAvgVsOpponent)}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Home/Away</div>
+                <div className={`text-sm font-bold ${getComparisonColor(homeAwayAvg, threshold)}`}>
+                  {formatNumber(homeAwayAvg)}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">@ Home</div>
+                <div
+                  className={`text-sm font-bold ${getComparisonColor(advancedPerformance?.avg_points_home, threshold)}`}
+                >
+                  {formatNumber(advancedPerformance?.avg_points_home)}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">@ Away</div>
+                <div
+                  className={`text-sm font-bold ${getComparisonColor(advancedPerformance?.avg_points_away, threshold)}`}
+                >
+                  {formatNumber(advancedPerformance?.avg_points_away)}
+                </div>
+              </div>
             </div>
-            {volatility_PlayOffs != 0 && (
-              <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-                <p className="text-gray-400 text-xs lg:text-sm mb-1">Playoffs Volatility</p>
-                <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(volatility_PlayOffs, threshold)}`}>
-                  {formatNumber(volatility_PlayOffs)} pts
-                </p>
+
+            {/* Playoff Stats Row - Only if playoff data exists */}
+            {num_playoff_games > 0 && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
+                  <div className="text-xs text-yellow-400">Playoff Avg</div>
+                  <div className={`text-sm font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
+                    {formatNumber(playoffAvg)}
+                  </div>
+                </div>
+                <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
+                  <div className="text-xs text-yellow-400">Playoff Games</div>
+                  <div className="text-sm font-bold text-white">{num_playoff_games}</div>
+                </div>
+                {volatilityPlayOffsForecast && volatilityPlayOffsForecast !== 0 && (
+                  <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
+                    <div className="text-xs text-yellow-400">PO Volatility</div>
+                    <div className="text-sm font-bold text-white">{formatNumber(volatilityPlayOffsForecast)}</div>
+                  </div>
+                )}
               </div>
             )}
-            {num_playoff_games !== 0 && (
-              <div className="bg-gray-800 p-3 lg:p-4 rounded-lg">
-                <p className="text-gray-400 text-xs lg:text-sm mb-1">Playoffs Average</p>
-                <p className={`text-lg lg:text-2xl font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
-                  {formatNumber(playoffAvg)} pts
-                </p>
-              </div>
-            )}
-          </div>
 
-          {/* Expandable sections remain the same but with mobile-optimized touch targets */}
-          {/* Recent Encounters Section */}
-          <div className="bg-gray-800 rounded-lg overflow-hidden">
-            <div
-              className="flex justify-between items-center p-4 cursor-pointer min-h-[56px]"
-              onClick={() => toggleSection("recentEncounters")}
-            >
-              <h2 className="text-lg lg:text-xl font-semibold">All Season Encounters</h2>
-              {expandedSection === "recentEncounters" ? (
-                <ChevronUp className="w-6 h-6 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-6 h-6 text-gray-400" />
+            {/* Volatility & Advanced Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              {volatilityForecast && (
+                <div className="bg-gray-800/50 p-2 rounded-lg">
+                  <div className="flex items-center mb-1">
+                    <BarChart3 className="w-3 h-3 text-blue-400 mr-1" />
+                    <span className="text-xs text-gray-400">Volatility</span>
+                  </div>
+                  <div className="text-sm font-bold text-white">{formatNumber(volatilityForecast)}</div>
+                </div>
+              )}
+              {advancedPerformance?.efg !== undefined && (
+                <div className="bg-gray-800/50 p-2 rounded-lg">
+                  <div className="text-xs text-gray-400">eFG%</div>
+                  <div className="text-sm font-bold text-white">{formatPercent(advancedPerformance.efg)}</div>
+                </div>
+              )}
+              {advancedPerformance?.shot_dist_3pt !== undefined && (
+                <div className="bg-gray-800/50 p-2 rounded-lg">
+                  <div className="text-xs text-gray-400">3PT Rate</div>
+                  <div className="text-sm font-bold text-white">{formatPercent(advancedPerformance.shot_dist_3pt)}</div>
+                </div>
+              )}
+              {advancedPerformance?.ft_rate !== undefined && (
+                <div className="bg-gray-800/50 p-2 rounded-lg">
+                  <div className="text-xs text-gray-400">FT Rate</div>
+                  <div className="text-sm font-bold text-white">{formatPercent(advancedPerformance.ft_rate)}</div>
+                </div>
               )}
             </div>
-            {expandedSection === "recentEncounters" && (
-              <div className="p-4 border-t border-gray-700">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[500px]">
-                    <thead>
-                      <tr className="text-left text-gray-400 border-b border-gray-700">
-                        <th className="pb-2 text-sm">Date</th>
-                        <th className="pb-2 text-sm">Opponent</th>
-                        <th className="pb-2 text-sm">Location</th>
-                        <th className="pb-2 text-sm">MIN</th>
-                        <th className="pb-2 text-sm">PTS</th>
-                        <th className="pb-2 text-right text-sm">vs Threshold</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {season_games_agst_opp.map((game, index) => (
-                        <tr key={index} className="border-b border-gray-700">
-                          <td className="py-3 text-sm">{game.date}</td>
-                          <td className="py-3">
-                            <div className="flex items-center">
-                              <ImageWithFallback
-                                src={game.opponentLogo || "/placeholder.svg"}
-                                alt={game.opponent}
-                                className="w-5 h-5 mr-2"
-                                fallbackSrc="/placeholder.svg?height=20&width=20"
-                              />
-                              <span className="text-sm truncate">{game.opponentFullName || game.opponent}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 text-sm">{game.location}</td>
-                          <td className="py-3 text-sm">{game.minutes || "N/A"}</td>
-                          <td className="py-3 font-bold text-sm">{game.points}</td>
-                          <td className="py-3 text-right">
-                            {threshold && (
-                              <span
-                                className={`text-sm font-medium ${
-                                  game.points > Number.parseFloat(threshold) ? "text-green-500" : "text-red-500"
-                                }`}
-                              >
-                                {game.points > Number.parseFloat(threshold) ? "OVER" : "UNDER"}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+
+            {/* Injury Report - Using your injuryReport data */}
+            {injuryReport && Object.keys(injuryReport).length > 0 && (
+              <div className="bg-gray-800/30 p-3 rounded-lg border border-gray-700">
+                <div className="flex items-center mb-2">
+                  <Heart className="w-4 h-4 text-red-400 mr-2" />
+                  <span className="text-sm font-medium">Injury Report</span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">Status:</span>
+                  <span className={`text-sm font-medium ${getInjuryStatusColor(injuryReport.status)}`}>
+                    {injuryReport.status || "Available"}
+                  </span>
+                </div>
+                {injuryReport.reason && (
+                  <div className="mt-1">
+                    <span className="text-xs text-gray-400">Reason: </span>
+                    <span className="text-xs text-gray-300">{injuryReport.reason}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Expandable Sections */}
+
+            {/* Recent Regular Season Games */}
+            <div className="bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700">
+              <button
+                className="w-full flex justify-between items-center p-3 hover:bg-gray-700/30 transition-colors"
+                onClick={() => toggleSection("recentGames")}
+              >
+                <div className="flex items-center">
+                  <Calendar className="w-4 h-4 text-green-400 mr-2" />
+                  <span className="text-sm font-medium">Recent Games ({last5RegularGames.length})</span>
+                </div>
+                {expandedSection === "recentGames" ? (
+                  <ChevronUp className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
+              {expandedSection === "recentGames" && (
+                <div className="border-t border-gray-700">
+                  <div className="p-3 space-y-2">
+                    {last5RegularGames.map((game, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between py-2 px-3 bg-gray-800/50 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <ImageWithFallback
+                            src={game.opponentLogo || "/placeholder.svg"}
+                            alt={game.opponent}
+                            className="w-5 h-5"
+                            fallbackSrc="/placeholder.svg?height=20&width=20"
+                          />
+                          <div>
+                            <div className="text-sm font-medium">{game.opponentFullName || game.opponent}</div>
+                            <div className="text-xs text-gray-400">
+                              {game.date} • {game.location}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`text-sm font-bold ${getComparisonColor(game.points, threshold)}`}>
+                            {game.points} pts
+                          </div>
+                          <div className="text-xs text-gray-400">{game.minutes}min</div>
+                          <div
+                            className={`text-xs font-medium ${game.points > threshold ? "text-green-400" : "text-red-400"}`}
+                          >
+                            {game.points > threshold ? "OVER" : "UNDER"}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Load More Games Button */}
+                    <button
+                      onClick={handleToggleMoreGames}
+                      disabled={loadingMoreGames}
+                      className="w-full py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+                    >
+                      {loadingMoreGames ? "Loading..." : showMoreGames ? "Show Less" : "Load More Games"}
+                    </button>
+
+                    {/* More Games */}
+                    {showMoreGames &&
+                      moreGames.map((game, index) => (
+                        <div
+                          key={`more-${index}`}
+                          className="flex items-center justify-between py-2 px-3 bg-gray-800/30 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <ImageWithFallback
+                              src={game.opponentLogo || "/placeholder.svg"}
+                              alt={game.opponent}
+                              className="w-5 h-5"
+                              fallbackSrc="/placeholder.svg?height=20&width=20"
+                            />
+                            <div>
+                              <div className="text-sm font-medium">{game.opponentFullName || game.opponent}</div>
+                              <div className="text-xs text-gray-400">
+                                {game.date} • {game.location}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-sm font-bold ${getComparisonColor(game.points, threshold)}`}>
+                              {game.points} pts
+                            </div>
+                            <div className="text-xs text-gray-400">{game.minutes}min</div>
+                            <div
+                              className={`text-xs font-medium ${game.points > threshold ? "text-green-400" : "text-red-400"}`}
+                            >
+                              {game.points > threshold ? "OVER" : "UNDER"}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                    {moreGamesError && <div className="text-red-400 text-sm text-center py-2">{moreGamesError}</div>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Playoff Games Section - Using your playoff_games data */}
+            {num_playoff_games > 0 && playoff_games.length > 0 && (
+              <div className="bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700">
+                <button
+                  className="w-full flex justify-between items-center p-3 hover:bg-gray-700/30 transition-colors"
+                  onClick={() => toggleSection("playoffGames")}
+                >
+                  <div className="flex items-center">
+                    <Trophy className="w-4 h-4 text-yellow-400 mr-2" />
+                    <span className="text-sm font-medium">Playoff Games ({num_playoff_games})</span>
+                    <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">
+                      Avg: {formatNumber(playoffAvg)} pts
+                    </span>
+                  </div>
+                  {expandedSection === "playoffGames" ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+                {expandedSection === "playoffGames" && (
+                  <div className="border-t border-gray-700">
+                    <div className="p-3 space-y-2">
+                      {playoff_games.map((game, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between py-2 px-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Trophy className="w-4 h-4 text-yellow-400" />
+                            <div>
+                              <div className="text-sm font-medium">{game.opponentFullName || game.opponent}</div>
+                              <div className="text-xs text-gray-400">
+                                {game.date} • {game.location}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-sm font-bold ${getComparisonColor(game.points, threshold)}`}>
+                              {game.points} pts
+                            </div>
+                            <div className="text-xs text-gray-400">{game.minutes}min</div>
+                            <div
+                              className={`text-xs font-medium ${game.points > threshold ? "text-green-400" : "text-red-400"}`}
+                            >
+                              {game.points > threshold ? "OVER" : "UNDER"}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Season vs Opponent - Using your season_games_agst_opp data */}
+            {season_games_agst_opp.length > 0 && (
+              <div className="bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700">
+                <button
+                  className="w-full flex justify-between items-center p-3 hover:bg-gray-700/30 transition-colors"
+                  onClick={() => toggleSection("vsOpponent")}
+                >
+                  <div className="flex items-center">
+                    <Target className="w-4 h-4 text-red-400 mr-2" />
+                    <span className="text-sm font-medium">
+                      vs {opponent} ({season_games_agst_opp.length})
+                    </span>
+                    <span className="ml-2 text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-full">
+                      Avg: {formatNumber(seasonAvgVsOpponent)} pts
+                    </span>
+                  </div>
+                  {expandedSection === "vsOpponent" ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+                {expandedSection === "vsOpponent" && (
+                  <div className="border-t border-gray-700">
+                    <div className="p-3 space-y-2">
+                      {season_games_agst_opp.map((game, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between py-2 px-3 bg-red-500/10 rounded-lg border border-red-500/20"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <MapPin className="w-4 h-4 text-gray-400" />
+                            <div>
+                              <div className="text-sm font-medium">{game.location}</div>
+                              <div className="text-xs text-gray-400">{game.date}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-sm font-bold ${getComparisonColor(game.points, threshold)}`}>
+                              {game.points} pts
+                            </div>
+                            <div className="text-xs text-gray-400">{game.minutes}min</div>
+                            <div
+                              className={`text-xs font-medium ${game.points > threshold ? "text-green-400" : "text-red-400"}`}
+                            >
+                              {game.points > threshold ? "OVER" : "UNDER"}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Career Season Stats - Using your careerSeasonStats data */}
+            {careerSeasonStats.length > 0 && (
+              <div className="bg-gray-800/30 rounded-lg overflow-hidden border border-gray-700">
+                <button
+                  className="w-full flex justify-between items-center p-3 hover:bg-gray-700/30 transition-colors"
+                  onClick={() => toggleSection("careerStats")}
+                >
+                  <div className="flex items-center">
+                    <BarChart3 className="w-4 h-4 text-purple-400 mr-2" />
+                    <span className="text-sm font-medium">Career Stats ({careerSeasonStats.length} seasons)</span>
+                  </div>
+                  {expandedSection === "careerStats" ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+                {expandedSection === "careerStats" && (
+                  <div className="border-t border-gray-700 p-3">
+                    <div className="space-y-2">
+                      {careerSeasonStats.map((season, index) => (
+                        <div key={index} className="bg-purple-500/10 p-3 rounded-lg border border-purple-500/20">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-purple-400">{season.SEASON_ID}</span>
+                            <span className="text-xs text-gray-400">{season.TEAM_ABBREVIATION}</span>
+                          </div>
+                          <div className="grid grid-cols-4 gap-2 text-xs">
+                            <div>
+                              <div className="text-gray-400">PPG</div>
+                              <div className="font-bold text-white">{formatNumber(season.PTS)}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400">FG%</div>
+                              <div className="font-bold text-white">{formatPercent(season.FG_PCT)}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400">3P%</div>
+                              <div className="font-bold text-white">{formatPercent(season.FG3_PCT)}</div>
+                            </div>
+                            <div>
+                              <div className="text-gray-400">GP</div>
+                              <div className="font-bold text-white">{season.GP}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
+        </div>
 
-          {/* Add to Picks Button - Mobile optimized */}
+        {/* Fixed Bottom Action */}
+        <div className="flex-shrink-0 p-3 lg:p-4 bg-gray-900 border-t border-gray-700">
           <button
             onClick={(e) => {
-              e.stopPropagation();
-              // Use backend-compatible date format (YYYYMMDD)
-              const gameDate = playerData.gameDate;
-              let dateStr = '';
-              
+              e.stopPropagation()
+              const gameDate = playerData.gameDate
+              let dateStr = ""
+
               if (gameDate) {
-                // Convert "MM/DD/YYYY" to "YYYYMMDD"
-                const [month, day, year] = gameDate.split('/');
-                dateStr = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+                const [month, day, year] = gameDate.split("/")
+                dateStr = `${year}${month.padStart(2, "0")}${day.padStart(2, "0")}`
               }
-            
-              const pickId = `${playerData.name.toLowerCase().replace(/\s+/g, '-')}_${threshold}_${dateStr}`;
-              
+
+              const pickId = `${playerData.name.toLowerCase().replace(/\s+/g, "-")}_${threshold}_${dateStr}`
+
               onAddToPicks({
                 ...playerData,
                 id: pickId,
                 threshold,
-              });
-              onClose();
+              })
+              onClose()
             }}
-            className="w-full py-4 lg:py-4 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium rounded-lg flex items-center justify-center transition-all duration-200 min-h-[56px] text-base lg:text-lg shadow-lg"
+            className="w-full py-3 lg:py-4 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 active:from-green-800 active:to-green-700 text-white font-medium rounded-lg flex items-center justify-center transition-all duration-200 shadow-lg"
           >
-            <Plus className="w-6 h-6 mr-2" />
+            <Plus className="w-5 h-5 mr-2" />
             <span>Add to Picks</span>
           </button>
         </div>
@@ -382,4 +684,4 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   )
 }
 
-export default PlayerAnalysisModal
+export default OptimizedPlayerAnalysisModal
