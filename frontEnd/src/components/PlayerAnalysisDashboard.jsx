@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Plus, TrendingUp, TrendingDown, Activity, BarChart3, Heart } from "lucide-react"
 import ImageWithFallback from "./ImageWithFallback"
 
-const OptimizedPlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
+const PlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks }) => {
   const [expandedSection, setExpandedSection] = useState(null)
   const [moreGames, setMoreGames] = useState([])
   const [showMoreGames, setShowMoreGames] = useState(false)
@@ -379,4 +379,4 @@ const OptimizedPlayerAnalysisDashboard = ({ playerData, threshold, onAddToPicks 
   )
 }
 
-export default OptimizedPlayerAnalysisDashboard
+export default PlayerAnalysisDashboard

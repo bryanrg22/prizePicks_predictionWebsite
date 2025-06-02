@@ -125,9 +125,7 @@ def fetch_player_stats(game_id, player_id):
 
         raw_min = row["MIN"] or "0"
         if isinstance(raw_min, str) and ":" in raw_min:
-            mins = int(raw_min.split(":")[0])
-        else:
-            mins = int(float(str(raw_min).split(".")[0])) if raw_min else 0
+            mins = int(float(str(raw_min).split(".")[0]))
         
         logger.info(f"Player {player_id} stats: {pts} points, {mins} minutes")
         return pts, mins

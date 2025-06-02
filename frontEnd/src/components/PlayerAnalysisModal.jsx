@@ -19,7 +19,8 @@ import {
 } from "lucide-react"
 import ImageWithFallback from "./ImageWithFallback"
 
-const OptimizedPlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
+
+const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
   const [expandedSection, setExpandedSection] = useState(null)
   const [moreGames, setMoreGames] = useState([])
   const [showMoreGames, setShowMoreGames] = useState(false)
@@ -684,4 +685,4 @@ const OptimizedPlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => 
   )
 }
 
-export default OptimizedPlayerAnalysisModal
+export default PlayerAnalysisModal

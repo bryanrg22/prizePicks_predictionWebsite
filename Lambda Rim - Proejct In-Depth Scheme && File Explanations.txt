@@ -1,4 +1,4 @@
-﻿# Lambda Rim  
+﻿# Lambda Rim
 ## Because 99% ain’t a free throw
 
 
@@ -307,6 +307,8 @@ firestore/
 │   │       ├─ num_playoff_games: number
 │   │       ├─ playoffAvg: number
 │   │       ├─ volatilityPlayOffsForecast: number
+│   │       ├─ points: number
+│   │       ├─ minutes: number
 │   │       └─ playoff_games: array<map> 
 │   │            ├─ date: string
 │   │            ├─ points: number
@@ -585,9 +587,12 @@ File
 – get_player_status(name) – quick lookup that scans the latest PDF data, returning { status, reason } or "NOT YET SUBMITTED" if no entry exists.
 • Preserves the original JSON/RSS fallback for speed but now prioritizes the PDF parser for complete, authoritative reports.
 • Returns a mapping keyed by NBA player ID so player_analyzer.py can apply up-to-the-minute injury status to adjust probabilistic forecasts.
-	main.py
-	Cloud‑Run entry‑point + cron helpers
-	• Exposes app for Gunicorn and contains scheduled logic that:  – polls recent box scores;  – moves finished picks from active → concluded;  – updates user bet history.
+	
+
+	
+
+	
+
 	monte_carlo.py
 	Python wrapper around native Monte‑Carlo engine
 	• Fetches ≤ 60 recent games → computes μ, σ → runs 100 000 sims.• Prefers the ultra‑fast shared lib libmontecarlo.so (see below) but can fall back to NumPy.
