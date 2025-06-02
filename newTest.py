@@ -25,27 +25,6 @@ except Exception as e:
     logger.exception("Failed to initialize Firebase")
     raise
 
-def safe_firestore_operation(operation, operation_name="Firestore operation", 
-                             max_retries=5, initial_delay=1):
-    """Execute Firestore operation with exponential backoff"""
-    for attempt in range(max_retries):
-        try:
-            result = operation()
-            if attempt > 0:
-                logger.info(f"{operation_name} succeeded on retry {attempt+1}")
-            return result
-        except (DeadlineExceeded, ServiceUnavailable, ConnectionError) as e:
-            if attempt < max_retries - 1:
-                delay = initial_delay * (2 ** attempt)
-                logger.warning(f"{operation_name} failed: {e}. Retry {attempt+1}/{max_retries} in {delay}s")
-                time.sleep(delay)
-            else:
-                logger.error(f"{operation_name} failed after {max_retries} attempts")
-                raise
-        except Exception as e:
-            logger.error(f"Unexpected error in {operation_name}: {e}")
-            raise
-    return None
 
 def fetch_player_stats(game_id, player_id, max_retries=3):
     """Fetch player stats with retry mechanism and robust parsing"""
@@ -92,134 +71,10 @@ def fetch_player_stats(game_id, player_id, max_retries=3):
             return None, None
     return None, None
 
-def process_concluded_players(batch_size=25):
-    """Process all players in concluded collection with batching"""
-    logger.info("Starting player processing")
-    total_processed = 0
-    total_updated = 0
-    last_doc = None
-    
-    # Get collection reference
-    coll_ref = db.collection("processedPlayers").document("players").collection("concluded")
-    
-    while True:
-        try:
-            # Build query with batching
-            query = coll_ref.order_by("__name__").limit(batch_size)
-            if last_doc:
-                query = query.start_after(last_doc)
-                
-            # Execute query with retry
-            docs = safe_firestore_operation(
-                lambda: list(query.stream()),
-                "Firestore query",
-                max_retries=5
-            )
-            
-            if not docs:
-                logger.info("Reached end of collection")
-                break
-                
-            logger.info(f"Processing batch of {len(docs)} players")
-            batch_updated = 0
-            
-            for doc in docs:
-                try:
-                    doc_id = doc.id
-                    data = doc.to_dict()
-                    logger.info(f"Processing player: {doc_id}")
-                    
-                    # Validate required fields
-                    game_id = data.get("gameId")
-                    player_id = data.get("playerId")
-                    threshold = data.get("threshold", 0)
-                    
-                    if not game_id or not player_id:
-                        logger.error(f"Skipping {doc_id}: Missing gameId or playerId")
-                        continue
-                    
-                    # CHANGED: Only skip if we have valid non-zero stats
-                    final_points = data.get("finalPoints")
-                    final_minutes = data.get("finalMinutes")
-                    
-                    # Check if player has valid stats (non-zero minutes or non-zero points)
-                    if final_points is not None and final_minutes is not None:
-                        if final_minutes > 0 or final_points > 0:
-                            logger.info(f"Skipping {doc_id}: Already processed with valid stats")
-                            continue
-                        else:
-                            logger.warning(f"Re-processing {doc_id}: Had 0 points and 0 minutes (possibly invalid)")
-                    
-                    # Get stats with retries
-                    pts, mins = fetch_player_stats(game_id, player_id)
-                    if pts is None:
-                        logger.warning(f"Stats unavailable for {doc_id}")
-                        continue
-                    
-                    # Determine result
-                    bet_result = "WIN" if pts > threshold else "LOSS"
-                    
-                    # Prepare update
-                    update_data = {
-                        "finalPoints": pts,
-                        "finalMinutes": mins,
-                        "bet_result": bet_result,
-                        "gameStatus": "Concluded"  # Ensure status is set
-                    }
-                    
-                    # Update document with retry
-                    safe_firestore_operation(
-                        lambda: doc.reference.update(update_data),
-                        f"Update document {doc_id}",
-                        max_retries=3
-                    )
-                    
-                    logger.info(f"Updated {doc_id}: {pts} pts vs {threshold} -> {bet_result}")
-                    batch_updated += 1
-                    total_updated += 1
-                    
-                except Exception as e:
-                    logger.error(f"Failed to process {doc_id}: {e}")
-                
-                finally:
-                    total_processed += 1
-                    last_doc = doc
-            
-            logger.info(f"Batch processed: {len(docs)} players, {batch_updated} updated")
-            
-            # Break if we got fewer than batch size (end of collection)
-            if len(docs) < batch_size:
-                logger.info("Reached final batch")
-                break
-                
-        except Exception as e:
-            logger.error(f"Batch processing failed: {e}")
-            break
-    
-    return total_processed, total_updated
 
 if __name__ == "__main__":
     start_time = time.time()
     logger.info("===== STARTING PLAYER STATS UPDATE =====")
     
-    try:
-        # Process with conservative batch size for large collections
-        processed_count, updated_count = process_concluded_players(batch_size=20)
-        
-        elapsed = time.time() - start_time
-        success_rate = (updated_count / processed_count * 100) if processed_count > 0 else 0
-        
-        logger.info(f"""
-        ======= PROCESSING COMPLETE =======
-        Total players processed: {processed_count}
-        Successfully updated:     {updated_count}
-        Failed:                   {processed_count - updated_count}
-        Success rate:             {success_rate:.1f}%
-        Elapsed time:             {elapsed:.2f} seconds
-        Avg time per player:      {(elapsed/processed_count):.2f}s (total)
-        ===================================
-        """)
-        
-    except Exception as e:
-        logger.exception("FATAL ERROR IN MAIN EXECUTION")
-        raise
+    print(fetch_player_stats("0042400223", 1628983)) # shai_gilgeous-alexander_26.5_20250509 - 45 mins, 18 points
+    print(fetch_player_stats("0042400306", 1627783)) # pascal_siakam_15.5_20250531 - 36 mins, 31 points
