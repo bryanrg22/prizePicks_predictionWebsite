@@ -2,3 +2,5 @@
 backend/env
 backEnd/prizepicksproject-15337-firebase-adminsdk-fbsvc-c967e4c17d.json
 .env.local
+test.py
+newTest.py
