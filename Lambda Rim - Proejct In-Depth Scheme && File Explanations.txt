@@ -181,7 +181,6 @@ Together, these three metrics give a balanced outlook:
 PRIZEPICKS_PREDICTIONWEBSITE/
 ├── backEnd/
 │   ├── app.py
-│   ├── backtester.py
 │   ├── chatgpt_bet_explainer.py
 │   ├── injury_report.py
 │   ├── monte_carlo.py
