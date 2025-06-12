@@ -143,8 +143,8 @@ export default function PreviousBetsPage() {
       bettingPlatform: bet.bettingPlatform || "PrizePicks",
       betType: bet.betType || "Power Play",
       picks: bet.picks.map((pick) => ({
-        player: pick.playerName,
-        team: pick.playerTeam || "Team",
+        player: pick.name,
+        team: pick.team || "Team",
         opponent: pick.opponent || "Opponent",
         threshold: pick.threshold,
         recommendation: pick.recommendation,
@@ -176,7 +176,7 @@ export default function PreviousBetsPage() {
       betType: bet.betType || "Power Play",
       picks: Array.isArray(bet.picks)
         ? bet.picks.map((pick) => ({
-            player: pick.playerName,
+            player: pick.name,
             team: pick.playerTeam || "Team",
             opponent: pick.opponent || "Opponent",
             threshold: pick.threshold,
