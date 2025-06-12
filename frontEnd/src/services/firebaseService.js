@@ -708,9 +708,9 @@ export const getActiveBets = async (userId) => {
 }
 
 // Get bet history and resolve document references
-export const getBetHistory = async (userId, year, month) => {
+export const getBetHistory = async (userId) => {
   try {
-    const histRef = collection(db, "users", userId, "betHistory", year, month)
+    const histRef = collection(db, "users", userId, "betHistory")
     const snap = await getDocs(histRef)
 
     const bets = await Promise.all(
@@ -748,10 +748,7 @@ export const getBetHistory = async (userId, year, month) => {
 // Get all bet history (simplified for now)
 export const getAllBetHistory = async (userId) => {
   try {
-    const now = new Date()
-    const y = now.getFullYear().toString()
-    const m = String(now.getMonth() + 1).padStart(2, "0")
-    return await getBetHistory(userId, y, m)
+    return await getBetHistory(userId)
   } catch (error) {
     console.error("Error getting all bet history:", error)
     return []
