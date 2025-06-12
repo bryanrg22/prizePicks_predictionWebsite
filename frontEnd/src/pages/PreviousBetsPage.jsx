@@ -175,6 +175,17 @@ export default function PreviousBetsPage() {
       bettingPlatform: bet.bettingPlatform || "PrizePicks",
       betType: bet.betType || "Power Play",
       picks: Array.isArray(bet.picks)
+        ? bet.picks.map((pick) => ({
+            player: pick.name,
+            team: pick.team || "Team",
+            opponent: pick.opponent || "Opponent",
+            threshold: pick.threshold,
+            recommendation: pick.recommendation,
+            photoUrl: pick.photoUrl || "/placeholder.svg?height=40&width=40",
+            finalPoints: pick.finalPoints || 0,
+            bet_result: pick.bet_result || "MISS",
+          }))
+        : [],
     }))
   }
 
