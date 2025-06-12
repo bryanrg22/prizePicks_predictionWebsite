@@ -304,9 +304,9 @@ const PreviousBets = ({ bets, activeBets }) => {
                             <div
                               key={index}
                               className={`rounded-lg p-3 border ${
-                                pick.bet_result === "Lost"
-                                  ? "bg-gradient-to-r from-red-800/50 to-red-900/50 border-red-700/50"
-                                  : "bg-gradient-to-r from-green-800/50 to-green-900/50 border-green-700/50"
+                                pick.bet_result === "WIN"
+                                  ? "bg-gradient-to-r from-green-800/50 to-green-900/50 border-green-700/50"
+                                  : "bg-gradient-to-r from-red-800/50 to-red-900/50 border-red-700/50"
                               }`}
                             >
                               <div className="flex items-center justify-between">
