@@ -443,8 +443,6 @@ def check_active_bets():
                         db.collection("users")
                           .document(user_id)
                           .collection("betHistory")
-                          .document(year)
-                          .collection(month)
                           .document(bet_doc.id)
                     )
 
