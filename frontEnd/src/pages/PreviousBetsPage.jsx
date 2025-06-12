@@ -142,14 +142,7 @@ export default function PreviousBetsPage() {
       gameTime: bet.picks[0]?.gameTime || "TBD",
       bettingPlatform: bet.bettingPlatform || "PrizePicks",
       betType: bet.betType || "Power Play",
-      picks: bet.picks.map((pick) => ({
-        player: pick.name,
-        team: pick.team || "Team",
-        opponent: pick.opponent || "Opponent",
-        threshold: pick.threshold,
-        recommendation: pick.recommendation,
-        photoUrl: pick.photoUrl || "/placeholder.svg?height=40&width=40",
-      })),
+      picks: bet.picks.map((pick))
     }))
   }
 
