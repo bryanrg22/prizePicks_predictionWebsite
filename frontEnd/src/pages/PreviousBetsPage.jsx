@@ -176,7 +176,7 @@ export default function PreviousBetsPage() {
       betType: bet.betType || "Power Play",
       picks: Array.isArray(bet.picks)
         ? bet.picks.map((pick) => ({
-            player: pick.name,
+            name: pick.name,
             team: pick.team || "Team",
             opponent: pick.opponent || "Opponent",
             threshold: pick.threshold,
