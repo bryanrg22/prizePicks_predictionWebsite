@@ -427,8 +427,42 @@ def check_active_bets():
                         "settledAt": firestore.SERVER_TIMESTAMP,
                     })
                     
+                    # Move to betHistory/{year}/{month}
+                    created_at = bet_data.get("createdAt")
+                    if hasattr(created_at, "to_datetime"):
+                        dt = created_at.to_datetime()
+                    elif hasattr(created_at, "datetime"):
+                        dt = created_at.datetime
+                    else:
+                        dt = datetime.datetime.utcnow()
+
+                    year = dt.strftime("%Y")
+                    month = dt.strftime("%m")
+
+                    history_ref = (
+                        db.collection("users")
+                          .document(user_id)
+                          .collection("betHistory")
+                          .document(year)
+                          .collection(month)
+                          .document(bet_doc.id)
+                    )
+
+                    history_data = {
+                        **bet_data,
+                        "status": overall_result,
+                        "bet_result": overall_result,
+                        "winnings": winnings,
+                        "settledAt": firestore.SERVER_TIMESTAMP,
+                    }
+
+                    history_ref.set(history_data)
+                    bet_doc.reference.delete()
+
                     settled_bets += 1
-                    logger.info(f"Settled bet {bet_doc.id} for user {user_id}: {overall_result}, winnings: ${winnings}")
+                    logger.info(
+                        f"Settled bet {bet_doc.id} for user {user_id}: {overall_result}, winnings: ${winnings}"
+                    )
                     
         logger.info(f"Settled {settled_bets} bets")
         
