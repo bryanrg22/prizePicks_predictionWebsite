@@ -304,9 +304,9 @@ const PreviousBets = ({ bets, activeBets }) => {
                             <div
                               key={index}
                               className={`rounded-lg p-3 border ${
-                                pick.result === "HIT"
-                                  ? "bg-gradient-to-r from-green-800/50 to-green-900/50 border-green-700/50"
-                                  : "bg-gradient-to-r from-red-800/50 to-red-900/50 border-red-700/50"
+                                pick.bet_result === "Lost"
+                                  ? "bg-gradient-to-r from-red-800/50 to-red-900/50 border-red-700/50"
+                                  : "bg-gradient-to-r from-green-800/50 to-green-900/50 border-green-700/50"
                               }`}
                             >
                               <div className="flex items-center justify-between">
@@ -322,7 +322,7 @@ const PreviousBets = ({ bets, activeBets }) => {
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-white truncate">{pick.player}</p>
+                                    <p className="font-medium text-white truncate">{pick.name}</p>
                                     <p className="text-sm text-gray-300">
                                       {pick.team} vs {pick.opponent}
                                     </p>
@@ -342,13 +342,13 @@ const PreviousBets = ({ bets, activeBets }) => {
                                 </div>
                                 
                                 <div className="text-right flex-shrink-0">
-                                  <p className="font-bold text-white text-lg">{pick.actual} pts</p>
+                                  <p className="font-bold text-white text-lg">{pick.finalPoints} pts</p>
                                   <div className={`px-2 py-1 rounded-md text-xs font-bold ${
-                                    pick.result === "HIT"
+                                    pick.bet_result === "WIN"
                                       ? "bg-green-600 text-white"
                                       : "bg-red-600 text-white"
                                   }`}>
-                                    {pick.result}
+                                    {pick.bet_result}
                                   </div>
                                 </div>
                               </div>
