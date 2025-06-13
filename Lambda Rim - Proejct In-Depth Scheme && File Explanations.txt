@@ -320,6 +320,8 @@ firestore/
 │   │       └── {first_last_threshold_YYYYMMDD}/ 
 │   │            │ ( same fields as active/ )
 │   │            ├─ bet_result: string
+│   │            ├─ finishedAt: timestamp
+│   │            ├─ betStatus: string
 │   │            ├─ finalPoints: number
 │   │            └─ finalMinutes: number
 │   └── injury_report/ (document)
