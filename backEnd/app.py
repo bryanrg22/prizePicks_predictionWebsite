@@ -121,9 +121,9 @@ def fetch_player_stats(game_id, player_id):
             return None, None
             
         row = df.loc[mask].iloc[0]
-        pts = int(row["PTS"]) if row["PTS"] is not None else 0
+        pts = int(row["PTS"]) if row["PTS"] is not None else -1
 
-        raw_min = row["MIN"] or "0"
+        raw_min = row["MIN"] or "-1"
         if isinstance(raw_min, str) and ":" in raw_min:
             mins = int(float(str(raw_min).split(".")[0]))
         
@@ -142,7 +142,7 @@ def update_doc(ref, data):
     try:
         game_id = data.get("gameId")
         player_id = data.get("playerId")
-        threshold = data.get("threshold", 0)
+        threshold = data.get("threshold")
         
         if not game_id or not player_id:
             logger.error(f"Missing gameId or playerId in data: {data}")

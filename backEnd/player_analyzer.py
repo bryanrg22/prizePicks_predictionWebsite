@@ -530,6 +530,7 @@ def analyze_player(first_name, last_name, threshold=None):
     num_playoff_games = 0
     playoff_games = []
     playoff_avg = 0
+    playoff_underCount = 0
     if next_game_type == "Playoffs":
         pgl = PlayerGameLog(
             player_id=nba_player_id,                 
@@ -576,6 +577,9 @@ def analyze_player(first_name, last_name, threshold=None):
             else:
                 minutes = int(raw_min) if raw_min else None
 
+            if int(curr['PTS']) <= threshold:
+                playoff_underCount += 1
+
             playoff_games.append({
                 "gameId":           curr['Game_ID'],
                 "date":             curr['GAME_DATE'],
@@ -594,6 +598,9 @@ def analyze_player(first_name, last_name, threshold=None):
     # Get the last 5 games
     last_5_regular_games = []
     last_5_regular_games_avg = 0
+    underCount = 0
+    num_season_count = 5
+    average_mins = 0
     # Check for (if remaining) Regular Season Game
     pgl = PlayerGameLog(
             player_id=nba_player_id,                 
@@ -625,6 +632,11 @@ def analyze_player(first_name, last_name, threshold=None):
         else:
             minutes = int(raw_min) if raw_min else None
         last_5_regular_games_avg += int(curr['PTS'])
+
+        if int(curr['PTS']) <= threshold:
+                underCount += 1
+        
+        average_mins += minutes
         
         last_5_regular_games.append({
             "gameId":           curr['Game_ID'],
@@ -640,11 +652,37 @@ def analyze_player(first_name, last_name, threshold=None):
     
     last_5_regular_games_avg /= 5
 
+    pgl = PlayerGameLog(
+            player_id=nba_player_id,                 
+            season=get_current_season(),
+            season_type_all_star='Regular Season'
+        )
+    games_df = pgl.get_data_frames()[0]
+    for i in range(5, len(games_df)):
+        curr = games_df.iloc[i]
+        num_season_count += 1
+
+        # minutes (takes only the minute portion if it's "MM:SS")
+        raw_min = curr.get('MIN', '')
+        if isinstance(raw_min, str) and ':' in raw_min:
+            minutes = int(raw_min.split(':')[0])
+        else:
+            minutes = int(raw_min) if raw_min else None
+        
+        average_mins += minutes
+
+        if int(curr['PTS']) <= threshold:
+            underCount += 1
+
+    
+    average_mins /= num_season_count
+        
+
     # Build the original player data object with preserved keys
     player_data = {
         "playerId": nba_player_id,
-        "points": None,
-        "minutes": None,
+        "finalPoints": -1,
+        "finalMinutes": -1,
         "threshold": threshold,
         "name": player_name,
         "position": player_position,
@@ -672,7 +710,11 @@ def analyze_player(first_name, last_name, threshold=None):
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
         "playoffAvg":       playoff_avg,
-        "season_games_agst_opp" : fetch_all_opponent_games(nba_player_id, opponent_abbr)
+        "season_games_agst_opp" : fetch_all_opponent_games(nba_player_id, opponent_abbr),
+        "underCount" : underCount,
+        "num_season_games" : num_season_count,
+        "playoff_underCount" : playoff_underCount,
+        "average_mins": average_mins
     }
 
     
