@@ -1,4 +1,4 @@
-﻿# Lambda Rim
+# Lambda Rim
 ## Because 99% ain’t a free throw
 
 
@@ -319,8 +319,9 @@ firestore/
 │   ├── concluded/ (document)
 │   │       └── {first_last_threshold_YYYYMMDD}/ 
 │   │            │ ( same fields as active/ )
-│   │            │  points: number
-│   │            └─ minutes: number
+│   │            ├─ bet_result: string
+│   │            ├─ finalPoints: number
+│   │            └─ finalMinutes: number
 │   └── injury_report/ (document)
 │           └── {team_name (e.g. indiana_pacers)}/ (document)
 │               ├─ lastUpdated: timestamp
