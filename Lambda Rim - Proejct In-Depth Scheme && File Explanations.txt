@@ -338,11 +338,15 @@ firestore/
 │   │   ├─ betPayOut: number
 │   │   ├─ bettingPlatform: string
 │   │   ├─ betType: string
-│   │   ├─ betResult: string
+│   │   ├─ createdAt: timestamp
 │   │   └─ picks: array<map>
 │   │       └─ {processedPlayers/players/active/first_last_threshold_YYYYMMDD} (doc ref)
 │   ├─ betHistory/{YYYYMMDDTHHMMSSZ} (e.g. 20250528T221321Z)
-│   │   └─ ( same fields as activeBets/, except the document references in the picks array<map> are changed to: processedPlayers/players/concluded/first_last_threshold_YYYYMMDD} (doc ref) )
+│   │   │  ( same fields as activeBets/, except the document references in the picks array<map> are changed to: processedPlayers/players/concluded/{first_last_threshold_YYYYMMDD} (doc ref) )
+│   │   ├─ betResult: string
+│   │   ├─ settledAt: timestamp
+│   │   ├─ status: string
+│   │   └─ winnings: number
 │   └─ profileData
 │       ├─ createdAt: timestamp
 │       ├─ displayName: string
