@@ -123,7 +123,8 @@ def fetch_player_stats(game_id, player_id):
         row = df.loc[mask].iloc[0]
         pts = int(row["PTS"]) if row["PTS"] is not None else -1
 
-        raw_min = row["MIN"] or "-1"
+        raw_min = row["MIN"]
+        mins = -1
         if isinstance(raw_min, str) and ":" in raw_min:
             mins = int(float(str(raw_min).split(".")[0]))
         
