@@ -231,9 +231,7 @@ def fetch_career_summaries(player_id, last_n=3):
         season_stats.append(season_data)
     return season_stats
 
-############################################################################
-### CHANGED: fetch_player_game_logs ensures we store FGM, FGA, etc.
-############################################################################
+
 def fetch_player_game_logs(nba_player_id, season_str):
     """
     Fetches advanced game logs for the specified NBA player (by official nba_api ID).
@@ -280,9 +278,8 @@ def fetch_player_game_logs(nba_player_id, season_str):
         })
     return game_dicts
 
-############################################################################
-### ADDED: analyze_player_performance using advanced logs
-############################################################################
+
+
 def analyze_player_performance(nba_player_id, season_str):
     """
     Computes additional advanced stats from the official NBA ID logs.
@@ -360,20 +357,13 @@ def analyze_player_performance(nba_player_id, season_str):
     avg_points_away = sum(away_games) / len(away_games) if away_games else 0
 
     return {
-        "avg_points": avg_points,
-        "avg_minutes": avg_minutes,
         "usage_rate": usage_rate,
         "efg": efg,
         "shot_dist_3pt": shot_dist_3pt,
         "ft_rate": ft_rate,
-        "avg_points_home": avg_points_home,
-        "avg_points_away": avg_points_away
     }
 
 
-############################################################################
-### CHANGED: in analyze_player, use name-based lookup for NBA ID and merge old data
-############################################################################
 def analyze_player(first_name, last_name, threshold=None):
     """
     1) Use balldontlie just for the player's name confirmation.
@@ -530,7 +520,15 @@ def analyze_player(first_name, last_name, threshold=None):
     num_playoff_games = 0
     playoff_games = []
     playoff_avg = 0
+    playoff_minutes_avg = 0
     playoff_underCount = 0
+    playoff_points_home_avg = 0
+    playoff_home_games = 0
+    playoff_points_away_avg = 0
+    playoff_minutes_away_avg = 0
+    playoff_minutes_away_avg = 0
+    playoff_away_games = 0
+
     if next_game_type == "Playoffs":
         pgl = PlayerGameLog(
             player_id=nba_player_id,                 
@@ -558,9 +556,12 @@ def analyze_player(first_name, last_name, threshold=None):
             if ' vs. ' in matchup:
                 location = 'Home'
                 opp_abbr = matchup.split(' vs. ')[1]
+                playoff_home_games += 1
             elif ' @ ' in matchup:
                 location = 'Away'
                 opp_abbr = matchup.split(' @ ')[1]
+                playoff_away_games += 1
+
             else:
                 location = 'Unknown'
                 opp_abbr = None
@@ -577,8 +578,17 @@ def analyze_player(first_name, last_name, threshold=None):
             else:
                 minutes = int(raw_min) if raw_min else None
 
+            playoff_minutes_avg += minutes
+
             if int(curr['PTS']) <= threshold:
                 playoff_underCount += 1
+
+            if location == 'Home':
+                playoff_points_home_avg += int(curr['PTS'])
+                playoff_minutes_home_avg += minutes
+            elif location == 'Away':
+                playoff_points_away_avg += int(curr['PTS'])
+                playoff_minutes_away_avg += minutes
 
             playoff_games.append({
                 "gameId":           curr['Game_ID'],
@@ -594,6 +604,12 @@ def analyze_player(first_name, last_name, threshold=None):
         
         
         playoff_avg = games_df['PTS'].sum() / len(games_df)
+        playoff_minutes_avg /= num_playoff_games if num_playoff_games > 0 else 0
+        playoff_points_home_avg /= playoff_home_games if playoff_home_games > 0 else 0
+        playoff_points_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
+        playoff_minutes_home_avg /= playoff_home_games if playoff_home_games > 0 else 0
+        playoff_minutes_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
+
 
     # Get the last 5 games
     last_5_regular_games = []
@@ -601,6 +617,7 @@ def analyze_player(first_name, last_name, threshold=None):
     underCount = 0
     num_season_count = 5
     average_mins = 0
+
     # Check for (if remaining) Regular Season Game
     pgl = PlayerGameLog(
             player_id=nba_player_id,                 
@@ -652,6 +669,13 @@ def analyze_player(first_name, last_name, threshold=None):
     
     last_5_regular_games_avg /= 5
 
+    home_games = 0
+    away_games = 0
+    points_home_avg = 0
+    points_away_avg = 0
+    minutes_home_avg = 0
+    minutes_away_avg = 0
+
     pgl = PlayerGameLog(
             player_id=nba_player_id,                 
             season=get_current_season(),
@@ -660,6 +684,14 @@ def analyze_player(first_name, last_name, threshold=None):
     games_df = pgl.get_data_frames()[0]
     for i in range(5, len(games_df)):
         curr = games_df.iloc[i]
+        matchup = curr['MATCHUP']            
+        if ' vs. ' in matchup:
+            location = 'Home'
+            home_games += 1
+        elif ' @ ' in matchup:
+            location = 'Away'
+            away_games += 1
+        
         num_season_count += 1
 
         # minutes (takes only the minute portion if it's "MM:SS")
@@ -668,7 +700,17 @@ def analyze_player(first_name, last_name, threshold=None):
             minutes = int(raw_min.split(':')[0])
         else:
             minutes = int(raw_min) if raw_min else None
+
+        if location == 'Home':
+            points_home_avg += int(curr['PTS'])
+            minutes_home_avg += minutes
+            home_games += 1
+        elif location == 'Away':
+            points_away_avg += int(curr['PTS'])
+            minutes_away_avg += minutes
+            away_games += 1
         
+
         average_mins += minutes
 
         if int(curr['PTS']) <= threshold:
@@ -676,53 +718,71 @@ def analyze_player(first_name, last_name, threshold=None):
 
     
     average_mins /= num_season_count
+    playoff_minutes_avg /= num_playoff_games if num_playoff_games > 0 else 0
+    points_home_avg /= playoff_home_games if playoff_home_games > 0 else 0
+    points_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
+    minutes_home_avg /= playoff_home_games if playoff_home_games > 0 else 0
+    minutes_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
         
 
     # Build the original player data object with preserved keys
     player_data = {
         "playerId": nba_player_id,
-        "finalPoints": -1,
-        "finalMinutes": -1,
-        "threshold": threshold,
         "name": player_name,
         "position": player_position,
+        "photoUrl": player_image_url,
+
+
+        "gameId": next_game_id,
+        "gameDate": game_date_str,
+        "gameTime": game_date_est,
+        "matchup": matchup,
+        "gameType": next_game_type,
+        "gameStatus" : "Scheduled",
+
+
         "team": player_team,
         "teamConference": player_team_conference,
         "teamPlayoffRank": player_team_playoffRank,
         "teamLogo": player_team_logo,
-        "photoUrl": player_image_url,
-        "gameDate": game_date_str,
-        "gameTime": game_date_est,
-        "matchup": matchup,
+
+
         "opponent": opponent_team_name,
         "opponentConference": opponent_team_conference,
         "opponentPlayoffRank": opponent_team_playoffRank,
         "opponentLogo": opponent_team_logo,
-        "seasonAvgPoints": season_avg_points,
-        "careerAvgVsOpponent": career_avg_points_vs_opponent,
-        "seasonAvgVsOpponent": season_avg_points_vs_opponent,
+        
+
+        "threshold": threshold,
         "last5RegularGames": last_5_regular_games,
+        "num_season_games" : num_season_count,
+        "seasonAvgPoints": season_avg_points,
+        "points_home_avg": playoff_points_home_avg,
+        "points_away_avg": playoff_points_away_avg,
+        "average_mins": average_mins,
+        "minutes_home_avg": playoff_minutes_home_avg,
+        "minutes_away_avg": playoff_minutes_away_avg,
+        "seasonAvgVsOpponent": season_avg_points_vs_opponent,
+        "careerAvgVsOpponent": career_avg_points_vs_opponent,
         "last5RegularGamesAvg": last_5_regular_games_avg,
-        "homeAwgAvg": season_avg_points * 1.05 if home else season_avg_points * 0.95 if season_avg_points else None,
-        "gameId": next_game_id,
-        "gameType": next_game_type,
-        "gameStatus" : "Scheduled",
+        "season_games_agst_opp" : fetch_all_opponent_games(nba_player_id, opponent_abbr),
+        "underCount" : underCount,
+
+
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
         "playoffAvg":       playoff_avg,
-        "season_games_agst_opp" : fetch_all_opponent_games(nba_player_id, opponent_abbr),
-        "underCount" : underCount,
-        "num_season_games" : num_season_count,
+        "playoff_points_home_avg": playoff_points_home_avg,
+        "playoff_points_away_avg": playoff_points_away_avg,
+        "playoff_minutes_avg" : playoff_minutes_avg,
+        "playoff_minutes_home_avg": playoff_minutes_home_avg,
+        "playoff_minutes_away_avg": playoff_minutes_away_avg,
         "playoff_underCount" : playoff_underCount,
-        "average_mins": average_mins
-    }
 
-    
-    performance_metrics = analyze_player_performance(nba_player_id, current_season_str)
-    player_data["advancedPerformance"] = performance_metrics
-    
-    career_summaries = fetch_career_summaries(nba_player_id, last_n=3)
-    player_data["careerSeasonStats"] = career_summaries
-    
+
+
+        "advancedPerformance" : analyze_player_performance(nba_player_id, current_season_str),
+        "careerSeasonStats" : fetch_career_summaries(nba_player_id, last_n=3)
+    }    
 
     return player_data

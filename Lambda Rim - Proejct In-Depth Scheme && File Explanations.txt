@@ -295,8 +295,36 @@ firestore/
 │   │       ├─ homeAwayAvg: number
 │   │       ├─ last5RegularGames: array<map> 
 │   │       │    └─ [{ date, points, opponent, opponentFullName, … }, …]
-│   │       ├─ advancedPerformance: map
-│   │       ├─ careerSeasonStats: array<map>
+│   │       ├─ advancedPerformance: array<map> ( averages calculated from careerSeasonStats )
+│   │       │    └─ efg: number
+│   │       │    └─ ft_rate: number
+│   │       │    └─ shot_dist_3pt: number
+│   │       ├─ careerSeasonStats: array<map> ( contains stats from the last 3 seasons )
+│   │       │    ├─ AST: number
+│   │       │    ├─ BLK: number
+│   │       │    ├─ DREB: number
+│   │       │    ├─ FG3A: number
+│   │       │    ├─ FG3M: number
+│   │       │    ├─ FG3_PCT: number
+│   │       │    ├─ FGA: number
+│   │       │    ├─ FGM: number
+│   │       │    ├─ FG_PCT: number
+│   │       │    ├─ FTA: number
+│   │       │    ├─ FTM: number
+│   │       │    ├─ FT_PCT: number
+│   │       │    ├─ GP: number
+│   │       │    ├─ GS: number
+│   │       │    ├─ MIN: number
+│   │       │    ├─ OREB: number 
+│   │       │    ├─ PF: number
+│   │       │    ├─ PLAYER_AGE: number
+│   │       │    ├─ PTS: number
+│   │       │    ├─ REB: number
+│   │       │    ├─ SEASON_ID: string
+│   │       │    ├─ STL: number
+│   │       │    ├─ TEAM_ABBREVIATION: string
+│   │       │    ├─ TEAM_ID: number
+│   │       │    └─ TOV: number
 │   │       ├─ injuryReport: map
 │   │       ├─ betExplanation: map
 │   │       ├─ poissonProbability: number
