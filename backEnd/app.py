@@ -162,6 +162,7 @@ def update_doc(ref, data):
             "finalPoints": pts,
             "finalMinutes": mins,
             "bet_result": bet_result,
+            "hit" : 1 if pts > threshold else 0,
             "finishedAt": firestore.SERVER_TIMESTAMP
         }
 
