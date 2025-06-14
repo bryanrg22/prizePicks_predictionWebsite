@@ -121,6 +121,12 @@ def fetch_player_stats(game_id, player_id):
             return None, None
             
         row = df.loc[mask].iloc[0]
+        
+        # Check if the player did not play
+        if "DNP" in row["COMMENT"]:
+            logger.info(f"Player {player_id} did not play in game {game_id}")
+            return -1, -1
+                
         pts = int(row["PTS"]) if row["PTS"] is not None else -1
 
         raw_min = row["MIN"]
@@ -410,15 +416,15 @@ def check_active_bets():
                     # Determine overall bet result
                     all_wins = all(
                         pick.get("bet_result") == "WIN" or 
-                        (pick.get("finalPoints", 0) > pick.get("threshold", 0))
+                        (pick.get("finalPoints") > pick.get("threshold"))
                         for pick in resolved_picks
                     )
                     
                     overall_result = "Won" if all_wins else "Lost"
                     
                     # Calculate winnings
-                    bet_amount = bet_data.get("betAmount", 0)
-                    potential_winnings = bet_data.get("potentialWinnings", 0)
+                    bet_amount = bet_data.get("betAmount")
+                    potential_winnings = bet_data.get("potentialWinnings")
                     winnings = potential_winnings if all_wins else 0
                     
                     # Update bet status
@@ -429,18 +435,7 @@ def check_active_bets():
                         "settledAt": firestore.SERVER_TIMESTAMP,
                     })
                     
-                    # Move to betHistory/{year}/{month}
-                    created_at = bet_data.get("createdAt")
-                    if hasattr(created_at, "to_datetime"):
-                        dt = created_at.to_datetime()
-                    elif hasattr(created_at, "datetime"):
-                        dt = created_at.datetime
-                    else:
-                        dt = datetime.datetime.utcnow()
-
-                    year = dt.strftime("%Y")
-                    month = dt.strftime("%m")
-
+                    
                     history_ref = (
                         db.collection("users")
                           .document(user_id)
@@ -507,7 +502,7 @@ def check_games_handler(request):
 def analyze_player_endpoint():
     body      = request.json or {}
     name      = body.get("playerName")
-    threshold = float(body.get("threshold", 0))
+    threshold = float(body.get("threshold"))
     key       = name.lower().replace(" ", "_")
     coll_ref = (
         db.collection("processedPlayers")
@@ -539,7 +534,7 @@ def analyze_player_endpoint():
     player_team = pdata.get("team", "Unknown Team")
     pdata["injuryReport"] = injury_report.get_player_injury_status(name, player_team)
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
-    pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or 0.0  
+    pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or -1
     pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
 
     # — GARCH vol forecast —

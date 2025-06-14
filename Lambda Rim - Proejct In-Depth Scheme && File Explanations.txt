@@ -292,7 +292,6 @@ firestore/
 │   │       ├─ seasonAvgPoints: number
 │   │       ├─ last5RegularGamesAvg: number
 │   │       ├─ seasonAvgVsOpponent: number
-│   │       ├─ homeAwayAvg: number
 │   │       ├─ last5RegularGames: array<map> 
 │   │       │    └─ [{ date, points, opponent, opponentFullName, … }, …]
 │   │       ├─ advancedPerformance: array<map> ( averages calculated from careerSeasonStats )
