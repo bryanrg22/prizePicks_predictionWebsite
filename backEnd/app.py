@@ -528,14 +528,25 @@ def analyze_player_endpoint():
     # 1) run your pipeline
     first, last = name.split(maxsplit=1)
     pdata = player_analyzer.analyze_player(first, last, threshold)
+
+
+
+
+    ###### ------------------------------------------------- ######
+    ### Final Variables Being Inputted into the Player Document ###
+    ###### ------------------------------------------------- ######
+
     # make sure both fields exist even if analyzer couldn’t find a game
     pdata.setdefault("gameId", None)
     pdata.setdefault("gameStatus", "Scheduled")
     player_team = pdata.get("team", "Unknown Team")
+    
+    # Fix Injury Report Process
     pdata["injuryReport"] = injury_report.get_player_injury_status(name, player_team)
+    
+
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
-    pdata["monteCarloProbability"]= monte_carlo_for_player(name, threshold) or -1
-    pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
+    pdata["monteCarloProbability"] = monte_carlo_for_player(name, threshold) or -1
 
     # — GARCH vol forecast —
     series = fetch_point_series(pdata, n_games=50)
@@ -544,12 +555,21 @@ def analyze_player_endpoint():
 
     if pdata["num_playoff_games"] >= 5:
         pdata["volatilityPlayOffsForecast"] = forecast_playoff_volatility(pdata)
+    else:
+        pdata["volatilityPlayOffsForecast"] = None
 
 
     game_date_obj = datetime.datetime.strptime(pdata["gameDate"], "%m/%d/%Y")
     # …and re-format to YYYYMMDD
     doc_date = game_date_obj.strftime("%Y%m%d")
     pdata["pick_id"]      = f"{pkey(name)}_{threshold}_{doc_date}"
+
+    pdata["betExplanation"]      = get_bet_explanation_from_chatgpt(pdata)
+
+
+
+
+
 
 
     # 2) persist it (writes to processedPlayers/players/active/{player_threshold_date})

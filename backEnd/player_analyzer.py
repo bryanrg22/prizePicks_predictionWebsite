@@ -7,7 +7,9 @@ from nba_api.stats.endpoints import leaguestandings
 from nba_api.stats.static import teams, players
 from nba_api.stats.endpoints import ScoreboardV2 as Scoreboard
 from nba_api.stats.endpoints import playercareerstats, playergamelog
-from nba_api.stats.endpoints import PlayerGameLog, commonplayoffseries
+from nba_api.stats.endpoints import PlayerGameLog
+from typing import Dict, Tuple, Union, Optional
+
 
 
 ############################################################################
@@ -183,55 +185,6 @@ def fetch_all_opponent_games(player_id, opponent_abbr):
     return games
    
 
-def fetch_career_summaries(player_id, last_n=3):
-    """
-    Fetches career season-by-season data for a player using nba_api's playercareerstats.
-    Returns a list of dictionaries for the last N seasons with stats like FGA, FG%, etc.
-    """
-    try:
-        career = playercareerstats.PlayerCareerStats(player_id=player_id)
-        df = career.get_data_frames()[0]
-        if df.empty:
-            print(f"[fetch_career_summaries] No career data for player_id={player_id}")
-            return []
-    except Exception as e:
-        print(f"[fetch_career_summaries] Error fetching career data for player_id={player_id}: {e}")
-        return []
-
-    data_slices = df.tail(last_n)
-    season_stats = []
-    for _, row in data_slices.iterrows():
-        season_data = {
-            "SEASON_ID": row.get("SEASON_ID"),
-            "TEAM_ID": row.get("TEAM_ID"),
-            "TEAM_ABBREVIATION": row.get("TEAM_ABBREVIATION"),
-            "PLAYER_AGE": row.get("PLAYER_AGE"),
-            "GP": row.get("GP"),
-            "GS": row.get("GS"),
-            "MIN": row.get("MIN"),
-            "FGM": row.get("FGM"),
-            "FGA": row.get("FGA"),
-            "FG_PCT": row.get("FG_PCT"),
-            "FG3M": row.get("FG3M"),
-            "FG3A": row.get("FG3A"),
-            "FG3_PCT": row.get("FG3_PCT"),
-            "FTM": row.get("FTM"),
-            "FTA": row.get("FTA"),
-            "FT_PCT": row.get("FT_PCT"),
-            "OREB": row.get("OREB"),
-            "DREB": row.get("DREB"),
-            "REB": row.get("REB"),
-            "AST": row.get("AST"),
-            "STL": row.get("STL"),
-            "BLK": row.get("BLK"),
-            "TOV": row.get("TOV"),
-            "PF": row.get("PF"),
-            "PTS": row.get("PTS"),
-        }
-        season_stats.append(season_data)
-    return season_stats
-
-
 def fetch_player_game_logs(nba_player_id, season_str):
     """
     Fetches advanced game logs for the specified NBA player (by official nba_api ID).
@@ -279,90 +232,104 @@ def fetch_player_game_logs(nba_player_id, season_str):
     return game_dicts
 
 
+def _safe_div(num: float, den: float) -> Optional[float]:
+    """Return num/den or None if denominator is zero (avoids -1 magic numbers)."""
+    return num / den if den else None
 
-def analyze_player_performance(nba_player_id, season_str):
+
+def analyze_player_performance(
+    nba_player_id: int,
+    season_str: str,
+) -> Union[
+    Tuple[float, float, float, float, float, float, float, float, float, float, float],
+    Dict[str, float],
+]:
     """
-    Computes additional advanced stats from the official NBA ID logs.
-    Returns stats such as eFG%, usage_rate, shot distribution, FT rate, etc.
-    Prints debug info for each game.
+    Advanced box-score aggregator.
+
+    Returns **either**
+      • the same 11-value tuple you used before         (default – backward-compatible)
+      • a self-documenting dict if `return_dict=True`
+
+    Tuple fields (same order):  
+        avg_fga, avg_fgm, avg_3pa, avg_3pm,
+        avg_fta, avg_ftm, avg_tov,
+        shot_dist_3pt, ft_rate, efg, usage_rate
     """
+
     logs = fetch_player_game_logs(nba_player_id, season_str)
     if not logs:
         print(f"[analyze_player_performance] No logs for ID={nba_player_id}, season={season_str}")
-        return {
-            "avg_points": 0,
-            "avg_minutes": 0,
-            "usage_rate": None,
-            "efg": 0,
-            "shot_dist_3pt": 0,
-            "ft_rate": 0,
-            "avg_points_home": 0,
-            "avg_points_away": 0
-        }
-    total_points = 0
-    total_fga = 0
-    total_fgm = 0
-    total_3pa = 0
-    total_3pm = 0
-    total_fta = 0
-    total_ftm = 0
-    total_tov = 0
-    total_minutes = 0
-    total_possessions = 0
-    home_games = []
-    away_games = []
-    for idx, g in enumerate(logs):
-        points = g.get("points", 0)
-        fga = g.get("fga", 0)
-        fgm = g.get("fgm", 0)
-        tpa = g.get("3pa", 0)
-        tpm = g.get("3pm", 0)
-        fta = g.get("fta", 0)
-        ftm = g.get("ftm", 0)
-        tov = g.get("turnovers", 0)
-        minutes = g.get("minutes", 0)
-        home_away_flag = g.get("home_away_flag", None)
-        poss = g.get("team_possessions", None)
-        total_points += points
-        total_fga += fga
-        total_fgm += fgm
-        total_3pa += tpa
-        total_3pm += tpm
-        total_fta += fta
-        total_ftm += ftm
-        total_tov += tov
-        total_minutes += minutes
-        if home_away_flag == 1:
-            home_games.append(points)
-        elif home_away_flag == 0:
-            away_games.append(points)
-        if poss is not None:
-            total_possessions += poss
-    total_games = len(logs)
-    if total_fga > 0:
-        efg = (total_fgm + 0.5 * total_3pm) / total_fga
-    else:
-        efg = 0
-        print("[analyze_player_performance] No FGA => eFG=0")
-    shot_dist_3pt = (total_3pa / total_fga) if total_fga else 0
-    ft_rate = (total_fta / total_fga) if total_fga else 0
-    usage_rate = None
-    if total_possessions > 0:
-        usage_rate = (total_fga + 0.44 * total_fta + total_tov) / total_possessions
-    else:
-        print("[analyze_player_performance] No possessions => usage_rate=None")
-    avg_points = total_points / total_games if total_games else 0
-    avg_minutes = total_minutes / total_games if total_games else 0
-    avg_points_home = sum(home_games) / len(home_games) if home_games else 0
-    avg_points_away = sum(away_games) / len(away_games) if away_games else 0
+        return {}
 
-    return {
-        "usage_rate": usage_rate,
-        "efg": efg,
-        "shot_dist_3pt": shot_dist_3pt,
+    # ── accumulate raw totals ───────────────────────────────────────────────────
+    totals = dict(
+        fga=0, fgm=0,
+        pa3=0, pm3=0,
+        fta=0, ftm=0,
+        tov=0, poss=0,
+        points=0,
+    )
+
+    for g in logs:
+
+        fga  = g.get("fga", 0)
+        fgm  = g.get("fgm", 0)
+        pa3  = g.get("3pa", 0)
+        pm3  = g.get("3pm", 0)
+        fta  = g.get("fta", 0)
+        ftm  = g.get("ftm", 0)
+        tov  = g.get("turnovers", 0)
+        poss = g.get("team_possessions", 0)
+
+        totals["fga"]  += fga
+        totals["fgm"]  += fgm
+        totals["pa3"]  += pa3
+        totals["pm3"]  += pm3
+        totals["fta"]  += fta
+        totals["ftm"]  += ftm
+        totals["tov"]  += tov
+        totals["poss"] += poss
+
+    G     = len(logs)
+    FGA   = totals["fga"]
+    FTA   = totals["fta"]
+    POS   = totals["poss"]
+
+    # ── advanced rates ──────────────────────────────────────────────────────────
+    efg          = _safe_div(totals["fgm"] + 0.5 * totals["pm3"], FGA)
+    shot_dist_3p = _safe_div(totals["pa3"], FGA)
+    ft_rate      = _safe_div(FTA, FGA)
+    usage_rate   = _safe_div(
+        totals["fga"] + 0.44 * FTA + totals["tov"],
+        POS
+    )
+    # optional: True Shooting % (not returned in tuple to avoid breaking order)
+    ts_pct       = _safe_div(totals["points"], 2 * (FGA + 0.44 * FTA))
+
+    # ── per-game averages ───────────────────────────────────────────────────────
+    per_game = lambda x: _safe_div(x, G)
+
+    results_dict = {
+        "avg_fga": per_game(totals["fga"]),
+        "avg_fgm": per_game(totals["fgm"]),
+        "avg_3pa": per_game(totals["pa3"]),
+        "avg_3pm": per_game(totals["pm3"]),
+        "avg_fta": per_game(totals["fta"]),
+        "avg_ftm": per_game(totals["ftm"]),
+        "avg_tov": per_game(totals["tov"]),
+        "shot_dist_3pt": shot_dist_3p,
         "ft_rate": ft_rate,
+        "efg": efg,
+        "usage_rate": usage_rate,
+        # extras you might want later
+        "ts_pct": ts_pct,
+        "games": G,
+        "total_points": totals["points"],
     }
 
+    return results_dict
+ 
 
 def analyze_player(first_name, last_name, threshold=None):
     """
@@ -723,7 +690,38 @@ def analyze_player(first_name, last_name, threshold=None):
     points_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
     minutes_home_avg /= playoff_home_games if playoff_home_games > 0 else 0
     minutes_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
-        
+
+
+    player_performace_dict = analyze_player_performance(nba_player_id, current_season_str)
+    if not player_performace_dict:
+        player_performace_dict['avg_fga'] = None
+        player_performace_dict['avg_fgm'] = None
+        player_performace_dict['avg_fpa'] = None
+        player_performace_dict['avg_3pm'] = None
+        player_performace_dict['avg_fta'] = None
+        player_performace_dict['avg_ftm'] = None
+        player_performace_dict['avg_tov'] = None
+        player_performace_dict['shot_dist_3pt'] = None
+        player_performace_dict['ft_rate'] = None
+        player_performace_dict['efg'] = None
+        player_performace_dict['usage_rate'] = None
+        player_performace_dict['ts_pct'] = None
+
+    # If player has no playoff data
+    if playoff_games == []:
+        num_playoff_games = None
+        playoff_games = []
+        playoff_avg = None
+        playoff_minutes_avg = None
+        playoff_underCount = None
+        playoff_points_home_avg = None
+        playoff_home_games = None
+        playoff_points_away_avg = None
+        playoff_minutes_away_avg = None
+        playoff_minutes_away_avg = None
+        playoff_away_games = None
+
+    
 
     # Build the original player data object with preserved keys
     player_data = {
@@ -768,7 +766,22 @@ def analyze_player(first_name, last_name, threshold=None):
         "season_games_agst_opp" : fetch_all_opponent_games(nba_player_id, opponent_abbr),
         "underCount" : underCount,
 
+        # Advanced metrics
+        "avg_fga": player_performace_dict['avg_fga'],
+        "avg_fgm": player_performace_dict['avg_fgm'],
+        "avg_3pa": player_performace_dict['avg_fpa'],
+        "avg_3pm": player_performace_dict['avg_3pm'],
+        "avg_fta": player_performace_dict['avg_fta'],
+        "avg_ftm": player_performace_dict['avg_ftm'],
+        "avg_tov": player_performace_dict['avg_tov'],
+        "shot_dist_3pt": player_performace_dict['shot_dist_3pt'],
+        "ft_rate": player_performace_dict['ft_rate'],
+        "efg": player_performace_dict['efg'],
+        "usage_rate": player_performace_dict['usage_rate'],
+        "ts_pct": player_performace_dict['ts_pct'],
+        
 
+        # Playoff data
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
         "playoffAvg":       playoff_avg,
@@ -777,12 +790,8 @@ def analyze_player(first_name, last_name, threshold=None):
         "playoff_minutes_avg" : playoff_minutes_avg,
         "playoff_minutes_home_avg": playoff_minutes_home_avg,
         "playoff_minutes_away_avg": playoff_minutes_away_avg,
-        "playoff_underCount" : playoff_underCount,
-
-
-
-        "advancedPerformance" : analyze_player_performance(nba_player_id, current_season_str),
-        "careerSeasonStats" : fetch_career_summaries(nba_player_id, last_n=3)
+        "playoff_underCount" : playoff_underCount
     }    
+
 
     return player_data
