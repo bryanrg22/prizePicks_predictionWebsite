@@ -89,7 +89,11 @@ def aggregate_prediction_data(player_data, threshold):
     advanced_data = get_advanced_data(player_data["name"])
     
     # ### CHANGED: call the real function
-    injury_status = check_injury_status(player_data["name"])
+    injury_status = check_injury_status(
+        player_data["name"],
+        player_data.get("team"),
+        player_data.get("opponent"),
+    )
     
     opp_def_rank = get_opponent_defensive_rank(player_data["opponent"])
     

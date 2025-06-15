@@ -63,18 +63,20 @@ def normalize_team_name(team_name):
     # Default normalization: lowercase and replace spaces with underscores
     return team_name.lower().replace(" ", "_").replace(".", "")
 
-def get_player_injury_status(player_name, player_team=None):
-    """
-    Get the injury status for a specific player from Firestore database.
-    Also returns all injured players on the team.
-    
+def get_player_injury_status(player_name, player_team=None, opponent_team=None):
+    """Look up a player's injury status in Firestore.
+
+    Besides checking the given player's team, this returns the full injury list
+    for both ``player_team`` and ``opponent_team`` when provided.
+
     Args:
-        player_name (str): Name of the player to check
-        player_team (str, optional): Team name to help with lookup
-    
+        player_name (str): Player to check.
+        player_team (str, optional): Team the player belongs to.
+        opponent_team (str, optional): Opponent team to also query.
     Returns:
-        dict: Contains individual player status and team injury report
+        dict: Injury information including any team and opponent injuries.
     """
+
     if not player_name:
         return {"error": "No player name provided"}
     
@@ -83,13 +85,22 @@ def get_player_injury_status(player_name, player_team=None):
         if not firebase_admin._apps:
             firebase_admin.initialize_app()
         db = firestore.client()
-        
+
+
+        team_injury_data = {}
+        opponent_injury_data = {}
+
         # If team is provided, check that team's injury report first
         if player_team:
             team_normalized = normalize_team_name(player_team)
             if team_normalized:
                 team_injury_data = get_team_injury_report(team_normalized, db)
-                
+            
+            if opponent_team:
+                opp_normalized = normalize_team_name(opponent_team)
+            if opp_normalized:
+                opponent_injury_data = get_team_injury_report(opp_normalized, db)
+            
                 # Check if player is in this team's injury report
                 if team_injury_data.get("found") and team_injury_data.get("players"):
                     for injured_player in team_injury_data["players"]:
@@ -106,6 +117,7 @@ def get_player_injury_status(player_name, player_team=None):
                                 },
                                 "team": team_injury_data.get("team"),
                                 "teamInjuries": team_injury_data.get("players", []),
+                                "opponentInjuries": opponent_injury_data.get("players", []),
                                 "lastUpdated": team_injury_data.get("lastUpdated"),
                                 "source": "database"
                             }
@@ -117,6 +129,7 @@ def get_player_injury_status(player_name, player_team=None):
                     "player": None,
                     "team": player_team,
                     "teamInjuries": team_injury_data.get("players", []),
+                    "opponentInjuries": opponent_injury_data.get("players", []),
                     "lastUpdated": team_injury_data.get("lastUpdated"),
                     "source": "database"
                 }
@@ -147,6 +160,7 @@ def get_player_injury_status(player_name, player_team=None):
                             },
                             "team": team_data.get("team"),
                             "teamInjuries": players,
+                            "opponentInjuries": opponent_injury_data.get("players", []),
                             "lastUpdated": team_data.get("lastUpdated"),
                             "source": "database"
                         }
@@ -158,6 +172,7 @@ def get_player_injury_status(player_name, player_team=None):
             "player": None,
             "team": player_team,
             "teamInjuries": [],
+            "opponentInjuries": opponent_injury_data.get("players", []),
             "lastUpdated": None,
             "source": "database"
         }
@@ -169,6 +184,7 @@ def get_player_injury_status(player_name, player_team=None):
             "found": False,
             "player": None,
             "teamInjuries": [],
+            "opponentInjuries": opponent_injury_data.get("players", []),
             "source": "database"
         }
 
