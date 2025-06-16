@@ -492,7 +492,7 @@ def analyze_player(first_name, last_name, threshold=None):
     playoff_points_home_avg = 0
     playoff_home_games = 0
     playoff_points_away_avg = 0
-    playoff_minutes_away_avg = 0
+    playoff_minutes_home_avg = 0
     playoff_minutes_away_avg = 0
     playoff_away_games = 0
 
