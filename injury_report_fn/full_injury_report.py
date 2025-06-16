@@ -125,7 +125,7 @@ def get_full_injury_report():
                 "gameDate": current_game_date,
                 "gameTime": current_game_time,
                 "team": split_camel_case(team),
-                "reason": 'NOT YET SUBMITTED'
+                "reason": 'NOT YET SUBMITTED',
             })
         
         elif player:

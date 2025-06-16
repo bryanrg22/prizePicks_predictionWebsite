@@ -119,6 +119,7 @@ def get_player_injury_status(player_name, player_team=None, opponent_team=None):
                                 "teamInjuries": team_injury_data.get("players", []),
                                 "opponentInjuries": opponent_injury_data.get("players", []),
                                 "lastUpdated": team_injury_data.get("lastUpdated"),
+                                "lastChecked": team_injury_data.get("lastChecked"),
                                 "source": "database"
                             }
                 
@@ -131,6 +132,7 @@ def get_player_injury_status(player_name, player_team=None, opponent_team=None):
                     "teamInjuries": team_injury_data.get("players", []),
                     "opponentInjuries": opponent_injury_data.get("players", []),
                     "lastUpdated": team_injury_data.get("lastUpdated"),
+                    "lastChecked": team_injury_data.get("lastChecked"),
                     "source": "database"
                 }
         
@@ -161,7 +163,8 @@ def get_player_injury_status(player_name, player_team=None, opponent_team=None):
                             "team": team_data.get("team"),
                             "teamInjuries": players,
                             "opponentInjuries": opponent_injury_data.get("players", []),
-                            "lastUpdated": team_data.get("lastUpdated"),
+                            "lastUpdated": firestore.SERVER_TIMESTAMP,
+                            "lastChecked": firestore.SERVER_TIMESTAMP,
                             "source": "database"
                         }
         
@@ -173,7 +176,8 @@ def get_player_injury_status(player_name, player_team=None, opponent_team=None):
             "team": player_team,
             "teamInjuries": [],
             "opponentInjuries": opponent_injury_data.get("players", []),
-            "lastUpdated": None,
+            "lastUpdated": firestore.SERVER_TIMESTAMP,
+            "lastChecked": firestore.SERVER_TIMESTAMP,
             "source": "database"
         }
         
@@ -185,6 +189,8 @@ def get_player_injury_status(player_name, player_team=None, opponent_team=None):
             "player": None,
             "teamInjuries": [],
             "opponentInjuries": opponent_injury_data.get("players", []),
+            "lastUpdated": firestore.SERVER_TIMESTAMP,
+            "lastChecked": firestore.SERVER_TIMESTAMP,
             "source": "database"
         }
 
@@ -221,7 +227,8 @@ def get_team_injury_report(team_name_normalized, db=None):
                 "found": False,
                 "team": team_name_normalized,
                 "players": [],
-                "lastUpdated": None,
+                "lastUpdated": firestore.SERVER_TIMESTAMP,
+                "lastChecked": firestore.SERVER_TIMESTAMP,
                 "message": "No injury report found for team (team is healthy)"
             }
         
@@ -232,7 +239,8 @@ def get_team_injury_report(team_name_normalized, db=None):
             "found": True,
             "team": team_data.get("team", team_name_normalized),
             "players": team_data.get("players", []),
-            "lastUpdated": team_data.get("lastUpdated"),
+            "lastUpdated": firestore.SERVER_TIMESTAMP,
+            "lastChecked": firestore.SERVER_TIMESTAMP,
             "message": f"Found {len(team_data.get('players', []))} injured players"
         }
         
@@ -242,7 +250,8 @@ def get_team_injury_report(team_name_normalized, db=None):
             "found": False,
             "team": team_name_normalized,
             "players": [],
-            "lastUpdated": None,
+            "lastUpdated": firestore.SERVER_TIMESTAMP,
+            "lastChecked": firestore.SERVER_TIMESTAMP,
             "error": str(e)
         }
 
@@ -273,14 +282,16 @@ def get_all_team_injuries():
                 all_injuries[team_name] = {
                     "team": team_data.get("team", team_name),
                     "players": team_data.get("players", []),
-                    "lastUpdated": team_data.get("lastUpdated"),
+                    "lastUpdated": firestore.SERVER_TIMESTAMP,
+                    "lastChecked": firestore.SERVER_TIMESTAMP,
                     "injuredCount": len(team_data.get("players", []))
                 }
             else:
                 all_injuries[team_name] = {
                     "team": team_name,
                     "players": [],
-                    "lastUpdated": None,
+                    "lastUpdated": firestore.SERVER_TIMESTAMP,
+                    "lastChecked": firestore.SERVER_TIMESTAMP,
                     "injuredCount": 0
                 }
         

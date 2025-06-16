@@ -549,6 +549,8 @@ def analyze_player_endpoint():
         player_team,
         opponent_team,
     )
+    # lastChecked = reference.update({"injuryReport.lastChecked": firestore.SERVER_TIMESTAMP})
+    # lastUpdated = reference.update({"injuryReport.lastUpdated": firestore.SERVER_TIMESTAMP})
 
     pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
     pdata["monteCarloProbability"] = monte_carlo_for_player(name, threshold) or -1
