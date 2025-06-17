@@ -104,7 +104,7 @@ def fetch_more_games(player_id):
         if isinstance(raw_min, str) and ':' in raw_min:
             minutes = int(raw_min.split(':')[0])
         else:
-            minutes = int(raw_min) if raw_min else None
+            minutes = int(raw_min) if raw_min else 0
         
         more_regular_games.append({
             "date":             curr['GAME_DATE'],
@@ -162,7 +162,7 @@ def fetch_all_opponent_games(player_id, opponent_abbr):
         if isinstance(raw_min, str) and ':' in raw_min:
             minutes = int(raw_min.split(':')[0])
         else:
-            minutes = int(raw_min) if raw_min else None
+            minutes = int(raw_min) if raw_min else 0
 
         # lookup full name & logo
         opp_full = get_team_full_name_from_abbr(opp) if opp else None
@@ -280,7 +280,7 @@ def analyze_player_performance(
         fta  = g.get("fta", 0)
         ftm  = g.get("ftm", 0)
         tov  = g.get("turnovers", 0)
-        poss = g.get("team_possessions", 0)
+        poss = g.get("team_possessions") or 0
 
         totals["fga"]  += fga
         totals["fgm"]  += fgm
@@ -543,7 +543,7 @@ def analyze_player(first_name, last_name, threshold=None):
             if isinstance(raw_min, str) and ':' in raw_min:
                 minutes = int(raw_min.split(':')[0])
             else:
-                minutes = int(raw_min) if raw_min else None
+                minutes = int(raw_min) if raw_min else 0
 
             playoff_minutes_avg += minutes
 
@@ -614,7 +614,7 @@ def analyze_player(first_name, last_name, threshold=None):
         if isinstance(raw_min, str) and ':' in raw_min:
             minutes = int(raw_min.split(':')[0])
         else:
-            minutes = int(raw_min) if raw_min else None
+            minutes = int(raw_min) if raw_min else 0
         last_5_regular_games_avg += int(curr['PTS'])
 
         if int(curr['PTS']) <= threshold:
@@ -666,15 +666,27 @@ def analyze_player(first_name, last_name, threshold=None):
         if isinstance(raw_min, str) and ':' in raw_min:
             minutes = int(raw_min.split(':')[0])
         else:
-            minutes = int(raw_min) if raw_min else None
+            minutes = int(raw_min) if raw_min else 0
 
         if location == 'Home':
-            points_home_avg += int(curr['PTS'])
-            minutes_home_avg += minutes
+            if curr['PTS'] is None:
+                continue
+            else:
+                points_home_avg += int(curr['PTS'])
+            if minutes is None:
+                continue
+            else:
+                minutes_home_avg += minutes
             home_games += 1
         elif location == 'Away':
-            points_away_avg += int(curr['PTS'])
-            minutes_away_avg += minutes
+            if curr['PTS'] is None:
+                continue
+            else:
+                points_away_avg += int(curr['PTS'])
+            if minutes is None:
+                continue
+            else:
+                minutes_away_avg += minutes
             away_games += 1
         
 
@@ -758,8 +770,8 @@ def analyze_player(first_name, last_name, threshold=None):
         "points_home_avg": playoff_points_home_avg,
         "points_away_avg": playoff_points_away_avg,
         "average_mins": average_mins,
-        "minutes_home_avg": playoff_minutes_home_avg,
-        "minutes_away_avg": playoff_minutes_away_avg,
+        "minutes_home_avg": minutes_home_avg,
+        "minutes_away_avg": minutes_away_avg,
         "seasonAvgVsOpponent": season_avg_points_vs_opponent,
         "careerAvgVsOpponent": career_avg_points_vs_opponent,
         "last5RegularGamesAvg": last_5_regular_games_avg,

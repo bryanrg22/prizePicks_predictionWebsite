@@ -528,6 +528,8 @@ def analyze_player_endpoint():
     # 1) run your pipeline
     first, last = name.split(maxsplit=1)
     pdata = player_analyzer.analyze_player(first, last, threshold)
+    if "error" in pdata:
+        return jsonify({"error": pdata["error"]}), 400
 
 
 
@@ -549,10 +551,13 @@ def analyze_player_endpoint():
         player_team,
         opponent_team,
     )
-    # lastChecked = reference.update({"injuryReport.lastChecked": firestore.SERVER_TIMESTAMP})
-    # lastUpdated = reference.update({"injuryReport.lastUpdated": firestore.SERVER_TIMESTAMP})
 
-    pdata["poissonProbability"]   = calculate_poisson_probability(pdata["seasonAvgPoints"], threshold)
+    season_avg = pdata.get("seasonAvgPoints")
+    pdata["poissonProbability"] = (
+        calculate_poisson_probability(season_avg, threshold)
+        if season_avg is not None
+        else None
+    )
     pdata["monteCarloProbability"] = monte_carlo_for_player(name, threshold) or -1
 
     # — GARCH vol forecast —
