@@ -814,7 +814,7 @@ def analyze_player(first_name, last_name, threshold=None):
         # Advanced metrics
         "avg_fga": player_performace_dict['avg_fga'],
         "avg_fgm": player_performace_dict['avg_fgm'],
-        "avg_3pa": player_performace_dict['avg_fpa'],
+        "avg_3pa": player_performace_dict['avg_3pa'],
         "avg_3pm": player_performace_dict['avg_3pm'],
         "avg_fta": player_performace_dict['avg_fta'],
         "avg_ftm": player_performace_dict['avg_ftm'],
