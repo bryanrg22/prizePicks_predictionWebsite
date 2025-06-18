@@ -386,6 +386,7 @@ def analyze_player(first_name, last_name, threshold=None):
     opponent_team_logo = None
     home = None
     next_game_id = None
+    home_game = True
     for _ in range(max_search_days):
         game_date_str = search_date.strftime("%m/%d/%Y")
         try:
@@ -404,6 +405,7 @@ def analyze_player(first_name, last_name, threshold=None):
                 next_game_type = deduce_game_type(next_game_id) if next_game_id else None
                 break
             elif player_team_id in game_df['VISITOR_TEAM_ID'].values:
+                home_game = False
                 away_index = int(game_df.index[game_df['VISITOR_TEAM_ID'] == player_team_id][0])
                 opponent_team_id = game_df.at[away_index, 'HOME_TEAM_ID']
                 game_date_est = game_df.at[away_index, 'GAME_STATUS_TEXT']
@@ -504,7 +506,10 @@ def analyze_player(first_name, last_name, threshold=None):
         )
         games_df = pgl.get_data_frames()[0]  # most recent game is first row
         num_playoff_games = len(games_df)
-        
+        game = 1
+        round_playoff_game = 0
+        series_score = "0-0"
+        type_playoff_game = ['Conference First Round', 'Conference Semifinals', 'Conference Finals', 'NBA Finals']
 
         # Get all playoff games data
 
@@ -517,7 +522,7 @@ def analyze_player(first_name, last_name, threshold=None):
         #series_df = cps.get_data_frames()[0][['GAME_ID', 'SERIES_ID', 'GAME_NUM']]
         
         for i in range(num_playoff_games):
-            curr = games_df.iloc[i]
+            curr = games_df.iloc[num_playoff_games - 1 - i]
 
             matchup = curr['MATCHUP']            
             if ' vs. ' in matchup:
@@ -556,6 +561,15 @@ def analyze_player(first_name, last_name, threshold=None):
             elif location == 'Away':
                 playoff_points_away_avg += int(curr['PTS'])
                 playoff_minutes_away_avg += minutes
+            
+            if game > 7 or (playoff_games and opp_abbr != playoff_games[-1]['opponent']):
+                game = 1
+                round_playoff_game += 1
+                series_score = "0-0"
+            if  curr['WL'] == 'W':
+                series_score = f"{int(series_score.split('-')[0]) + 1}-{series_score.split('-')[1]}"
+            else:
+                series_score = f"{series_score.split('-')[0]}-{int(series_score.split('-')[1]) + 1}"
 
             playoff_games.append({
                 "gameId":           curr['Game_ID'],
@@ -566,8 +580,13 @@ def analyze_player(first_name, last_name, threshold=None):
                 "opponentLogo":     opp_logo,
                 "location":         location,
                 "minutes":          minutes,
+                "game_number":      game,
+                "round":            type_playoff_game[round_playoff_game],
+                "series_score": series_score,
+                "result":         curr['WL'],
                 "gameType":         "Playoffs"
             })
+            game += 1
         
         
         playoff_avg = games_df['PTS'].sum() / len(games_df)
@@ -719,6 +738,17 @@ def analyze_player(first_name, last_name, threshold=None):
         player_performace_dict['usage_rate'] = None
         player_performace_dict['ts_pct'] = None
 
+    # ── importance metrics ───────────────────────────────────────────────────
+    alpha = 0.7
+    usg = player_performace_dict.get('usage_rate') or 0
+    importance_score = round(alpha * (average_mins / 48) + (1 - alpha) * usg, 2)
+    if importance_score >= 0.6:
+        importance_role = "Starter"
+    elif importance_score >= 0.3:
+        importance_role = "Rotation"
+    else:
+        importance_role = "Bench"
+
     # If player has no playoff data
     if playoff_games == []:
         num_playoff_games = None
@@ -749,6 +779,7 @@ def analyze_player(first_name, last_name, threshold=None):
         "matchup": matchup,
         "gameType": next_game_type,
         "gameStatus" : "Scheduled",
+        "home_game": home_game,
 
 
         "team": player_team,
@@ -770,6 +801,8 @@ def analyze_player(first_name, last_name, threshold=None):
         "points_home_avg": playoff_points_home_avg,
         "points_away_avg": playoff_points_away_avg,
         "average_mins": average_mins,
+        "importanceScore": importance_score,
+        "importanceRole": importance_role,
         "minutes_home_avg": minutes_home_avg,
         "minutes_away_avg": minutes_away_avg,
         "seasonAvgVsOpponent": season_avg_points_vs_opponent,

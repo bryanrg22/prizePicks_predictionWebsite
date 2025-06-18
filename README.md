@@ -16,8 +16,9 @@ A full-stack, AI-powered platform that automatically analyzes NBA “Over/Under�
     - Season & last-5 game averages  
     - Poisson probability  
     - Monte Carlo simulation  
-    - GARCH volatility forecast (regular season & playoffs)  
-    - Injury report scraping  
+    - GARCH volatility forecast (regular season & playoffs)
+    - Injury report scraping
+    - Importance scoring (minutes + usage) to label Starter/Rotation/Bench
     - ChatGPT-powered bet explanation  
   - **Playoff Support:** Automatically switches to playoff stats after ≥ 5 postseason games.  
   - **Real-Time Updates:** Background Cloud Functions mark “Concluded” games and settle bets.  
