@@ -59,6 +59,17 @@ def thr_doc_ref(name: str, threshold: float):
         .document(doc_id)
     )
 
+from google.cloud.firestore_v1 import transforms
+
+def _strip_sentinels(obj):
+    """Recursively replace Firestore Sentinel objects with ``None``."""
+    if isinstance(obj, transforms.Sentinel):
+        return None
+    if isinstance(obj, dict):
+        return {k: _strip_sentinels(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_strip_sentinels(v) for v in obj]
+    return obj
 
 def _fetch_scoreboard() -> dict:
     """Pull raw JSON for a single YYYYMMDD date."""
@@ -552,10 +563,12 @@ def analyze_player_endpoint():
     
     # Fix Injury Report Process
     opponent_team = pdata.get("opponent")
-    pdata["injuryReport"] = injury_report.get_player_injury_status(
-        name,
-        player_team,
-        opponent_team,
+    pdata["injuryReport"] = _strip_sentinels(
+        injury_report.get_player_injury_status(
+            name,
+            player_team,
+            opponent_team,
+        )
     )
 
     season_avg = pdata.get("seasonAvgPoints")
