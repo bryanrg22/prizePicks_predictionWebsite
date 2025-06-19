@@ -91,7 +91,8 @@ def refresh_active_player_injuries():
         existing_report = pdata.get("injuryReport") or {}
 
         def _strip_check(d):
-            return {k: v for k, v in d.items() if k != "lastChecked"}
+            return {k: v for k, v in d.items() if k != "lastChecked" and 
+                    k != "lastUpdated"}
 
         if _strip_check(existing_report) != _strip_check(new_report):
             snap.reference.update({"injuryReport": new_report})

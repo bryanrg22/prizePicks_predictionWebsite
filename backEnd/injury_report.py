@@ -335,12 +335,15 @@ def get_team_injury_report_new(team_name, db):
         
         injured_players = {}
         for player in data['players']:
-            injured_players[player['player']] = {player['status'], player['reason']}
+            injured_players[player['player']] = {
+                'status': player['status'],
+                'reason': player['reason']
+            }
 
         return injured_players
         
     except Exception as e:
-        #logger.error(f"Error getting team injury report for {team_name_normalized}: {e}")
+        logger.error(f"Error getting team injury report for {team_name}: {e}")
         return {}
     
 def get_player_injury_status_new(player_name, player_team, opponent_team):
@@ -372,10 +375,10 @@ def get_player_injury_status_new(player_name, player_team, opponent_team):
         opponent_injury_data = {}
         
         team_normalized = player_team.lower().replace(" ", "_").replace(".", "")
-        team_injury_data = get_team_injury_report(team_normalized, db)
+        team_injury_data = get_team_injury_report_new(team_normalized, db)
             
         opp_normalized = opponent_team.lower().replace(" ", "_").replace(".", "")
-        opponent_injury_data = get_team_injury_report(opp_normalized, db)
+        opponent_injury_data = get_team_injury_report_new(opp_normalized, db)
             
            
         # Check if player is in this team's injury report
@@ -387,8 +390,8 @@ def get_player_injury_status_new(player_name, player_team, opponent_team):
             "player_injured": player_injured,
             "teamInjuries": team_injury_data,
             "opponentInjuries": opponent_injury_data,
-            "lastUpdated": team_injury_data.get("lastUpdated"),
-            "lastChecked": team_injury_data.get("lastChecked"),
+            "lastUpdated": firestore.SERVER_TIMESTAMP,
+            "lastChecked": firestore.SERVER_TIMESTAMP,
             "source": "NBA Injury Report"
         }
         
