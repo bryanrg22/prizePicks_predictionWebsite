@@ -563,7 +563,7 @@ def analyze_player_endpoint():
     player_team = pdata.get("team")
     opponent_team = pdata.get("opponent")
     pdata["injuryReport"] = _strip_sentinels(
-        injury_report.get_player_injury_status(
+        injury_report.get_player_injury_status_new(
             name,
             player_team,
             opponent_team,
