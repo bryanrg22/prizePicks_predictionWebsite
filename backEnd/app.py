@@ -559,9 +559,8 @@ def analyze_player_endpoint():
     pdata.setdefault("gameId", None)
     pdata.setdefault("gameStatus", "Scheduled")
     
-    player_team = pdata.get("team", "Unknown Team")
     
-    # Fix Injury Report Process
+    player_team = pdata.get("team")
     opponent_team = pdata.get("opponent")
     pdata["injuryReport"] = _strip_sentinels(
         injury_report.get_player_injury_status(

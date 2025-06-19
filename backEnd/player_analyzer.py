@@ -281,6 +281,7 @@ def analyze_player_performance(
         ftm  = g.get("ftm", 0)
         tov  = g.get("turnovers", 0)
         poss = g.get("team_possessions") or 0
+        points  = g.get("points", 0)
 
         totals["fga"]  += fga
         totals["fgm"]  += fgm
@@ -290,6 +291,7 @@ def analyze_player_performance(
         totals["ftm"]  += ftm
         totals["tov"]  += tov
         totals["poss"] += poss
+        totals['points'] += points
 
     G     = len(logs)
     FGA   = totals["fga"]
