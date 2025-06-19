@@ -8,7 +8,7 @@ import sys
 
 # Allow importing back-end helpers for injury status lookup
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "backEnd"))
-from injury_report import get_player_injury_status
+from injury_report import get_player_injury_status_new
 
 # ------------- one‑time SDK bootstrap -------------
 firebase_admin.initialize_app()
@@ -67,7 +67,7 @@ def update_injury_report(event):
     refresh_active_player_injuries()
 
 
-def refresh_active_player_injuries(team=None):
+def refresh_active_player_injuries():
     """Update injuryReport for all active players.
 
     If ``team`` is provided, only players whose team or opponent matches will
@@ -87,18 +87,13 @@ def refresh_active_player_injuries(team=None):
         p_team   = pdata.get("team")
         opp_team = pdata.get("opponent")
 
-        if not name:
-            continue
-        if team and team not in {p_team, opp_team}:
-            continue
-
-        new_report = get_player_injury_status(name, p_team, opp_team)
-        existing = pdata.get("injuryReport") or {}
+        new_report = get_player_injury_status_new(name, p_team, opp_team)
+        existing_report = pdata.get("injuryReport") or {}
 
         def _strip_check(d):
             return {k: v for k, v in d.items() if k != "lastChecked"}
 
-        if _strip_check(existing) != _strip_check(new_report):
+        if _strip_check(existing_report) != _strip_check(new_report):
             snap.reference.update({"injuryReport": new_report})
             new_report["lastUpdated"] = firestore.SERVER_TIMESTAMP
             new_report["lastChecked"] = firestore.SERVER_TIMESTAMP
