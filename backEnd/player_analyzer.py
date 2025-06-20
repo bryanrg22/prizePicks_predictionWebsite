@@ -499,6 +499,7 @@ def analyze_player(first_name, last_name, threshold=None):
     playoff_minutes_home_avg = 0
     playoff_minutes_away_avg = 0
     playoff_away_games = 0
+    playoff_curr_score = ""
 
     if next_game_type == "Playoffs":
         pgl = PlayerGameLog(
@@ -597,6 +598,11 @@ def analyze_player(first_name, last_name, threshold=None):
         playoff_points_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
         playoff_minutes_home_avg /= playoff_home_games if playoff_home_games > 0 else 0
         playoff_minutes_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
+    
+    if playoff_games:
+        playoff_curr_score = playoff_games[-1]['series_score'] if playoff_games[-1]['game'] != 7 else "0-0"
+    else:
+        playoff_curr_score = "0-0"
 
 
     # Get the last 5 games
@@ -831,6 +837,7 @@ def analyze_player(first_name, last_name, threshold=None):
         # Playoff data
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
+        "playoff_curr_score": playoff_curr_score,
         "playoffAvg":       playoff_avg,
         "playoff_points_home_avg": playoff_points_home_avg,
         "playoff_points_away_avg": playoff_points_away_avg,
