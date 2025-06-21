@@ -338,7 +338,7 @@ def update_bet_pick_references():
                 if needs_update:
                     bet_doc.reference.update({"picks": updated_picks})
                     updated_bets += 1
-                    logger.info(f"Updated pick references for bet {bet_doc.id} of user {user_id}")
+            logger.info(f"Updated pick references for bets of user {user_id}")
                     
         logger.info(f"Updated {updated_bets} bets with new pick references")
         

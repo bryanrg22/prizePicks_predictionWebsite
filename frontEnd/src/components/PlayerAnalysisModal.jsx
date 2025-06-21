@@ -266,19 +266,19 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             {/* Quick Stats Grid - Utilizing ALL your data */}
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Season</div>
+                <div className="text-xs text-gray-400">Season Point Average</div>
                 <div className={`text-sm font-bold ${getComparisonColor(seasonAvgPoints, threshold)}`}>
                   {formatNumber(seasonAvgPoints)}
                 </div>
               </div>
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Last 5</div>
+                <div className="text-xs text-gray-400">Last 5 Game Point Average</div>
                 <div className={`text-sm font-bold ${getComparisonColor(last5RegularGamesAvg, threshold)}`}>
                   {formatNumber(last5RegularGamesAvg)}
                 </div>
               </div>
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">vs {opponent?.slice(0, 3)}</div>
+                <div className="text-xs text-gray-400">Point Average vs {opponent?.slice(0, 3)}</div>
                 <div className={`text-sm font-bold ${getComparisonColor(seasonAvgVsOpponent, threshold)}`}>
                   {formatNumber(seasonAvgVsOpponent)}
                 </div>
@@ -311,7 +311,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             {num_playoff_games > 0 && (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                 <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
-                  <div className="text-xs text-yellow-400">Playoff Avg</div>
+                  <div className="text-xs text-yellow-400">Playoff Point Avg</div>
                   <div className={`text-sm font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
                     {formatNumber(playoffAvg)}
                   </div>

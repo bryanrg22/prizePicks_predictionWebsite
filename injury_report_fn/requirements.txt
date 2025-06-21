@@ -3,4 +3,5 @@ firebase-admin
 functions-framework
 pdfplumber
 requests
+nba_api
 pytz

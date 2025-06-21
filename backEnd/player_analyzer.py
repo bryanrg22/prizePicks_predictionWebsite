@@ -290,22 +290,16 @@ def analyze_player_performance(
         totals["fta"]  += fta
         totals["ftm"]  += ftm
         totals["tov"]  += tov
-        totals["poss"] += poss
         totals['points'] += points
 
     G     = len(logs)
     FGA   = totals["fga"]
     FTA   = totals["fta"]
-    POS   = totals["poss"]
 
     # ── advanced rates ──────────────────────────────────────────────────────────
     efg          = _safe_div(totals["fgm"] + 0.5 * totals["pm3"], FGA)
     shot_dist_3p = _safe_div(totals["pa3"], FGA)
     ft_rate      = _safe_div(FTA, FGA)
-    usage_rate   = _safe_div(
-        totals["fga"] + 0.44 * FTA + totals["tov"],
-        POS
-    )
     # optional: True Shooting % (not returned in tuple to avoid breaking order)
     ts_pct       = _safe_div(totals["points"], 2 * (FGA + 0.44 * FTA))
 
@@ -323,11 +317,9 @@ def analyze_player_performance(
         "shot_dist_3pt": shot_dist_3p,
         "ft_rate": ft_rate,
         "efg": efg,
-        "usage_rate": usage_rate,
         # extras you might want later
         "ts_pct": ts_pct,
-        "games": G,
-        "total_points": totals["points"],
+        "games": G
     }
 
     return results_dict
@@ -681,10 +673,8 @@ def analyze_player(first_name, last_name, threshold=None):
         matchup = curr['MATCHUP']            
         if ' vs. ' in matchup:
             location = 'Home'
-            home_games += 1
         elif ' @ ' in matchup:
             location = 'Away'
-            away_games += 1
         
         num_season_count += 1
 
@@ -743,13 +733,33 @@ def analyze_player(first_name, last_name, threshold=None):
         player_performace_dict['shot_dist_3pt'] = None
         player_performace_dict['ft_rate'] = None
         player_performace_dict['efg'] = None
-        player_performace_dict['usage_rate'] = None
         player_performace_dict['ts_pct'] = None
+
+    # Get Team Data Metrics To Calculate Usage Rate
+    from nba_api.stats.endpoints import TeamGameLog
+    def fetch_team_stats_for_usage(team_id, season):
+        """
+        Fetches per‐game averages for every team, then adds an 'AVG_POSS' column.
+        """
+        gamelog_df = TeamGameLog(team_id=team_id, season=season).get_data_frames()[0]
+        return (
+            float(gamelog_df['FGA'].mean()),
+            float(gamelog_df['FTA'].mean()),
+            float(gamelog_df['TOV'].mean())
+        )
+        
+
+    team_fga, team_fta, team_tov = fetch_team_stats_for_usage(player_team_id, get_current_season())
 
     # ── importance metrics ───────────────────────────────────────────────────
     alpha = 0.7
-    usg = player_performace_dict.get('usage_rate') or 0
-    importance_score = round(alpha * (average_mins / 48) + (1 - alpha) * usg, 2)
+    usage_rate = (
+        (player_performace_dict['avg_fga'] + 0.475*player_performace_dict['avg_fta'] + player_performace_dict['avg_tov']) * 240
+        / (average_mins * (team_fga + 0.475*team_fta + team_tov))
+    )
+
+
+    importance_score = round(alpha * (average_mins / 48) + (1 - alpha) * usage_rate, 2)
     if importance_score >= 0.6:
         importance_role = "Starter"
     elif importance_score >= 0.3:
@@ -830,8 +840,8 @@ def analyze_player(first_name, last_name, threshold=None):
         "shot_dist_3pt": player_performace_dict['shot_dist_3pt'],
         "ft_rate": player_performace_dict['ft_rate'],
         "efg": player_performace_dict['efg'],
-        "usage_rate": player_performace_dict['usage_rate'],
         "ts_pct": player_performace_dict['ts_pct'],
+        "usage_rate": usage_rate,
         
 
         # Playoff data
@@ -849,3 +859,7 @@ def analyze_player(first_name, last_name, threshold=None):
 
 
     return player_data
+
+if __name__ == "__main__":
+    player_info = analyze_player("aaron", "nesmith", threshold=20)
+    print(player_info)

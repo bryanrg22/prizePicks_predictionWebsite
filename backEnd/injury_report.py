@@ -3,11 +3,103 @@ from firebase_admin import firestore
 from datetime import datetime
 import pytz
 import logging
+import nba_api
+from nba_api.stats.endpoints import TeamGameLog
+from nba_api.stats.endpoints import playergamelog
+from nba_api.stats.static import teams, players
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def get_current_season():
+    now = datetime.datetime.now()
+    if now.month >= 10:
+        season_start = now.year
+        season_end = now.year + 1
+    else:
+        season_start = now.year - 1
+        season_end = now.year
+    return f"{season_start}-{str(season_end)[-2:]}"
+
+def get_ids(first_name, last_name):
+    url = "https://api.balldontlie.io/v1/players"
+    headers = {"Authorization": "03f64803-21d9-40e4-ab9f-5d69ca82c8dc"}
+    params = {"first_name": first_name, "last_name": last_name}
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code != 200:
+        return {"error": f"API Error from balldontlie: {response.status_code}"}
+    bd_players = response.json().get("data", [])
+    if not bd_players:
+        return {"error": f"No players found in balldontlie for {first_name} {last_name}"}
+    bdl_player = bd_players[0]
+
+    full_name = f"{bdl_player['first_name']} {bdl_player['last_name']}"
+    nba_found = players.find_players_by_full_name(full_name)
+    if not nba_found:
+        return {"error": f"No matching NBA Stats player found for {full_name}"}
+    nba_player_id = nba_found[0]["id"]
+    player_team = bdl_player["team"]["full_name"] if bdl_player.get("team") else "Unknown Team"
+    player_team_standings = teams.find_teams_by_full_name(player_team)[0]
+    player_team_id = player_team_standings["id"]
+
+    return nba_player_id, player_team_id
+
+def fetch_player_game_stats(nba_player_id, season_str):
+    """
+    Fetches advanced game logs for the specified NBA player (by official nba_api ID).
+    Returns per-game stats including FGM, FGA, 3PA, 3PM, etc.
+    """
+    fga = fta = tov = minutes = 0
+    gamelog_df = playergamelog.PlayerGameLog(player_id=nba_player_id, season=season_str).get_data_frames()[0]
+
+
+    for idx, row in gamelog_df.iterrows():
+        fga += row.get("FGA", 0)
+        fta += row.get("FTA", 0)
+        tov += row.get("TOV", 0)
+        minutes += row.get("MIN", 0)
+
+    fga /= len(gamelog_df)
+    fta /= len(gamelog_df)
+    tov /= len(gamelog_df)
+    minutes /= len(gamelog_df)
+
+    return fga, fta, tov, minutes
+
+def fetch_team_stats_for_usage(team_id, season):
+    """
+    Fetches per‐game averages for every team, then adds an 'AVG_POSS' column.
+    """
+    gamelog_df = TeamGameLog(team_id=team_id, season=season).get_data_frames()[0]
+    return (
+            float(gamelog_df['FGA'].mean()),
+            float(gamelog_df['FTA'].mean()),
+            float(gamelog_df['TOV'].mean())
+        )
+
+def get_data_metrics(player_name):
+    first_name, last_name = player_name.split(" ", 1)
+    player_id, player_team_id = get_ids(first_name, last_name)
+    fga, fta, tov, mins = fetch_player_game_stats(player_id, get_current_season())
+    team_fga, team_fta, team_tov = fetch_team_stats_for_usage(player_team_id, get_current_season())
+
+    alpha = 0.7
+    usage_rate = (
+        (fga + 0.475*fta + tov) * 240
+        / (mins * (team_fga + 0.475*team_fta + team_tov))
+    )
+
+    importance_score = round(alpha * (mins / 48) + (1 - alpha) * usage_rate, 2)
+    if importance_score >= 0.6:
+        importance_role = "Starter"
+    elif importance_score >= 0.3:
+        importance_role = "Rotation"
+    else:
+        importance_role = "Bench"
+    
+    return usage_rate, importance_score, importance_role
 
 def get_team_injury_report(team_name, db):
     """
@@ -335,9 +427,13 @@ def get_team_injury_report_new(team_name, db):
         
         injured_players = {}
         for player in data['players']:
+            usage_rate, importance_score, importance_role = get_data_metrics(player['player'])  # Call to get_data_metrics to ensure player data is fetched
             injured_players[player['player']] = {
                 'status': player['status'],
-                'reason': player['reason']
+                'reason': player['reason'],
+                'usage_rate': usage_rate,
+                'importance_score': importance_score,
+                'importance_role': importance_role
             }
 
         return injured_players
