@@ -592,9 +592,26 @@ def analyze_player(first_name, last_name, threshold=None):
         playoff_minutes_away_avg /= playoff_away_games if playoff_away_games > 0 else 0
     
     if playoff_games:
-        playoff_curr_score = playoff_games[-1]['series_score'] if playoff_games[-1]['game'] != 7 else "0-0"
+        last_game = playoff_games[-1]           # most-recent playoff game on record
+
+        if last_game['game_number'] == 7:
+            # Series finished → reset score and advance round IF another exists
+            playoff_curr_score = "0-0"
+            next_round_idx = round_playoff_game + 1
+            playoff_round = (
+                type_playoff_game[next_round_idx]
+                if next_round_idx < len(type_playoff_game)
+                else type_playoff_game[-1]      # stay on “NBA Finals” if we’re already there
+            )
+        else:
+            # Series still in progress
+            playoff_curr_score = last_game['series_score']
+            playoff_round = type_playoff_game[round_playoff_game]
     else:
+        # No playoff data yet
         playoff_curr_score = "0-0"
+        playoff_round = type_playoff_game[round_playoff_game]
+
 
 
     # Get the last 5 games
@@ -848,6 +865,7 @@ def analyze_player(first_name, last_name, threshold=None):
         "playoff_games":     playoff_games,
         "num_playoff_games": num_playoff_games,
         "playoff_curr_score": playoff_curr_score,
+        "playoff_round": playoff_round,
         "playoffAvg":       playoff_avg,
         "playoff_points_home_avg": playoff_points_home_avg,
         "playoff_points_away_avg": playoff_points_away_avg,

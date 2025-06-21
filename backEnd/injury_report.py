@@ -427,14 +427,17 @@ def get_team_injury_report_new(team_name, db):
         
         injured_players = {}
         for player in data['players']:
-            usage_rate, importance_score, importance_role = get_data_metrics(player['player'])  # Call to get_data_metrics to ensure player data is fetched
-            injured_players[player['player']] = {
-                'status': player['status'],
-                'reason': player['reason'],
-                'usage_rate': usage_rate,
-                'importance_score': importance_score,
-                'importance_role': importance_role
-            }
+            if player['reason'] == "NOT YET SUBMITTED":
+                return {'status': "NOT YET SUBMITTED", 'reason': "Injury report not yet submitted by team"}
+            else:
+                usage_rate, importance_score, importance_role = get_data_metrics(player['player'])  # Call to get_data_metrics to ensure player data is fetched
+                injured_players[player['player']] = {
+                    'status': player['status'],
+                    'reason': player['reason'],
+                    'usage_rate': usage_rate,
+                    'importance_score': importance_score,
+                    'importance_role': importance_role
+                }
 
         return injured_players
         
@@ -442,55 +445,46 @@ def get_team_injury_report_new(team_name, db):
         logger.error(f"Error getting team injury report for {team_name}: {e}")
         return {}
     
+    
 def get_player_injury_status_new(player_name, player_team, opponent_team):
-    """Look up a player's injury status in Firestore.
-
-    Besides checking the given player's team, this returns the full injury list
-    for both ``player_team`` and ``opponent_team`` when provided.
-
-    Args:
-        player_name (str): Player to check.
-        player_team (str, optional): Team the player belongs to.
-        opponent_team (str, optional): Opponent team to also query.
-    Returns:
-        dict: Injury information including any team and opponent injuries.
     """
-
+    Look up a player's injury status plus both teams' full injury lists.
+    """
     if not player_name:
         return {"error": "No player name provided"}
-    
-    try:
-        # Initialize Firestore client
-        if not firebase_admin._apps:
-            firebase_admin.initialize_app()
-        db = firestore.client()
 
+    # ── 1. Firestore client ────────────────────────────────────────────────
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app()
+    db = firestore.client()
 
-        player_injured = False
-        team_injury_data = {}
-        opponent_injury_data = {}
-        
-        team_normalized = player_team.lower().replace(" ", "_").replace(".", "")
-        team_injury_data = get_team_injury_report_new(team_normalized, db)
-            
-        opp_normalized = opponent_team.lower().replace(" ", "_").replace(".", "")
-        opponent_injury_data = get_team_injury_report_new(opp_normalized, db)
-            
-           
-        # Check if player is in this team's injury report
-        if player_name in team_injury_data:
-            player_injured = True
-        
+    # ── 2. Pull both reports ───────────────────────────────────────────────
+    team_key  = player_team.lower().replace(" ", "_").replace(".", "")
+    opp_key   = opponent_team.lower().replace(" ", "_").replace(".", "") if opponent_team else None
 
-        return {
-            "player_injured": player_injured,
-            "teamInjuries": team_injury_data,
-            "opponentInjuries": opponent_injury_data,
-            "lastUpdated": firestore.SERVER_TIMESTAMP,
-            "lastChecked": firestore.SERVER_TIMESTAMP,
-            "source": "NBA Injury Report"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error querying injury database: {e}")
-        return {}
+    team_injuries     = get_team_injury_report_new(team_key, db)              # may be {}, {'status': 'NOT YET SUBMITTED'}, or {player: {...}}
+    opponent_injuries = get_team_injury_report_new(opp_key,  db) if opp_key else {}
+
+    # ── 3. Decide the player flag ──────────────────────────────────────────
+    #
+    # Case A – report not filed yet
+    if team_injuries.get("status") == "NOT YET SUBMITTED":
+        player_injured = {'status': "NOT YET SUBMITTED", 'reason': "Injury report not yet submitted by team"}
+
+    # Case B – report exists and player is listed
+    elif player_name in team_injuries:               # keys are player names
+        player_injured = {'status': team_injuries[player_name]['status'], 'reason': team_injuries[player_name]['reason']}
+
+    # Case C – report exists and player is NOT listed
+    else:
+        player_injured = {'status': 'NOT INJURED', 'reason': 'Player not listed in NBA injury report'}
+
+    # ── 4. Uniform response ────────────────────────────────────────────────
+    return {
+        "player_injured":   player_injured,
+        "teamInjuries":     team_injuries,
+        "opponentInjuries": opponent_injuries,
+        "lastUpdated":      firestore.SERVER_TIMESTAMP,
+        "lastChecked":      firestore.SERVER_TIMESTAMP,
+        "source":           "NBA Injury Report",
+    }

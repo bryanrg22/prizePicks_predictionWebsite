@@ -79,7 +79,12 @@ processedPlayers/players
 │       │
 │       ├── # 6. Injury Report
 │       │   └─ injuryReport: map
-│       │       ├─ player_injured: boolean
+│       │       ├─ player_injured: map<string, map>
+│       │       │   └─ [
+│       │       │       { 
+│       │       │         status, reason
+│       │       │       }
+│       │       │      ]
 │       │       ├─ teamInjuries: map<string, map>
 │       │       │   └─ [
 │       │       │       { 
@@ -117,6 +122,7 @@ processedPlayers/players
 │       │
 │       └── # 8. Playoff Data (only present when gameType == Playoffs)
 │           ├─ num_playoff_games: number
+│           ├─ playoff_curr_score
 │           ├─ playoffAvg: number
 │           ├─ playoff_points_home_avg: number
 │           ├─ playoff_points_away_avg: number
