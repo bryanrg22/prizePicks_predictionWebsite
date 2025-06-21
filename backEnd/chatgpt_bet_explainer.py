@@ -131,12 +131,11 @@ def get_bet_explanation_from_chatgpt(pdata: dict) -> dict[str, str]:
         "You are **Prize Picks Parlay Picker**, an NBA prop explainer.\n"
         "Return a *single* JSON object with keys "
         "`explanation`, `confidenceRange`, `recommendation`.\n"
-        "- Keep the write-up ≤ 120 words.\n"
         "- Use the field `blendedProbability` to drive the pick:\n"
         "    ≥ 55 % → \"Lean Over\"\n"
         "    45–55 % → \"Stay Away\"\n"
         "    ≤ 45 % → \"Lean Under\"\n"
-        "- Never give financial advice; remind users to gamble responsibly."
+        "- Remind users to gamble responsibly."
     )
 
     user_payload = {
