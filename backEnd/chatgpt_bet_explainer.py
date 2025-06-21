@@ -19,6 +19,7 @@ import json, math, os, random, typing as _t
 import numpy as np
 from scipy import stats as st
 from openai import OpenAI
+from firebase_admin import functions
 
 
 # ──────────────────────────────────────────────────
@@ -91,7 +92,19 @@ def _ci(p: float, n: int = 20_000) -> tuple[float, float]:
 #  Main public entry point
 # ──────────────────────────────────────────────────
 MODEL = "gpt-4o-mini"        # swap to "gpt-4o" or "gpt-4o-128k" when needed
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Lazily initialize the OpenAI client so imports succeed even if the
+# environment variable isn't set during build steps.
+_client: OpenAI | None = None
+
+def _get_client() -> OpenAI:
+    global _client
+    if _client is None:
+        key = os.getenv("OPENAI_API_KEY") or functions.config()["openai"]["key"]
+        if not key:
+            raise RuntimeError("OPENAI_API_KEY env var not configured")
+        _client = OpenAI(api_key=key)
+    return _client
+
 
 
 def get_bet_explanation_from_chatgpt(pdata: dict) -> dict[str, str]:
@@ -140,7 +153,7 @@ def get_bet_explanation_from_chatgpt(pdata: dict) -> dict[str, str]:
     }
 
     # 3) Call the model (JSON mode keeps parsing bullet-proof)
-    chat = client.chat.completions.create(
+    chat = _get_client().chat.completions.create(
         model=MODEL,
         response_format={"type": "json_object"},
         messages=[
