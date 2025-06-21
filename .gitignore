@@ -1,6 +1,17 @@
+# ---- secrets & env files -------------------------------------------------
 *.env
-backend/env
-backEnd/prizepicksproject-15337-firebase-adminsdk-fbsvc-c967e4c17d.json
 .env.local
+backend/prizepicksproject-15337-firebase-adminsdk-fbsvc-c967e4c17d.json
+
+# ---- throw-away test stubs ----------------------------------------------
 test.py
 newTest.py
+
+# ---- dependency & build artifacts ---------------------------------------
+node_modules/          
+__pycache__/           
+*.py[cod]              
+venv/                  
+
+# (leave backend/env if that really is a directory you never want tracked)
+backend/env
