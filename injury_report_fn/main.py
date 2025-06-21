@@ -9,6 +9,7 @@ import sys
 # Allow importing back-end helpers for injury status lookup
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "backEnd"))
 from injury_report import get_player_injury_status_new
+from chatgpt_bet_explainer import get_bet_explanation_from_chatgpt
 
 # ------------- one‑time SDK bootstrap -------------
 firebase_admin.initialize_app()
@@ -67,14 +68,12 @@ def update_injury_report(event):
     refresh_active_player_injuries()
 
 
-def refresh_active_player_injuries():
-    """Update injuryReport for all active players.
-
-    If ``team`` is provided, only players whose team or opponent matches will
-    be refreshed. The player's injuryReport map gains a ``lastChecked`` field
-    and is overwritten when the data differs.
+def refresh_active_player_injuries(request=None):  # Cloud Functions entry-point
     """
-
+    For every active player doc:
+      • refresh injuryReport
+      • refresh betExplanation *only if* the report actually changed
+    """
     coll = (
         db.collection("processedPlayers")
           .document("players")
@@ -83,21 +82,38 @@ def refresh_active_player_injuries():
 
     for snap in coll.stream():
         pdata = snap.to_dict() or {}
-        name     = pdata.get("name")
-        p_team   = pdata.get("team")
-        opp_team = pdata.get("opponent")
+        name, p_team, opp_team = pdata.get("name"), pdata.get("team"), pdata.get("opponent")
 
+        # ── 1. Build latest injury map ───────────────────────────
         new_report = get_player_injury_status_new(name, p_team, opp_team)
+        if not isinstance(new_report, dict):
+            continue                                              # skip bad parse
+
+        def _strip_ts(d: dict) -> dict:
+            return {k: v for k, v in d.items() if k not in ("lastChecked", "lastUpdated")}
+
         existing_report = pdata.get("injuryReport") or {}
 
-        def _strip_check(d):
-            return {k: v for k, v in d.items() if k != "lastChecked" and 
-                    k != "lastUpdated"}
+        # ── 2. Decide whether anything meaningful changed ───────
+        if _strip_ts(existing_report) != _strip_ts(new_report):
+            # add timestamps *before* we push to Firestore
+            new_report.update({
+                "lastChecked": firestore.SERVER_TIMESTAMP,
+                "lastUpdated": firestore.SERVER_TIMESTAMP,
+            })
 
-        if _strip_check(existing_report) != _strip_check(new_report):
-            snap.reference.update({"injuryReport": new_report})
-            new_report["lastUpdated"] = firestore.SERVER_TIMESTAMP
-            new_report["lastChecked"] = firestore.SERVER_TIMESTAMP
+            doc_ref = snap.reference
+            doc_ref.update({"injuryReport": new_report})
+
+            # update local copy so ChatGPT sees the new injuries
+            pdata["injuryReport"] = new_report
+
+            # ── 3. Regenerate bet explanation (costly, so gated) ─
+            bet_expl = get_bet_explanation_from_chatgpt(pdata)
+            doc_ref.update({"betExplanation": bet_expl})
+
         else:
-            snap.reference.update({"injuryReport.lastChecked": firestore
-                                   .SERVER_TIMESTAMP})
+            # Only bump the heartbeat timestamp
+            snap.reference.update(
+                {"injuryReport.lastChecked": firestore.SERVER_TIMESTAMP}
+            )

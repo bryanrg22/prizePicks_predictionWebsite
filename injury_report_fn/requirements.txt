@@ -5,3 +5,6 @@ pdfplumber
 requests
 nba_api
 pytz
+numpy
+scipy
+openai
