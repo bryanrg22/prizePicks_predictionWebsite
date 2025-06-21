@@ -4,302 +4,119 @@ import os, json, textwrap
 from openai import OpenAI, OpenAIError
 
 # ---------- TEAM-LEVEL CONTEXT ----------
-_TEAM_CTX = { 
+_TEAM_CTX = {
     "Pacers": {
-        "seed"      : 1,
-        "arena"     : "Home – Gainbridge Fieldhouse",
-        "narrative" : (
-            "Blew out #1 Cleveland in 5 with NBA-best 121.1 offensive rating. "
-            "Tyrese Haliburton fresh after short series. Up 3-2 looking to close "
-            "at home. A win would mean their first Finals trip since 2000."
+        "seed": 4,
+        "arena": "Away – Paycom Center, Oklahoma City",
+        "narrative": (
+            "Indiana clawed back from a 3-2 deficit with a 108-91 rout in Game 6, "
+            "forcing the first Finals Game 7 since 2016. Tyrese Haliburton (right-calf "
+            "tightness) says he’s ‘100 percent playing,’ while Pascal Siakam and a deep "
+            "bench have powered the NBA’s surprise run. A victory would give the Pacers "
+            "their first NBA championship and cap a postseason that already toppled the "
+            "64-win Cavaliers and the Knicks."
         ),
     },
     "Thunder": {
-        "seed"      : 4,
-        "arena"     : "Away @ DEN",
-        "narrative" : (
-            "Fourth-seed Thunder opened against defending champion Nuggets. "
-            "Shai Gilgeous-Alexander has shouldered the load all season, averaging "
-            "30.1 PPG and 5.1 APG, while Chet Holmgren’s shot-blocking has anchored "
-            "the paint. They stole Game 1 on the road but now trail 1-2 after a tight "
-            "Game 3 loss. A win in Game 4 back in Oklahoma City would swing home-court "
-            "toward OKC and energize their young core."
+        "seed": 1,
+        "arena": "Home – Paycom Center",
+        "narrative": (
+            "Oklahoma City, owner of a league-best 68-14 record and led by MVP "
+            "Shai Gilgeous-Alexander, still controls home court after letting Game 6 slip away. "
+            "Chet Holmgren’s rim protection and Jalen Williams’ shot-making headline a young core "
+            "trying to deliver the franchise’s first title since the 1979 Sonics—and the first ever "
+            "won in Oklahoma City."
         ),
     },
+}
+
+_ESPN_CTX = {
+    # ── Game meta ─────────────────────────────────────────────────────────────
+    "game": {
+        "series":        "NBA Finals",
+        "game_number":   7,
+        "series_status": "Tied 3-3",
+        "datetime_et":   "Sunday 8:00 p.m. ET",          # June 22 2025
+        "venue":         "Paycom Center, Oklahoma City",
+        "odds": {
+            "favorite": "Thunder",
+            "spread":   -7.5,
+            "over_under": 215,
+        },
+        "last_matchup": {
+            "score":          "Pacers 108 – Thunder 91",
+            "pacers_leader":  {"player": "Obi Toppin",  "pts": 20},
+            "thunder_leader": {"player": "Shai Gilgeous-Alexander", "pts": 21},
+            "date":           "Friday",
+        },
+    },
+
+    # ── Team capsules ─────────────────────────────────────────────────────────
+    "teams": {
+        "Pacers": {
+            "record":             "50-32",
+            "conference_seed":    4,
+            "away_record":        "21-20",
+            "vs_over_500":        "22-15",
+            "avg_made_3s":        13.2,
+            "def_3p_allowed_pct": 37.4,   # Thunder shoot 0.8 pp better
+            "top_performers": {
+                "Pascal Siakam":     {"ppg": 20.2, "rpg": 6.9, "apg": 3.4},
+                "Tyrese Haliburton": {"ppg": 17.0, "span": "last 10 games"},
+            },
+            "last_10": {
+                "record":  "5-5",
+                "ppg":     110.4,
+                "rpg":     40.3,
+                "apg":     24.2,
+                "spg":     9.9,
+                "bpg":     6.0,
+                "fg_pct":  46.4,
+                "opp_ppg": 110.8,
+            },
+            "injuries": {
+                "Isaiah Jackson": {"status": "out for season", "reason": "calf"},
+                "Jarace Walker":  {"status": "day-to-day",     "reason": "ankle"},
+            },
+        },
+
+        "Thunder": {
+            "record":            "68-14",
+            "conference_seed":   1,
+            "home_record":       "36-6",
+            "avg_made_3s":       14.5,
+            "team_3p_pct":       37.4,
+            "three_pt_leader":   {"player": "Isaiah Joe", "makes": 2.6, "pct": 41.2},
+            "top_performers": {
+                "Jalen Williams":       {"ppg": 21.6, "fg_pct": 48.4},
+                "Shai Gilgeous-Alexander": {"ppg": 30.9, "span": "last 10 games"},
+            },
+            "last_10": {
+                "record":  "6-4",
+                "ppg":     113.3,
+                "rpg":     40.8,
+                "apg":     20.0,
+                "spg":     10.3,
+                "bpg":     5.2,
+                "fg_pct":  46.1,
+                "opp_ppg": 112.1,
+            },
+            "injuries": {
+                "Nikola Topic": {"status": "out for season", "reason": "ACL"},
+            },
+        },
+    },
+
+    # ── Narrative blurb (optional) ────────────────────────────────────────────
+    "bottom_line": (
+        "The Oklahoma City Thunder host the Indiana Pacers in a winner-take-all "
+        "Game 7. Oklahoma City’s league-best defense meets Indiana’s up-tempo attack "
+        "after the Pacers’ Game 6 rout forced the NBA’s first Finals Game 7 since 2016."
+    ),
 }
 
 
 # ---------- ROSTER ANALYSIS ----------
-pacers_roster = {
-  "PacersRosterWithImportance": [
-    {
-      "player_name": "Tyrese Haliburton",
-      "team": "indiana_pacers",
-      "position": "PG",
-      "importanceRole": "Starter",
-      "importanceScore": 0.70
-    },
-    {
-      "player_name": "Pascal Siakam",
-      "team": "indiana_pacers",
-      "position": "PF",
-      "importanceRole": "Starter",
-      "importanceScore": 0.68
-    },
-    {
-      "player_name": "Myles Turner",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Starter",
-      "importanceScore": 0.63
-    },
-    {
-      "player_name": "Bennedict Mathurin",
-      "team": "indiana_pacers",
-      "position": "SG/SF",
-      "importanceRole": "Starter",
-      "importanceScore": 0.62
-    },
-    {
-      "player_name": "Aaron Nesmith",
-      "team": "indiana_pacers",
-      "position": "SF",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.52
-    },
-    {
-      "player_name": "Andrew Nembhard",
-      "team": "indiana_pacers",
-      "position": "PG",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.60
-    },
-    {
-      "player_name": "T. J. McConnell",
-      "team": "indiana_pacers",
-      "position": "PG",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.37
-    },
-    {
-      "player_name": "Obi Toppin",
-      "team": "indiana_pacers",
-      "position": "PF",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.41
-    },
-    {
-      "player_name": "Ben Sheppard",
-      "team": "indiana_pacers",
-      "position": "SG/SF",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.41
-    },
-    {
-      "player_name": "Jarace Walker",
-      "team": "indiana_pacers",
-      "position": "F",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.33
-    },
-    {
-      "player_name": "Isaiah Jackson",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.35
-    },
-    {
-      "player_name": "Thomas Bryant",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Bench",
-      "importanceScore": 0.30
-    },
-    {
-      "player_name": "Quenton Jackson",
-      "team": "indiana_pacers",
-      "position": "G/F",
-      "importanceRole": "Bench",
-      "importanceScore": 0.29
-    },
-    {
-      "player_name": "Tony Bradley",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Bench",
-      "importanceScore": 0.17
-    },
-    {
-      "player_name": "Moses Brown",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Bench",
-      "importanceScore": 0.19
-    },
-    {
-      "player_name": "Johnny Furphy",
-      "team": "indiana_pacers",
-      "position": "F",
-      "importanceRole": "Bench",
-      "importanceScore": 0.18
-    },
-    {
-      "player_name": "Enrique Freeman",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Bench",
-      "importanceScore": 0.16
-    },
-    {
-      "player_name": "RayJ Dennis",
-      "team": "indiana_pacers",
-      "position": "PG",
-      "importanceRole": "Bench",
-      "importanceScore": 0.04
-    },
-    {
-      "player_name": "James Johnson",
-      "team": "indiana_pacers",
-      "position": "PF",
-      "importanceRole": "Bench",
-      "importanceScore": 0.06
-    },
-    {
-      "player_name": "James Wiseman",
-      "team": "indiana_pacers",
-      "position": "C",
-      "importanceRole": "Bench",
-      "importanceScore": 0.10
-    },
-    {
-      "player_name": "Tristen Newton",
-      "team": "indiana_pacers",
-      "position": "PG",
-      "importanceRole": "Bench",
-      "importanceScore": 0.03
-    }
-  ]
-}
-
-
-okc_roster = {
-  "OKCRosterWithImportance": [
-    {
-      "player_name": "Shai Gilgeous-Alexander",
-      "team": "oklahoma_city_thunder",
-      "position": "PG",
-      "importanceRole": "Starter",
-      "importanceScore": 0.72
-    },
-    {
-      "player_name": "Jalen Williams",
-      "team": "oklahoma_city_thunder",
-      "position": "SF",
-      "importanceRole": "Starter",
-      "importanceScore": 0.68
-    },
-    {
-      "player_name": "Luguentz Dort",
-      "team": "oklahoma_city_thunder",
-      "position": "SG/SF",
-      "importanceRole": "Starter",
-      "importanceScore": 0.63
-    },
-    {
-      "player_name": "Chet Holmgren",
-      "team": "oklahoma_city_thunder",
-      "position": "C",
-      "importanceRole": "Starter",
-      "importanceScore": 0.59
-    },
-    {
-      "player_name": "Isaiah Hartenstein",
-      "team": "oklahoma_city_thunder",
-      "position": "PF/C",
-      "importanceRole": "Starter",
-      "importanceScore": 0.60
-    },
-    {
-      "player_name": "Cason Wallace",
-      "team": "oklahoma_city_thunder",
-      "position": "PG",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.61
-    },
-    {
-      "player_name": "Aaron Wiggins",
-      "team": "oklahoma_city_thunder",
-      "position": "SG/SF",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.49
-    },
-    {
-      "player_name": "Isaiah Joe",
-      "team": "oklahoma_city_thunder",
-      "position": "SG",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.49
-    },
-    {
-      "player_name": "Ousmane Dieng",
-      "team": "oklahoma_city_thunder",
-      "position": "SF",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.30
-    },
-    {
-      "player_name": "Kenrich Williams",
-      "team": "oklahoma_city_thunder",
-      "position": "PF/SF",
-      "importanceRole": "Rotation",
-      "importanceScore": 0.37
-    },
-    {
-      "player_name": "Dillon Jones",
-      "team": "oklahoma_city_thunder",
-      "position": "PF",
-      "importanceRole": "Bench",
-      "importanceScore": 0.20
-    },
-    {
-      "player_name": "Jaylin Williams",
-      "team": "oklahoma_city_thunder",
-      "position": "PF",
-      "importanceRole": "Bench",
-      "importanceScore": 0.15
-    },
-    {
-      "player_name": "Ajay Mitchell",
-      "team": "oklahoma_city_thunder",
-      "position": "PG",
-      "importanceRole": "Bench",
-      "importanceScore": 0.10
-    },
-    {
-      "player_name": "Alex Ducas",
-      "team": "oklahoma_city_thunder",
-      "position": "G",
-      "importanceRole": "Bench",
-      "importanceScore": 0.10
-    },
-    {
-      "player_name": "Adam Flagler",
-      "team": "oklahoma_city_thunder",
-      "position": "PG",
-      "importanceRole": "Bench",
-      "importanceScore": 0.10
-    },
-    {
-      "player_name": "Nikola Topic",
-      "team": "oklahoma_city_thunder",
-      "position": "PG",
-      "importanceRole": "Bench",
-      "importanceScore": 0.08
-    }
-  ]
-}
-
 def _fmt(label, val, decimals=2):
     """Formats a single stat line for display."""
     try:
@@ -314,8 +131,6 @@ def _generate_playoff_context(team, opponent):
     Generates playoff context specifically for Pacers vs Thunder.
     (returns empty string if team/opponent aren’t exactly "Pacers" or "Thunder")
     """
-    if {team, opponent} != {"Pacers", "Thunder"}:
-        return ""
 
     # pull each team’s narrative
     pacers_text = _TEAM_CTX["Pacers"]["narrative"]

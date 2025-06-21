@@ -1,148 +1,149 @@
+### Firestore Database Scheme
 processedPlayers/players 
 ├── active/
 │   └── {pick_id} (e.g. aaron_nesmith_7.5_20250619)
-│       ├── # 1. Identity & Media
-│       │   ├─ name: string
-│       │   ├─ playerId: number
-│       │   ├─ team: string
-│       │   ├─ position: string
-│       │   ├─ photoUrl: string
-│       │   ├─ teamLogo: string
-│       │   └─ opponentLogo: string
+│       │  # 1. Identity & Media
+│       ├─ name: string
+│       ├─ playerId: number
+│       ├─ team: string
+│       ├─ position: string
+│       ├─ photoUrl: string
+│       ├─ teamLogo: string
+│       ├─ opponentLogo: string
 │       │
-│       ├── # 2. Game Context
-│       │   ├─ opponent: string
-│       │   ├─ gameDate: string (MM/DD/YYYY)
-│       │   ├─ gameTime: string
-│       │   ├─ gameType: string
-│       │   ├─ gameStatus: string
-│       │   ├─ gameId: string
-│       │   ├─ home_game: boolean
-│       │   ├─ matchup: string
-│       │   ├─ series_score: string
-│       │   ├─ teamConference: string
-│       │   ├─ opponentConference: string
-│       │   ├─ teamPlayoffRank: number
-│       │   └─ opponentPlayoffRank: number
+│       │  # 2. Game Context
+│       ├─ opponent: string
+│       ├─ gameDate: string (MM/DD/YYYY)
+│       ├─ gameTime: string
+│       ├─ gameType: string
+│       ├─ gameStatus: string
+│       ├─ gameId: string
+│       ├─ home_game: boolean
+│       ├─ matchup: string
+│       ├─ series_score: string
+│       ├─ teamConference: string
+│       ├─ opponentConference: string
+│       ├─ teamPlayoffRank: number
+│       ├─ opponentPlayoffRank: number
 │       │
-│       ├── # 3. Vegas & Market
-│       │   ├─ threshold: number
-│       │   ├─ vegasSpread: number
-│       │   ├─ overUnder: number
-│       │   ├─ totalMove: number
-│       │   ├─ spreadMove: number
-│       │   ├─ teamImpliedPts: number
-│       │   ├─ oppImpliedPts: number
-│       │   ├─ impliedOverProb: number
-│       │   ├─ favoriteFlag: number (0/1)
-│       │   ├─ underdogFlag: number (0/1)
-│       │   └─ details: string
+│       │  # 3. Vegas & Market
+│       ├─ threshold: number
+│       ├─ vegasSpread: number
+│       ├─ overUnder: number
+│       ├─ totalMove: number
+│       ├─ spreadMove: number
+│       ├─ teamImpliedPts: number
+│       ├─ oppImpliedPts: number
+│       ├─ impliedOverProb: number
+│       ├─ favoriteFlag: number (0/1)
+│       ├─ underdogFlag: number (0/1)
+│       ├─ details: string
 │       │
-│       ├── # 4. Performance Metrics
-│       │   ├─ seasonAvgPoints: number
-│       │   ├─ last5RegularGamesAvg: number
-│       │   ├─ seasonAvgVsOpponent: number
-│       │   ├─ careerAvgVsOpponent: number
-│       │   ├─ points_home_avg: number
-│       │   ├─ points_away_avg: number
-│       │   ├─ average_mins: number
-│       │   ├─ minutes_home_avg: number
-│       │   ├─ minutes_away_avg: number
-│       │   ├─ efg: number
-│       │   ├─ ft_rate: number
-│       │   ├─ shot_dist_3pt: number
-│       │   ├─ ts_pct: number
-│       │   ├─ avg_3pm: number
-│       │   ├─ avg_3pa: number
-│       │   ├─ avg_fgm: number
-│       │   ├─ avg_fga: number
-│       │   ├─ avg_ftm: number
-│       │   ├─ avg_fta: number
-│       │   ├─ avg_tov: number
-│       │   ├─ usage_rate: number
-│       │   └─ num_season_games: number
+│       │  # 4. Performance Metrics
+│       ├─ seasonAvgPoints: number
+│       ├─ last5RegularGamesAvg: number
+│       ├─ seasonAvgVsOpponent: number
+│       ├─ careerAvgVsOpponent: number
+│       ├─ points_home_avg: number
+│       ├─ points_away_avg: number
+│       ├─ average_mins: number
+│       ├─ minutes_home_avg: number
+│       ├─ minutes_away_avg: number
+│       ├─ efg: number
+│       ├─ ft_rate: number
+│       ├─ shot_dist_3pt: number
+│       ├─ ts_pct: number
+│       ├─ avg_3pm: number
+│       ├─ avg_3pa: number
+│       ├─ avg_fgm: number
+│       ├─ avg_fga: number
+│       ├─ avg_ftm: number
+│       ├─ avg_fta: number
+│       ├─ avg_tov: number
+│       ├─ usage_rate: number
+│       ├─ num_season_games: number
 │       │
-│       ├── # 5. Analytics & Forecasts
-│       │   ├─ poissonProbability: number
-│       │   ├─ monteCarloProbability: number
-│       │   ├─ volatilityForecast: number
-│       │   ├─ volatilityPlayOffsForecast: number
-│       │   ├─ blowoutRisk: number
-│       │   ├─ importanceScore: number
-│       │   ├─ importanceRole: string
-│       │   ├─ underCount: number
-│       │   ├─ playoff_underCount: number
-│       │   └─ betExplanation: map
-│       │       ├─ explanation: string
-│       │       ├─ confidenceRange: string
-│       │       └─ recommendation: string
+│       ├─ # 5. Analytics & Forecasts
+│       ├─ poissonProbability: number
+│       ├─ monteCarloProbability: number
+│       ├─ volatilityForecast: number
+│       ├─ volatilityPlayOffsForecast: number
+│       ├─ blowoutRisk: number
+│       ├─ importanceScore: number
+│       ├─ importanceRole: string
+│       ├─ underCount: number
+│       ├─ playoff_underCount: number
+│       ├─ betExplanation: map
+│       │   ├─ explanation: string
+│       │   ├─ confidenceRange: string
+│       │   └─ recommendation: string
 │       │
-│       ├── # 6. Injury Report
-│       │   └─ injuryReport: map
-│       │       ├─ player_injured: map<string, map>
-│       │       │   └─ [
-│       │       │       { 
-│       │       │         status, reason
-│       │       │       }
-│       │       │      ]
-│       │       ├─ teamInjuries: map<string, map>
-│       │       │   └─ [
-│       │       │       { 
-│       │       │         status, reason, usage_rate, 
-│       │       │         importance_score, importance_role,
-│       │       │       }
-│       │       │      ]
-│       │       ├─ opponentInjuries: map<string, map>
-│       │       │   └─ [
-│       │       │       { 
-│       │       │         status, reason, usage_rate, 
-│       │       │         importance_score, importance_role,
-│       │       │       }
-│       │       │      ]
-│       │       └─ source: string
-│       │      
-│       ├── # 7. Historical Data
-│       │   ├─ last5RegularGames: array<map>
-│       │   │   └─ [ 
+│       │  # 6. Injury Report
+│       ├─ injuryReport: map
+│       │   ├─ player_injured: map<string, map>
+│       │   │   └─ [
 │       │   │       { 
-│       │   │         date, points, minutes, location,
-│       │   │         opponent, opponentFullName, 
-│       │   │         opponentLogo, gameType, gameId 
-│       │   │       } 
+│       │   │         status, reason
+│       │   │       }
 │       │   │      ]
-│       │   │
-│       │   └─ season_games_agst_opp: array<map>
-│       │       └─ [
-│       │           { 
-│       │             date, points, minutes, location,
-│       │             opponent, opponentFullName, 
-│       │             opponentLogo, gameType, gameId 
-│       │           }
-│       │          ]
+│       │   ├─ teamInjuries: map<string, map>
+│       │   │   └─ [
+│       │   │       { 
+│       │   │         status, reason, usage_rate, 
+│       │   │         importance_score, importance_role,
+│       │   │       }
+│       │   │      ]
+│       │   ├─ opponentInjuries: map<string, map>
+│       │   │   └─ [
+│       │   │       { 
+│       │   │         status, reason, usage_rate, 
+│       │   │         importance_score, importance_role,
+│       │   │       }
+│       │   │      ]
+│       │   └─ source: string
+│       │      
+│       │  # 7. Historical Data
+│       ├─ last5RegularGames: array<map>
+│       │   └─ [ 
+│       │       { 
+│       │         date, points, minutes, location,
+│       │         opponent, opponentFullName, 
+│       │         opponentLogo, gameType, gameId 
+│       │       } 
+│       │      ]
 │       │
-│       └── # 8. Playoff Data (only present when gameType == Playoffs)
-│           ├─ num_playoff_games: number
-│           ├─ playoff_curr_score
-│           ├─ playoffAvg: number
-│           ├─ playoff_points_home_avg: number
-│           ├─ playoff_points_away_avg: number
-│           ├─ playoff_minutes_home_avg: number
-│           ├─ playoff_minutes_away_avg: number
-│           └─ playoff_games: array<map>
-│               └─ [
-│                   { 
-│                     date, points, minutes, location, result,
-│                     opponent, opponentFullName, opponentLogo, 
-│                     gameType, gameId, game_number, round
-│                   }
-│                  ]
-│                        
+│       ├─ season_games_agst_opp: array<map>
+│       │   └─ [
+│       │       { 
+│       │         date, points, minutes, location,
+│       │         opponent, opponentFullName, 
+│       │         opponentLogo, gameType, gameId 
+│       │       }
+│       │      ]
+│       │
+│       │  # 8. Playoff Data (only present when gameType == Playoffs)
+│       ├─ num_playoff_games: number
+│       ├─ playoff_curr_score
+│       ├─ playoffAvg: number
+│       ├─ playoff_points_home_avg: number
+│       ├─ playoff_points_away_avg: number
+│       ├─ playoff_minutes_home_avg: number
+│       ├─ playoff_minutes_away_avg: number
+│       └─ playoff_games: array<map>
+│           └─ [
+│               { 
+│                 date, points, minutes, location, result,
+│                 opponent, opponentFullName, opponentLogo, 
+│                 gameType, gameId, game_number, round
+│               }
+│              ]
+│                    
 ├── concluded/
     └── {pick_id} (e.g. aaron_nesmith_7.5_20250619)
         │  ( same fields as active/{pick_id} )
-        ├─ # 9. Final Game Results 
-           ├─ gameStatus: "concluded"
-           ├─ finalPoints: number
-           ├─ finalMinutes: number
-           ├─ hit : 1 if pts > threshold else 0,
-           └─ finishedAt: firestore.SERVER_TIMESTAMP
+        │  # 9. Final Game Results 
+        ├─ gameStatus: "concluded"
+        ├─ finalPoints: number
+        ├─ finalMinutes: number
+        ├─ hit : 1 if pts > threshold else 0,
+        └─ finishedAt: firestore.SERVER_TIMESTAMP
