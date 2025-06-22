@@ -862,7 +862,7 @@ def analyze_player(first_name, last_name, threshold=None):
         
 
         # Playoff data
-        "playoff_games":     playoff_games,
+        "playoff_games":     playoff_games[::-1],
         "num_playoff_games": num_playoff_games,
         "playoff_curr_score": playoff_curr_score,
         "playoff_round": playoff_round,

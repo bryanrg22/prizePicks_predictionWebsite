@@ -65,20 +65,25 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
     return value > threshold ? "text-green-400" : "text-red-400"
   }
 
+  const toInjuryArray = (injuriesObj = {}) =>
+    Object.entries(injuriesObj).map(([player, info]) => ({
+      player,
+      ...info
+    }))
+
   // Get injury status color
   const getInjuryStatusColor = (status) => {
     if (!status || status === "NOT YET SUBMITTED") return "text-gray-400"
     const statusLower = status.toLowerCase()
     if (statusLower.includes("out")) return "text-red-400"
     if (statusLower.includes("questionable") || statusLower.includes("doubtful")) return "text-yellow-400"
-    if (statusLower.includes("probable") || statusLower.includes("available")) return "text-green-400"
+    if (statusLower.includes("probable") || statusLower.includes("available") || statusLower.includes("not injured")) return "text-green-400"
     return "text-gray-400"
   }
 
   // Extract ALL available data from Firestore schema
   const {
     name,
-    playerId,
     team,
     position,
     opponent,
@@ -93,9 +98,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
     seasonAvgPoints,
     last5RegularGamesAvg,
     seasonAvgVsOpponent,
-    homeAwayAvg,
     last5RegularGames = [],
-    advancedPerformance = {},
     careerSeasonStats = [],
     injuryReport = {},
     betExplanation = {},
@@ -108,6 +111,27 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
     playoffAvg,
     playoff_games = [],
     volatilityPlayOffsForecast,
+    playoff_curr_score,
+    playoff_points_home_avg,
+    playoff_points_away_avg,
+    underCount,
+    playoff_underCount,
+    points_home_avg,
+    points_away_avg,
+    average_mins,
+    importanceRole,
+    usage_rate,
+    blowoutRisk,
+    vegasSpread,
+    overUnder,
+    totalMove,
+    spreadMove,
+    teamImpliedPts,
+    oppImpliedPts,
+    impliedOverProb,
+    favoriteFlag,
+    underdogFlag,
+    details,
   } = playerData
 
   // Format probabilities for display
@@ -263,6 +287,26 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
+            {/* More Player Role Data */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Importance Role</div>
+                <div className="text-sm font-bold text-white">{importanceRole}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Blowout Risk</div>
+                <div className="text-sm font-bold text-white">{blowoutRisk}</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Usage Rate</div>
+                <div className="text-sm font-bold text-white">{usage_rate}</div>
+              </div>
+            </div>
+            
             {/* Quick Stats Grid - Utilizing ALL your data */}
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
@@ -284,32 +328,42 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                 </div>
               </div>
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Home/Away</div>
-                <div className={`text-sm font-bold ${getComparisonColor(homeAwayAvg, threshold)}`}>
-                  {formatNumber(homeAwayAvg)}
+                <div className="text-xs text-gray-400">Point Average - HOME</div>
+                <div className={`text-sm font-bold ${getComparisonColor(points_home_avg, threshold)}`}>
+                  {formatNumber(points_home_avg)}
                 </div>
               </div>
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">@ Home</div>
-                <div
-                  className={`text-sm font-bold ${getComparisonColor(advancedPerformance?.avg_points_home, threshold)}`}
-                >
-                  {formatNumber(advancedPerformance?.avg_points_home)}
+                <div className="text-xs text-gray-400">Point Average - AWAY</div>
+                <div className={`text-sm font-bold ${getComparisonColor(points_away_avg, threshold)}`}>
+                  {formatNumber(points_away_avg)}
                 </div>
               </div>
+              {/* Point Under Count */}
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">@ Away</div>
-                <div
-                  className={`text-sm font-bold ${getComparisonColor(advancedPerformance?.avg_points_away, threshold)}`}
-                >
-                  {formatNumber(advancedPerformance?.avg_points_away)}
+                <div className="text-xs text-gray-400">Point Under Count</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(underCount)}
+                </div>
+              </div>
+              {/* Average Minutes */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Average Minutes</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(average_mins)}
                 </div>
               </div>
             </div>
 
             {/* Playoff Stats Row - Only if playoff data exists */}
             {num_playoff_games > 0 && (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+                <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
+                <div className="text-xs text-yellow-400">Current Score</div>
+                <div className="text-sm font-bold text-white">
+                  {playoff_curr_score}
+                </div>
+                </div>
                 <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
                   <div className="text-xs text-yellow-400">Playoff Point Avg</div>
                   <div className={`text-sm font-bold ${getComparisonColor(playoffAvg, threshold)}`}>
@@ -317,12 +371,26 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                   </div>
                 </div>
                 <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
-                  <div className="text-xs text-yellow-400">Playoff Games</div>
-                  <div className="text-sm font-bold text-white">{num_playoff_games}</div>
+                  <div className="text-xs text-yellow-400">Playoff Point Avg - HOME</div>
+                  <div className={`text-sm font-bold ${getComparisonColor(playoff_points_home_avg, threshold)}`}>
+                    {formatNumber(playoff_points_home_avg)}
+                  </div>
+                </div>
+                <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
+                  <div className="text-xs text-yellow-400">Playoff Point Avg - AWAY</div>
+                  <div className={`text-sm font-bold ${getComparisonColor(playoff_points_away_avg, threshold)}`}>
+                    {formatNumber(playoff_points_away_avg)}
+                  </div>
+                </div>
+                <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
+                  <div className="text-xs text-yellow-400">Playoff Point Under Count</div>
+                  <div className="text-sm font-bold text-white">
+                    {formatNumber(playoff_underCount)}
+                  </div>
                 </div>
                 {volatilityPlayOffsForecast && volatilityPlayOffsForecast !== 0 && (
                   <div className="bg-yellow-500/10 p-2 rounded-lg text-center border border-yellow-500/20">
-                    <div className="text-xs text-yellow-400">PO Volatility</div>
+                    <div className="text-xs text-yellow-400">Playoff Volatility</div>
                     <div className="text-sm font-bold text-white">{formatNumber(volatilityPlayOffsForecast)}</div>
                   </div>
                 )}
@@ -340,24 +408,97 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                   <div className="text-sm font-bold text-white">{formatNumber(volatilityForecast)}</div>
                 </div>
               )}
-              {advancedPerformance?.efg !== undefined && (
-                <div className="bg-gray-800/50 p-2 rounded-lg">
-                  <div className="text-xs text-gray-400">eFG%</div>
-                  <div className="text-sm font-bold text-white">{formatPercent(advancedPerformance.efg)}</div>
+              <div className="bg-gray-800/50 p-2 rounded-lg">
+                <div className="text-xs text-gray-400">ChatGPT Confidence Range</div>
+                <div className="text-sm font-bold text-white">{betExplanation.confidenceRange}</div>
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg">
+                <span className="text-gray-400">
+                  Poisson:{" "}
+                  <span className={getProbabilityColor(poissonProbability)}>{poissonProbabilityFormatted}</span>
+                </span>
+              </div>
+              
+              <div className="bg-gray-800/50 p-2 rounded-lg">
+                <span className="text-gray-400">
+                  Monte Carlo:{" "}
+                  <span className={getProbabilityColor(monteCarloProbability)}>{monteCarloFormatted}</span>
+                </span>
+              </div>
+            </div>
+
+            {/* ── Vegas & Market Data ───────────────────────────────────────────── */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              {/* Spread */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Vegas Spread</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(vegasSpread)}
                 </div>
-              )}
-              {advancedPerformance?.shot_dist_3pt !== undefined && (
-                <div className="bg-gray-800/50 p-2 rounded-lg">
-                  <div className="text-xs text-gray-400">3PT Rate</div>
-                  <div className="text-sm font-bold text-white">{formatPercent(advancedPerformance.shot_dist_3pt)}</div>
+              </div>
+              {/* Total / Over-Under */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Over / Under</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(overUnder)}
                 </div>
-              )}
-              {advancedPerformance?.ft_rate !== undefined && (
-                <div className="bg-gray-800/50 p-2 rounded-lg">
-                  <div className="text-xs text-gray-400">FT Rate</div>
-                  <div className="text-sm font-bold text-white">{formatPercent(advancedPerformance.ft_rate)}</div>
+              </div>
+              {/* Move – Total */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Total Move</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(totalMove)}
                 </div>
-              )}
+              </div>
+              {/* Move – Spread */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Spread Move</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(spreadMove)}
+                </div>
+              </div>
+              {/* Implied – Team */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Team Implied Pts</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(teamImpliedPts)}
+                </div>
+              </div>
+              {/* Implied – Opponent */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Opp Implied Pts</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(oppImpliedPts)}
+                </div>
+              </div>
+              {/* Implied Over Probability */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Implied Over Prob</div>
+                <div className="text-sm font-bold text-white">
+                  {formatNumber(impliedOverProb)}
+                </div>
+              </div>
+              {/* Favorite? */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Favorite</div>
+                <div className="text-sm font-bold text-white">
+                  {favoriteFlag === 1 ? "Yes" : "No"}
+                </div>
+              </div>
+              {/* Underdog? */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Underdog</div>
+                <div className="text-sm font-bold text-white">
+                  {underdogFlag === 1 ? "Yes" : "No"}
+                </div>
+              </div>
+              {/* Line details (e.g. “OKC -6.5”) */}
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center col-span-2 lg:col-span-3">
+                <div className="text-xs text-gray-400">Details</div>
+                <div className="text-sm font-bold text-white">
+                  {details || "—"}
+                </div>
+              </div>
             </div>
 
             {/* Injury Report - Using your injuryReport data */}
@@ -368,15 +509,62 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                   <span className="text-sm font-medium">Injury Report</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">Status:</span>
-                  <span className={`text-sm font-medium ${getInjuryStatusColor(injuryReport.status)}`}>
-                    {injuryReport.status || "Available"}
+                  <span className="text-xs text-gray-400">Player Status:</span>
+                  <span className={`text-sm font-medium ${getInjuryStatusColor(injuryReport.player_injured.status)}`}>
+                    {injuryReport.player_injured.status || "Available"}
                   </span>
                 </div>
                 {injuryReport.reason && (
                   <div className="mt-1">
                     <span className="text-xs text-gray-400">Reason: </span>
                     <span className="text-xs text-gray-300">{injuryReport.reason}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ========== Team-wide & Opponent injury reports ========== */}
+            {(injuryReport?.teamInjuries || injuryReport?.opponentInjuries) && (
+              <div className="bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-3 space-y-3">
+                {/* Your own team ------------------------------------------------ */}
+                {injuryReport.teamInjuries && Object.keys(injuryReport.teamInjuries).length > 0 && (
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <Heart className="w-3 h-3 text-blue-400 mr-2" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Your Team</span>
+                    </div>
+
+                    {toInjuryArray(injuryReport.teamInjuries).map(
+                      ({ player, status, reason }) => (
+                        <div key={player} className="flex justify-between text-sm pl-1 pr-2 py-0.5">
+                          <span className="truncate text-gray-300">{player}</span>
+                          <span className={getInjuryStatusColor(status)}>
+                            {status ?? "—"}
+                          </span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+
+                {/* Opponent ----------------------------------------------------- */}
+                {injuryReport.opponentInjuries && Object.keys(injuryReport.opponentInjuries).length > 0 && (
+                  <div>
+                    <div className="flex items-center mb-1">
+                      <Heart className="w-3 h-3 text-red-400 mr-2" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Opponent</span>
+                    </div>
+
+                    {toInjuryArray(injuryReport.opponentInjuries).map(
+                      ({ player, status, reason }) => (
+                        <div key={player} className="flex justify-between text-sm pl-1 pr-2 py-0.5">
+                          <span className="truncate text-gray-300">{player}</span>
+                          <span className={getInjuryStatusColor(status)}>
+                            {status ?? "—"}
+                          </span>
+                        </div>
+                      )
+                    )}
                   </div>
                 )}
               </div>

@@ -273,7 +273,6 @@ PRIZEPICKS_PREDICTIONWEBSITE/
 
 ### Firestore Database Scheme
 firestore/
-### Firestore Database Scheme
 processedPlayers/players 
 │	├── active/
 │	│   └─ {pick_id} (e.g. aaron_nesmith_7.5_20250619)
