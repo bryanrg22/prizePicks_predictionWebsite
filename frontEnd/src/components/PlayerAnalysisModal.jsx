@@ -288,7 +288,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
             {/* More Player Role Data */}
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+            <div className="grid grid-cols-3 lg:grid-cols-3 gap-2">
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Importance Role</div>
                 <div className="text-sm font-bold text-white">{importanceRole}</div>
@@ -400,7 +400,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             {/* Volatility & Advanced Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {volatilityForecast && (
-                <div className="bg-gray-800/50 p-2 rounded-lg">
+                <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                   <div className="flex items-center mb-1">
                     <BarChart3 className="w-3 h-3 text-blue-400 mr-1" />
                     <span className="text-xs text-gray-400">Volatility</span>
@@ -408,27 +408,28 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                   <div className="text-sm font-bold text-white">{formatNumber(volatilityForecast)}</div>
                 </div>
               )}
-              <div className="bg-gray-800/50 p-2 rounded-lg">
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">ChatGPT Confidence Range</div>
+                <div className={`text-sm font-bold ${getProbabilityColor(betExplanation.confidenceRange)}`}>
                 <div className="text-sm font-bold text-white">{betExplanation.confidenceRange}</div>
               </div>
-              <div className="bg-gray-800/50 p-2 rounded-lg">
-                <span className="text-gray-400">
-                  Poisson:{" "}
-                  <span className={getProbabilityColor(poissonProbability)}>{poissonProbabilityFormatted}</span>
-                </span>
+
+
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Poisson Probability</div>
+                <div className={`text-sm font-bold ${getProbabilityColor(poissonProbability)}`}>
+                  {formatNumber(poissonProbabilityFormatted)}</div>
               </div>
               
-              <div className="bg-gray-800/50 p-2 rounded-lg">
-                <span className="text-gray-400">
-                  Monte Carlo:{" "}
-                  <span className={getProbabilityColor(monteCarloProbability)}>{monteCarloFormatted}</span>
-                </span>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                <div className="text-xs text-gray-400">Monte Carlo Probability</div>
+                  <div className={`text-sm font-bold ${getProbabilityColor(monteCarloProbability)}`}>
+                    {formatNumber(monteCarloFormatted)}</div>
               </div>
             </div>
 
             {/* ── Vegas & Market Data ───────────────────────────────────────────── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2">
               {/* Spread */}
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Vegas Spread</div>
@@ -436,25 +437,11 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                   {formatNumber(vegasSpread)}
                 </div>
               </div>
-              {/* Total / Over-Under */}
+              {/* Line details (e.g. “OKC -6.5”) */}
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Over / Under</div>
+                <div className="text-xs text-gray-400">Details</div>
                 <div className="text-sm font-bold text-white">
-                  {formatNumber(overUnder)}
-                </div>
-              </div>
-              {/* Move – Total */}
-              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Total Move</div>
-                <div className="text-sm font-bold text-white">
-                  {formatNumber(totalMove)}
-                </div>
-              </div>
-              {/* Move – Spread */}
-              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Spread Move</div>
-                <div className="text-sm font-bold text-white">
-                  {formatNumber(spreadMove)}
+                  {details || "—"}
                 </div>
               </div>
               {/* Implied – Team */}
@@ -471,16 +458,9 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                   {formatNumber(oppImpliedPts)}
                 </div>
               </div>
-              {/* Implied Over Probability */}
-              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Implied Over Prob</div>
-                <div className="text-sm font-bold text-white">
-                  {formatNumber(impliedOverProb)}
-                </div>
-              </div>
               {/* Favorite? */}
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Favorite</div>
+                <div className="text-xs text-gray-400">Favorites</div>
                 <div className="text-sm font-bold text-white">
                   {favoriteFlag === 1 ? "Yes" : "No"}
                 </div>
@@ -490,13 +470,6 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
                 <div className="text-xs text-gray-400">Underdog</div>
                 <div className="text-sm font-bold text-white">
                   {underdogFlag === 1 ? "Yes" : "No"}
-                </div>
-              </div>
-              {/* Line details (e.g. “OKC -6.5”) */}
-              <div className="bg-gray-800/50 p-2 rounded-lg text-center col-span-2 lg:col-span-3">
-                <div className="text-xs text-gray-400">Details</div>
-                <div className="text-sm font-bold text-white">
-                  {details || "—"}
                 </div>
               </div>
             </div>

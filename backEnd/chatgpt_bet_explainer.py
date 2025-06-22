@@ -135,7 +135,6 @@ def get_bet_explanation_from_chatgpt(pdata: dict) -> dict[str, str]:
         "    ≥ 55 % → \"Lean Over\"\n"
         "    45–55 % → \"Stay Away\"\n"
         "    ≤ 45 % → \"Lean Under\"\n"
-        "- Remind users to gamble responsibly."
     )
 
     user_payload = {
