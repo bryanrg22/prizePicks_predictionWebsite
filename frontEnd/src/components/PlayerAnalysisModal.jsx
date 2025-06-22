@@ -411,20 +411,21 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">ChatGPT Confidence Range</div>
                 <div className={`text-sm font-bold ${getProbabilityColor(betExplanation.confidenceRange)}`}>
-                <div className="text-sm font-bold text-white">{betExplanation.confidenceRange}</div>
+                  {betExplanation.confidenceRange}
+                </div>
               </div>
 
 
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Poisson Probability</div>
                 <div className={`text-sm font-bold ${getProbabilityColor(poissonProbability)}`}>
-                  {formatNumber(poissonProbabilityFormatted)}</div>
+                  {poissonProbabilityFormatted}</div>
               </div>
               
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Monte Carlo Probability</div>
                   <div className={`text-sm font-bold ${getProbabilityColor(monteCarloProbability)}`}>
-                    {formatNumber(monteCarloFormatted)}</div>
+                    {monteCarloFormatted}</div>
               </div>
             </div>
 
