@@ -288,7 +288,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
             {/* More Player Role Data */}
-            <div className="grid grid-cols-3 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-2">
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Importance Role</div>
                 <div className="text-sm font-bold text-white">{importanceRole}</div>
@@ -296,14 +296,8 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Blowout Risk</div>
-                <div className="text-sm font-bold text-white">{blowoutRisk}</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
-              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Usage Rate</div>
-                <div className="text-sm font-bold text-white">{usage_rate}</div>
+                <div className="text-sm font-bold text-white">{formatNumber(usage_rate)}</div>
               </div>
             </div>
             

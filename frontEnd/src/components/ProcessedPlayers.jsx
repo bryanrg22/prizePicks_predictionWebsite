@@ -284,19 +284,19 @@ const ProcessedPlayers = ({ onAddToPicks }) => {
                     {/* Season stats */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-xs text-gray-400 mb-1">Season Avg</p>
+                      <p className="text-xs text-gray-400 mb-1">ChatGPT Recommendation</p>
                         <p
-                          className={`font-bold text-base lg:text-lg ${getComparisonColor(player.seasonAvgPoints, threshold)}`}
+                          className={`font-bold text-base lg:text-lg`}
                         >
-                          {player.seasonAvgPoints?.toFixed(1) || "N/A"} pts
+                          {player.betExplanation.recommendation}
                         </p>
                       </div>
                       <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-xs text-gray-400 mb-1">Last 5 Games</p>
+                        <p className="text-xs text-gray-400 mb-1">ChatGPT Confidence Range</p>
                         <p
-                          className={`font-bold text-base lg:text-lg ${getComparisonColor(player.last5GamesAvg, threshold)}`}
+                          className={`font-bold text-base lg:text-lg`}
                         >
-                          {player.last5GamesAvg?.toFixed(1) || "N/A"} pts
+                          {player.betExplanation.confidenceRange}
                         </p>
                       </div>
                     </div>
