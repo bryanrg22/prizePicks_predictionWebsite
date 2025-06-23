@@ -132,6 +132,7 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
     favoriteFlag,
     underdogFlag,
     details,
+    home_game,
   } = playerData
 
   // Format probabilities for display
@@ -287,17 +288,17 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 lg:p-6 space-y-3 lg:space-y-4">
+            
             {/* More Player Role Data */}
             <div className="grid grid-cols-2 lg:grid-cols-2 gap-2">
               <div className="bg-gray-800/50 p-2 rounded-lg text-center">
+                  <div className="text-sm font-bold text-white">
+                    {home_game === true ? "Home Game" : "Away Game"}
+                  </div>
+                </div>
+              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
                 <div className="text-xs text-gray-400">Importance Role</div>
                 <div className="text-sm font-bold text-white">{importanceRole}</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
-              <div className="bg-gray-800/50 p-2 rounded-lg text-center">
-                <div className="text-xs text-gray-400">Usage Rate</div>
-                <div className="text-sm font-bold text-white">{formatNumber(usage_rate)}</div>
               </div>
             </div>
             
@@ -469,72 +470,93 @@ const PlayerAnalysisModal = ({ playerData, onClose, onAddToPicks }) => {
               </div>
             </div>
 
-            {/* Injury Report - Using your injuryReport data */}
+            {/* Injury Report – player + both teams */}
             {injuryReport && Object.keys(injuryReport).length > 0 && (
               <div className="bg-gray-800/30 p-3 rounded-lg border border-gray-700">
+                {/* section title */}
                 <div className="flex items-center mb-2">
                   <Heart className="w-4 h-4 text-red-400 mr-2" />
                   <span className="text-sm font-medium">Injury Report</span>
                 </div>
+
+                {/* ── Player line ───────────────────────── */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400">Player Status:</span>
-                  <span className={`text-sm font-medium ${getInjuryStatusColor(injuryReport.player_injured.status)}`}>
+                  <span className="text-xs text-gray-400">Player status:</span>
+                  <span
+                    className={`text-sm font-medium ${getInjuryStatusColor(
+                      injuryReport.player_injured.status
+                    )}`}
+                  >
                     {injuryReport.player_injured.status || "Available"}
                   </span>
                 </div>
-                {injuryReport.reason && (
+                {injuryReport.player_injured.reason && (
                   <div className="mt-1">
-                    <span className="text-xs text-gray-400">Reason: </span>
-                    <span className="text-xs text-gray-300">{injuryReport.reason}</span>
+                    <span className="text-xs text-gray-400">Reason:&nbsp;</span>
+                    <span className="text-xs text-gray-300">
+                      {injuryReport.player_injured.reason}
+                    </span>
                   </div>
                 )}
-              </div>
-            )}
 
-            {/* ========== Team-wide & Opponent injury reports ========== */}
-            {(injuryReport?.teamInjuries || injuryReport?.opponentInjuries) && (
-              <div className="bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-3 space-y-3">
-                {/* Your own team ------------------------------------------------ */}
-                {injuryReport.teamInjuries && Object.keys(injuryReport.teamInjuries).length > 0 && (
-                  <div>
-                    <div className="flex items-center mb-1">
-                      <Heart className="w-3 h-3 text-blue-400 mr-2" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Your Team</span>
+                {/* ── TEAM injuries ─────────────────────── */}
+                {injuryReport.teamInjuries &&
+                  Object.keys(injuryReport.teamInjuries).length > 0 && (
+                    <div className="mt-3">
+                      <span className="block text-xs text-gray-400 mb-1">
+                        Team Injuries ({Object.keys(injuryReport.teamInjuries).length})
+                      </span>
+                      <ul className="space-y-1">
+                        {toInjuryArray(injuryReport.teamInjuries).map((p) => (
+                          <li
+                            key={p.player}
+                            className="flex items-center justify-between bg-gray-800/20 p-1 rounded"
+                          >
+                            <span className="text-xs text-gray-300 truncate">
+                              {p.player}
+                            </span>
+                            <span
+                              className={`text-xs font-medium ${getInjuryStatusColor(
+                                p.status
+                              )}`}
+                            >
+                              {p.status}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
+                  )}
 
-                    {toInjuryArray(injuryReport.teamInjuries).map(
-                      ({ player, status, reason }) => (
-                        <div key={player} className="flex justify-between text-sm pl-1 pr-2 py-0.5">
-                          <span className="truncate text-gray-300">{player}</span>
-                          <span className={getInjuryStatusColor(status)}>
-                            {status ?? "—"}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-
-                {/* Opponent ----------------------------------------------------- */}
-                {injuryReport.opponentInjuries && Object.keys(injuryReport.opponentInjuries).length > 0 && (
-                  <div>
-                    <div className="flex items-center mb-1">
-                      <Heart className="w-3 h-3 text-red-400 mr-2" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Opponent</span>
+                {/* ── OPPONENT injuries ─────────────────── */}
+                {injuryReport.opponentInjuries &&
+                  Object.keys(injuryReport.opponentInjuries).length > 0 && (
+                    <div className="mt-3">
+                      <span className="block text-xs text-gray-400 mb-1">
+                        Opponent Injuries (
+                        {Object.keys(injuryReport.opponentInjuries).length})
+                      </span>
+                      <ul className="space-y-1">
+                        {toInjuryArray(injuryReport.opponentInjuries).map((p) => (
+                          <li
+                            key={p.player}
+                            className="flex items-center justify-between bg-gray-800/20 p-1 rounded"
+                          >
+                            <span className="text-xs text-gray-300 truncate">
+                              {p.player}
+                            </span>
+                            <span
+                              className={`text-xs font-medium ${getInjuryStatusColor(
+                                p.status
+                              )}`}
+                            >
+                              {p.status}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-
-                    {toInjuryArray(injuryReport.opponentInjuries).map(
-                      ({ player, status, reason }) => (
-                        <div key={player} className="flex justify-between text-sm pl-1 pr-2 py-0.5">
-                          <span className="truncate text-gray-300">{player}</span>
-                          <span className={getInjuryStatusColor(status)}>
-                            {status ?? "—"}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
+                  )}
               </div>
             )}
 

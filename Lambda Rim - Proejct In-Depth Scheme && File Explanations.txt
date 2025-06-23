@@ -361,16 +361,16 @@ processedPlayers/players
 │	│       │   │       }
 │	│       │   │      ]
 │	│       │   ├─ teamInjuries: map<string, map>
-│	│       │   │   └─ [
+│	│       │   │   └─ Per Player Present in Array: [
 │	│       │   │       { 
-│	│       │   │         status, reason, usage_rate, 
+│	│       │   │         status, reason, usage_rate, photoUrl,
 │	│       │   │         importance_score, importance_role,
 │	│       │   │       }
 │	│       │   │      ]
 │	│       │   ├─ opponentInjuries: map<string, map>
-│	│       │   │   └─ [
+│	│       │   │   └─ Per Player Present in Array: [
 │	│       │   │       { 
-│	│       │   │         status, reason, usage_rate, 
+│	│       │   │         status, reason, usage_rate, photoUrl,
 │	│       │   │         importance_score, importance_role,
 │	│       │   │       }
 │	│       │   │      ]
