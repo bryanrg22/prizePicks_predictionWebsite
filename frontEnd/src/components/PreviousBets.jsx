@@ -304,7 +304,7 @@ const PreviousBets = ({ bets, activeBets }) => {
                             <div
                               key={index}
                               className={`rounded-lg p-3 border ${
-                                pick.bet_result === "WIN"
+                                pick.hit === 1
                                   ? "bg-gradient-to-r from-green-800/50 to-green-900/50 border-green-700/50"
                                   : "bg-gradient-to-r from-red-800/50 to-red-900/50 border-red-700/50"
                               }`}
@@ -344,11 +344,11 @@ const PreviousBets = ({ bets, activeBets }) => {
                                 <div className="text-right flex-shrink-0">
                                   <p className="font-bold text-white text-lg">{pick.finalPoints} pts</p>
                                   <div className={`px-2 py-1 rounded-md text-xs font-bold ${
-                                    pick.bet_result === "WIN"
+                                    pick.hit === 1
                                       ? "bg-green-600 text-white"
                                       : "bg-red-600 text-white"
                                   }`}>
-                                    {pick.bet_result}
+                                    {pick.hit === 1 ? "WIN" : "LOSS"}
                                   </div>
                                 </div>
                               </div>

@@ -183,7 +183,8 @@ export default function PreviousBetsPage() {
             recommendation: pick.recommendation,
             photoUrl: pick.photoUrl || "/placeholder.svg?height=40&width=40",
             finalPoints: pick.finalPoints ?? -1,
-            bet_result: pick.bet_result || "-1",
+            hit: pick.hit ?? -1,
+            bet_result: pick.bet_result ?? "-1",
           }))
         : [],
     }))
