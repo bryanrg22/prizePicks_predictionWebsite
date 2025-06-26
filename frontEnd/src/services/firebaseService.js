@@ -9,6 +9,8 @@ import {
   increment,
   deleteDoc,
   writeBatch,
+  query,
+  orderBy,
 } from "firebase/firestore"
 import { db } from "../firebase"
 
@@ -711,7 +713,7 @@ export const getActiveBets = async (userId) => {
 export const getBetHistory = async (userId) => {
   try {
     const histRef = collection(db, "users", userId, "betHistory")
-    const snap = await getDocs(histRef)
+    const snap = await getDocs(query(histRef, orderBy("createdAt", "desc")))
 
     const bets = await Promise.all(
       snap.docs.map(async (betDoc) => {
@@ -737,6 +739,16 @@ export const getBetHistory = async (userId) => {
         }
       }),
     )
+
+    bets.sort((a, b) => {
+      const aTime = a.createdAt?.seconds
+        ? a.createdAt.seconds
+        : Date.parse(a.createdAt || 0) / 1000
+      const bTime = b.createdAt?.seconds
+        ? b.createdAt.seconds
+        : Date.parse(b.createdAt || 0) / 1000
+      return bTime - aTime
+    })
 
     return bets
   } catch (error) {
